@@ -1,0 +1,5 @@
+archive/
+*.d
+*.o
+bi/
+console/
