@@ -41,7 +41,7 @@ private:
 
     VEC<Int> find_mayhop();
     
-    Nci git_nci(const NORG& norg);
+    Nci git_nci(const VecReal& ground_state);
     
     void expand(Nci& natural_cfgs);
 
@@ -64,7 +64,7 @@ private:
         return flag;
     }
 
-    Str change_cfg_str(const Str& cfg_str, Int& pos) {
+    Str change_cfg_str(const Str& cfg_str, Int pos) {
         Int crt(pos/hop_h.ncols()), ann(pos%hop_h.ncols());
         Str temp_c = cfg_str;
         temp_c[ann] = (temp_c[ann]=='1') ? '0' : 'x';
@@ -84,7 +84,7 @@ private:
         return rank;
     }
 
-    Nci truncation(Nci& inital);
+    Nci truncation(Nci inital);
 
     Tab find_table(Str inter_type);
 

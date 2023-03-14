@@ -14,7 +14,7 @@ Asnci::Asnci(const NORG& norg, Idx trncat_size, const Int mode):
     nosp(norg.scsp), groundE(norg.groune_lst)
 {
     // inital = git_nci(norg);
-    trncat = truncation(git_nci(norg));
+    trncat = truncation(git_nci(norg.final_ground_state));
 }
 
 NORG Asnci::get_norg(Tab table, Int mode) {
@@ -33,14 +33,14 @@ VEC<Int> Asnci::find_mayhop() {
     return move(mayhop_i);
 }
 
-Nci Asnci::git_nci(const NORG& norg) {
+Nci Asnci::git_nci(const VecReal& ground_state) {
     Nci         natural_cfg;
     VEC<UInt*>& cfigs(natural_cfg.first);
     VEC<Real>&  ranks(natural_cfg.second);
 
     VecIdx groundstate_idx(nosp.dim);
     for_Idx(i, 0, nosp.dim) groundstate_idx[i]=i;
-    VecReal grndste_norm = SQR(norg.final_ground_state);
+    VecReal grndste_norm = SQR(ground_state);
     slctsort(grndste_norm, groundstate_idx);
     for_Int(i, 0, Int(dim/Int(mayhop.size()/2))){
         // if(grndste_norm[i] > 1e-5){
@@ -84,7 +84,7 @@ void Asnci::expand(Nci& natural_cfgs) {
     }
 }
 
-Nci Asnci::truncation(Nci& inital) {
+Nci Asnci::truncation(Nci inital) {
 
     VEC<UInt*>& cfigs(inital.first);
     VEC<Real>&  rank(inital.second);
