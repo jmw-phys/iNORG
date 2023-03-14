@@ -51,7 +51,7 @@ Nci Asnci::git_nci(const NORG& norg) {
             ranks.push_back(grndste_norm[i]);
         }
     }
-    expand(cfigs); cfigs.shrink_to_fit(); ranks.shrink_to_fit();
+    expand(natural_cfg); cfigs.shrink_to_fit(); ranks.shrink_to_fit();
     return natural_cfg;
 }
 
@@ -84,7 +84,7 @@ void Asnci::expand(Nci& natural_cfgs) {
     }
 }
 
-Nci Asnci::truncation(const Nci& inital) {
+Nci Asnci::truncation(Nci& inital) {
 
     VEC<UInt*>& cfigs(inital.first);
     VEC<Real>&  rank(inital.second);

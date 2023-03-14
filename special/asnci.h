@@ -13,7 +13,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2023.03.03
 
 // typedef pair<VEC<Str>,VEC<Real>> Nci;
 // typedef pair<VEC<__uint128_t>,VEC<Real>> Nci;
-typedef pair<VEC<UInt*>,VEC<Real>> Nci;
+typedef std::pair<VEC<UInt*>,VEC<Real>> Nci;
 class Asnci 
 {
 	const MyMpi& mm;				// parameters
@@ -31,11 +31,11 @@ class Asnci
     Nci trncat;
     std::map<UInt*, Idx>  cfig_idx;
 
-    MatReal hop_h;
     VEC<Int> mayhop;
 
 public:
-    Idx dim;                // The truncated space size
+    const MatReal hop_h;    // The hopping H(H_0)
+    const Idx dim;                // The truncated space size
 
 private:
 
@@ -84,7 +84,7 @@ private:
         return rank;
     }
 
-    Nci truncation(const Nci& inital);
+    Nci truncation(Nci& inital);
 
     Tab find_table(Str inter_type);
 

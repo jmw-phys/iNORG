@@ -13,6 +13,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
 #include "crrvec.h"
 #include "krylov.h"
 #include "impurity.h"
+#include "asnci.h"
 
 // impurity model
 
@@ -87,7 +88,7 @@ public:
 
 	// NORG(const MyMpi& mm_i, const Impurity& imp_i, const Prmtr& prmtr_i);
 
-	void up_date_h0_to_solve(const MatReal& h0_i, const VecReal sub_energy = Vec<Real>());
+	void up_date_h0_to_solve(const MatReal& h0_i, const VecReal sub_energy = Vec<Real>()); // for multi-number space.
 	void up_date_h0_to_solve(const MatReal& h0_i, const Int mode);
 	
 /*
@@ -131,6 +132,9 @@ public:
 
 	void get_gimp(Green& imp_i);
 	void get_gimp(Green& imp_i, VecInt or_deg);
+
+	// void asnci_gimp(Green& imp_i);
+	void asnci_gimp(Green& imp_i, VecInt or_deg);
 	
 	void find_g0(Green& imp_i);
 //--------------------------------------- for the io---------------------------------

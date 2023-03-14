@@ -22,6 +22,13 @@ Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i,
 {
 }
 
+
+Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const Asnci& nc):
+	scsp(NocSpace(mm_i, prmtr_i)), // blank
+	mm(mm_i), p(prmtr_i), table(find_h_idx(nc))
+{
+}
+
 // (Deactivate) SparseH;
 SparseMatReal Operator::find_hmlt()
 {
@@ -260,6 +267,35 @@ Tab Operator::find_h_idx()
 		// 		for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 		// 	}
 		// }
+	}
+	// TIME_END("t_find_hmlt_table" + NAV(mm.id()), t_find_hmlt_table);
+	for_Int(jj, 0, 3) h_idxs[jj].shrink_to_fit();
+	return std::move(h_idxs);
+}
+
+Tab Operator::find_h_idx(const Asnci& nc)
+{
+	clock_t t_find_hmlt_table;
+	t_find_hmlt_table = clock(); // TIME_BGN("find_hmlt_table" + NAV(mm.id()), t_find_hmlt_table);
+	VecPartition row_H(mm.np(), mm.id(), nc.dim);
+	Tab h_idxs(3);
+	MatInt mat_hop_pos(nc.hop_h.nrows(),nc.hop_h.ncols());
+	for_Int(i, 0, mat_hop_pos.nrows()) for_Int(j, 0, mat_hop_pos.ncols()) mat_hop_pos[i][j] = i * mat_hop_pos.ncols() + j;
+	Int h_hbd_idx(mat_hop_pos.size()	+ 1);
+	Int h_orb_ud_idx(mat_hop_pos.size() + 2);
+	Int h_orb_uu_idx(mat_hop_pos.size() + 3);
+	Int h_orb_dd_idx(mat_hop_pos.size() + 4);
+
+	// Int h_orb_j_idx(mat_hop_pos.size() + 5);
+	for_Int(h_i, row_H.bgn(), row_H.end()) {
+		// To save as sparse matrix, [0]: row number;[1]: colum number;[2]: idx.
+		VecInt h_idx(3, 0);
+		Int sparse_idx(h_i - row_H.bgn());
+		
+		// For the diagonal term:
+
+		// off diagonal term:
+
 	}
 	// TIME_END("t_find_hmlt_table" + NAV(mm.id()), t_find_hmlt_table);
 	for_Int(jj, 0, 3) h_idxs[jj].shrink_to_fit();

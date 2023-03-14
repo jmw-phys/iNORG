@@ -18,6 +18,7 @@ public:
 	const MyMpi& mm;				// parameters
 	const Prmtr& p;					// parameters
 	const NocSpace& scsp;			// NocSpace
+	// const Asnci& nc;				// asnci
 
 	Tab table;						// The movement by two femi operator contain.
 	Real groundstate_energy;		// The ground state energy on this shortcut restratin.
@@ -32,7 +33,8 @@ public:
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i, const Tab &per_table);
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i, Str tab_name);
 	// For the ASNCI.
-	Operator(const NORG& norg, const Asnci& asnci);
+	// Operator(const NORG& norg, const Asnci& asnci);
+	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const Asnci& nc);
 	
 	// Operator::Operator(const Operator &per):
 	// mm(per.mm), p(per.p), scsp(per.scsp), table(per.table) , 
@@ -40,6 +42,9 @@ public:
 	
 	// [i][0]row Idx; [i][1]colum Idx;[i][2] for the position for the hopint.
 	Tab find_h_idx();
+
+	// [i][0]row Idx; [i][1]colum Idx;[i][2] for the position for the hopint.
+	Tab find_h_idx(const Asnci& asnci);
 
 	void clear(){ for_Int(i, 0, 3) VEC<int> ().swap(table[i]);}
 
