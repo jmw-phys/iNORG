@@ -73,17 +73,7 @@ private:
     }
 
     // The hamilton form:
-    Real hamilton_value(Str alpha, Str beta_i = Str()) {
-        Real value(0.);
-        if(beta_i.length() == 0) {
-            value += 
-            return value;
-        }
-        else {
-            value += 
-            return value;
-        }
-    }
+    Real hamilton_value(const Str alpha, const Str beta_i = Str());
 
     Real cfi2rank(Str alpha, Vec<Str> beta) {
         Real rank(0.);

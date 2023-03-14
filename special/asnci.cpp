@@ -43,7 +43,8 @@ Nci Asnci::git_nci(const NORG& norg) {
     VecReal grndste_norm = SQR(norg.final_ground_state);
     slctsort(grndste_norm, groundstate_idx);
     for_Int(i, 0, Int(dim/Int(mayhop.size()/2))){
-        if(grndste_norm[i] > 1e-5){
+        // if(grndste_norm[i] > 1e-5){
+        {
             Idx ci_idx = groundstate_idx[i];
             StateStatistics cig(ci_idx, nosp.wherein_NocSpace(ci_idx), nosp);
             cfigs.push_back(cig.cfg2nums());
@@ -67,6 +68,7 @@ void Asnci::expand(Nci& natural_cfgs) {
     }
     for_Idx(i, 0, cfigs_core.size()){
         for(const auto j : mayhop) if(judge(cfigs_core[i], j)) {
+            Str new_cfig(change_cfg_str(cfigs_core[i], j));
             UInt nbath_orb(0), nums[p.nband];
             Real rank;
             for_Int(k, 0, p.nband) {
@@ -110,4 +112,49 @@ Tab Asnci::find_table(Str inter_type)
 	Int h_orb_dd_idx(mat_hop_pos.size() + 4);
 
     return h_idxs;
+}
+
+Real Asnci::hamilton_value(const Str alpha, const Str beta_i = Str()) {
+    Real value(0.), u(p.hubbU), j = (p.jz);
+    Idx nimp(p.norbs), nband(p.nband), norb(p.norbit);
+    if(beta_i.length() == 0 || (alpha == beta_i)) {
+        Vec<Char> a(alpha.length()); for_Int(i, 0, a.size()) a[i] = alpha[i];
+        Vec<Char> impcfig = a.mat(nband, p.nI2B[0] + 1).tr()[0];
+        value += hop_h.trace();
+
+        // add the U.
+        for_Int(i, 0, nband) if (impcfig[2 * i] == '1' && impcfig[2 * i + 1] == '1') value += u;
+
+        // add the up-down term.
+        for_Int(i, 0, nband)
+            for_Int(j, 0, nband) if (i != j && impcfig[2 * i] == '1' && impcfig[2 * j + 1] == '1')
+                value += u - 2 * j;
+
+        // add the up-up term.
+        for_Int(i, 0, nband)
+            for_Int(j, 0, nband) if (i != j && impcfig[2 * i] == '1' && impcfig[2 * j] == '1')
+                value += u - 3 * j;
+
+        // add the down-down term.
+        for_Int(i, 0, nband)
+            for_Int(j, 0, nband) if (i != j && impcfig[2 * i + 1] == '1' && impcfig[2 * j + 1] == '1')
+                value += u - 3 * j;
+
+        return value;
+    }
+    else {
+        Vec<Char> a(alpha.length()), b(beta_i.length());
+        for_Int(i, 0, a.size()) {a[i] = alpha[i]; b[i] = beta_i[i];}
+        Vec<Char> a_cfig = a.mat(nband, p.nI2B[0] + 1).vec(), b_cfig = b.mat(nband, p.nI2B[0] + 1).vec();
+        Int crt(-1), ann(-1);
+        for_Int(i, 0, norb)
+            if(a_cfig[i] != b_cfig[i]) {
+                if(b_cfig[i] == '1')    ann = i;
+                else if(b_cfig[i] == '0')  crt = i;
+                else (ERR("some thing wrong in here!"));
+            }
+        if(crt >= 0 && ann >= 0) value += crt > ann ? hop_h[crt][ann] : - hop_h[crt][ann];
+        else (ERR("some thing wrong in here!"));
+        return value;
+    }
 }
