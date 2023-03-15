@@ -14,6 +14,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2023.03.03
 // typedef pair<VEC<Str>,VEC<Real>> Nci;
 // typedef pair<VEC<__uint128_t>,VEC<Real>> Nci;
 typedef std::pair<VEC<UInt*>,VEC<Real>> Nci;
+
 class Asnci 
 {
 	const MyMpi& mm;				// parameters
@@ -28,14 +29,20 @@ class Asnci
     // Nci inital;    
 
     Real groundE;
-    Nci trncat;
-    std::map<UInt*, Idx>  cfig_idx;
-
     VEC<Int> mayhop;
+    struct ArrayCompare {
+        bool operator()(const UInt* a, const UInt* b) const {
+            return std::equal(a, a + *a, b);
+        }
+    };
+
 
 public:
-    const MatReal hop_h;    // The hopping H(H_0)
-    const Idx dim;                // The truncated space size
+    const MatReal hop_h;            // The hopping H(H_0)
+    const Idx dim;                  // The truncated space size
+    Nci trncat;                     // The truncation NCI
+    // The cfig's idx
+    std::map<UInt*, Idx, ArrayCompare> cfig_idx;
 
 private:
 
@@ -96,6 +103,9 @@ Asnci(const NORG& norg, Idx trncat_size, const Int mode = 0);
 
 // out put the NORG class with the table
 NORG get_norg(Tab table, Int mode = 0);
+
+// out put the Table
+Tab find_h_idx();
 
 
 };

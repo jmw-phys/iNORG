@@ -42,7 +42,7 @@ Nci Asnci::git_nci(const VecReal& ground_state) {
     for_Idx(i, 0, nosp.dim) groundstate_idx[i]=i;
     VecReal grndste_norm = SQR(ground_state);
     slctsort(grndste_norm, groundstate_idx);
-    for_Int(i, 0, Int(dim/Int(mayhop.size()/2))){
+    for_Int(i, 0, Int(dim / Int(mayhop.size() / 1.5))) {
         // if(grndste_norm[i] > 1e-5){
         {
             Idx ci_idx = groundstate_idx[i];
@@ -63,23 +63,21 @@ void Asnci::expand(Nci& natural_cfgs) {
     Vec<Str> cfigs_core;
     for_Idx(i, 0, cfigs.size()){
         Str cfg_str;
-        for_Int(j, 0, p.norbs) cfg_str += to_binary_string(cfigs[i][j/2]);
+        for_Int(j, 0, p.norbs) cfg_str += to_binary_string(cfigs[i][j]);
         cfigs_core[i] = cfg_str;
     }
     for_Idx(i, 0, cfigs_core.size()){
         for(const auto j : mayhop) if(judge(cfigs_core[i], j)) {
             Str new_cfig(change_cfg_str(cfigs_core[i], j));
-            UInt nbath_orb(0), nums[p.nband];
-            Real rank;
-            for_Int(k, 0, p.nband) {
+            UInt nbath_orb(0), nums[p.norbs];
+            for_Int(k, 0, p.norbs) {
                 Str alpha;
-                for_Int(l, SUM_0toX(p.nI2B, k * 2), SUM_0toX(p.nI2B, (k+1) * 2)) alpha += cfigs_core[i][l];
-                const UInt num {std::stoul(alpha, nullptr, 2)};
-                nums[i] = num;
-                rank = cfi2rank(alpha, cfigs_core);
+                for_Int(l, SUM_0toX(p.nI2B, k * 2), SUM_0toX(p.nI2B, (k+1) * 2)) alpha += new_cfig[l];
+                const UInt num {std::stoul(new_cfig, nullptr, 2)};
+                nums[k] = num;
             }
             cfigs.push_back(nums);
-            ranks.push_back(rank);
+            ranks.push_back(cfi2rank(new_cfig, cfigs_core));
         }
     }
 }
@@ -115,30 +113,37 @@ Tab Asnci::find_table(Str inter_type)
 }
 
 Real Asnci::hamilton_value(const Str alpha, const Str beta_i = Str()) {
-    Real value(0.), u(p.hubbU), j = (p.jz);
+    Real value(0.), uz(p.hubbU), jz = (p.jz);
     Idx nimp(p.norbs), nband(p.nband), norb(p.norbit);
     if(beta_i.length() == 0 || (alpha == beta_i)) {
-        Vec<Char> a(alpha.length()); for_Int(i, 0, a.size()) a[i] = alpha[i];
-        Vec<Char> impcfig = a.mat(nband, p.nI2B[0] + 1).tr()[0];
-        value += hop_h.trace();
+        Vec<Char> a_cfig(alpha.length()); for_Int(i, 0, a_cfig.size()) a_cfig[i] = alpha[i];
+
+        // add the on site energy.
+        for_Int(i, 0, norb) {
+                if(a_cfig[i] == '1') value += hop_h[i][i];
+                else if(a_cfig[i] == '0') ;
+                else (ERR("some thing wrong in here!"));
+            }
+
+        Vec<Char> impcfig = a_cfig.mat(nband, p.nI2B[0] + 1).tr()[0];
 
         // add the U.
-        for_Int(i, 0, nband) if (impcfig[2 * i] == '1' && impcfig[2 * i + 1] == '1') value += u;
+        for_Int(i, 0, nband) if (impcfig[2 * i] == '1' && impcfig[2 * i + 1] == '1') value += uz;
 
         // add the up-down term.
         for_Int(i, 0, nband)
             for_Int(j, 0, nband) if (i != j && impcfig[2 * i] == '1' && impcfig[2 * j + 1] == '1')
-                value += u - 2 * j;
+                value += uz - 2 * jz;
 
         // add the up-up term.
         for_Int(i, 0, nband)
             for_Int(j, 0, nband) if (i != j && impcfig[2 * i] == '1' && impcfig[2 * j] == '1')
-                value += u - 3 * j;
+                value += uz - 3 * jz;
 
         // add the down-down term.
         for_Int(i, 0, nband)
             for_Int(j, 0, nband) if (i != j && impcfig[2 * i + 1] == '1' && impcfig[2 * j + 1] == '1')
-                value += u - 3 * j;
+                value += uz - 3 * jz;
 
         return value;
     }
@@ -153,8 +158,107 @@ Real Asnci::hamilton_value(const Str alpha, const Str beta_i = Str()) {
                 else if(b_cfig[i] == '0')  crt = i;
                 else (ERR("some thing wrong in here!"));
             }
-        if(crt >= 0 && ann >= 0) value += crt > ann ? hop_h[crt][ann] : - hop_h[crt][ann];
+        if(crt >= 0 && ann >= 0) value = crt > ann ? hop_h[crt][ann] : - hop_h[crt][ann];
         else (ERR("some thing wrong in here!"));
         return value;
     }
+}
+
+
+Tab Asnci::find_h_idx()
+{
+	clock_t t_find_hmlt_table;
+	t_find_hmlt_table = clock(); 
+    // TIME_BGN("find_hmlt_table" + NAV(mm.id()), t_find_hmlt_table);
+	VecPartition row_H(mm.np(), mm.id(), dim);
+	Tab h_idxs(3);
+	MatInt mat_hop_pos(hop_h.nrows(),hop_h.ncols());
+	for_Int(i, 0, mat_hop_pos.nrows()) for_Int(j, 0, mat_hop_pos.ncols()) mat_hop_pos[i][j] = i * mat_hop_pos.ncols() + j;
+	Int h_hbd_idx(mat_hop_pos.size()	+ 1);
+	Int h_orb_ud_idx(mat_hop_pos.size() + 2);
+	Int h_orb_uu_idx(mat_hop_pos.size() + 3);
+	Int h_orb_dd_idx(mat_hop_pos.size() + 4);
+
+	// Int h_orb_j_idx(mat_hop_pos.size() + 5);
+
+    const VEC<UInt*>& cfigs(trncat.first);
+    const VEC<Real>&  ranks(trncat.second);
+
+    Real uz(p.hubbU), jz = (p.jz);
+    Idx nimp(p.norbs), nband(p.nband), norb(p.norbit);
+
+	for_Int(h_i, row_H.bgn(), row_H.end()) {
+        Str cfg_str; for_Int(j, 0, p.norbs) cfg_str += to_binary_string(cfigs[h_i][j]);
+        Vec<Char> a_cfig(cfg_str.length()); for_Int(i, 0, a_cfig.size()) a_cfig[i] = cfg_str[i];
+		
+		// To save as sparse matrix, [0]: row number;[1]: colum number;[2]: idx.
+		VecInt h_idx(3, 0);
+		Int sparse_idx(h_i - row_H.bgn());		
+    // ! For the diagonal term:
+        // add the on site energy.
+        for_Int(i, 0, norb) {
+                if(a_cfig[i] == '1') {
+                    h_idx = { sparse_idx, h_i, mat_hop_pos[i][i] + 1 };
+                    for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+                }
+                else if(a_cfig[i] != '0') (ERR("some thing wrong in here!"));
+            }
+
+        // add the interation.
+        Vec<Char> impcfig = a_cfig.mat(nband, p.nI2B[0] + 1).tr()[0];
+
+        // add the U.
+        for_Int(i, 0, nband) if (impcfig[2 * i] == '1' && impcfig[2 * i + 1] == '1') {
+			h_idx = { sparse_idx, h_i, h_hbd_idx};
+			for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+		}
+
+        // add the up-down term.
+        for_Int(i, 0, nband)
+            for_Int(j, 0, nband) if (i != j && impcfig[2 * i] == '1' && impcfig[2 * j + 1] == '1'){
+				h_idx = { sparse_idx, h_i, h_orb_ud_idx};
+				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+			}
+
+        // add the up-up term.
+        for_Int(i, 0, nband)
+            for_Int(j, 0, nband) if (i != j && impcfig[2 * i] == '1' && impcfig[2 * j] == '1'){
+				h_idx = { sparse_idx, h_i, h_orb_uu_idx};
+				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+			}
+
+        // add the down-down term.
+        for_Int(i, 0, nband)
+            for_Int(j, 0, nband) if (i != j && impcfig[2 * i + 1] == '1' && impcfig[2 * j + 1] == '1'){
+				h_idx = { sparse_idx, h_i, h_orb_dd_idx};
+				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+			}
+    // ! off diagonal term:
+        for(const auto j : mayhop) if(judge(cfg_str, j)) {
+            Str new_cfig(change_cfg_str(cfg_str, j));
+            Vec<Char> b_cfig(new_cfig.length()); for_Int(i, 0, b_cfig.size()) b_cfig[i] = new_cfig[i];
+            Int crt(-1), ann(-1);
+            for_Int(i, 0, norb) if(a_cfig[i] != b_cfig[i]) {
+                    if(b_cfig[i] == '1')    ann = i;
+                    else if(b_cfig[i] == '0')  crt = i;
+                    else (ERR("some thing wrong in here!"));
+            }
+            Int Anticommutativity = crt > ann ? 1 : - 1;
+            UInt nums[p.norbs];
+            for_Int(k, 0, p.norbs) {
+                Str alpha;
+                for_Int(l, SUM_0toX(p.nI2B, k * 2), SUM_0toX(p.nI2B, (k+1) * 2)) alpha += new_cfig[l];
+                // const UInt num {std::stoul(new_cfig, nullptr, 2)};
+                nums[k] = stoul(new_cfig, nullptr, 2);
+            }
+            if(crt >= 0 && ann >= 0) {
+
+				h_idx = {sparse_idx, Int(cfig_idx[nums]), Anticommutativity * (mat_hop_pos[crt][ann] + 1)};
+				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+			}
+        }
+	}
+	// TIME_END("t_find_hmlt_table" + NAV(mm.id()), t_find_hmlt_table);
+	for_Int(jj, 0, 3) h_idxs[jj].shrink_to_fit();
+	return std::move(h_idxs);
 }

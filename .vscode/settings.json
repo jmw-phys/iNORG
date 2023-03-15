@@ -10,6 +10,7 @@
         "utility": "cpp",
         "complex": "cpp",
         "fstream": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "iostream": "cpp"
     }
 }

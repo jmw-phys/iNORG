@@ -251,12 +251,11 @@ Str StateStatistics::string() {
 }
 
 UInt* StateStatistics::cfg2nums() {
-	UInt nums[occ_n.nrows()/2];
+	UInt nums[occ_n.nrows()];
 	const VecOnb& cf(cfg.cf);
-	for_Idx(i, 0, cf.size()/2){
+	for_Idx(i, 0, cf.size()){
 		Str cfig;
-		for_Int(j, 0, cf[i * 2].get_ns()) cfig += cf[i * 2][j];
-		for_Int(j, 0, cf[i * 2 + 1].get_ns()) cfig += cf[i * 2 + 1][j];
+		for_Int(j, 0, cf[i].get_ns()) cfig += cf[i][j];
 		const UInt num {std::stoul(cfig, nullptr, 2)};
 		nums[i] = num;
 	}
