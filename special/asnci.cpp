@@ -84,16 +84,16 @@ void Asnci::expand(Nci& natural_cfgs) {
 
 Nci Asnci::truncation(const Nci& inital) {
     VEC<std::array<UInt,10>>   cfigs(dim);
-    VEC<Real>                  rank(dim);
+    VEC<Real>                  ranks(dim);
 
-    slctsort(rank, cfigs);
+    slctsort(ranks, cfigs);
     for_Int(cunt, 0, dim){// add the map
         cfig_idx.insert(pair<array<UInt, 10>, Int>(inital.first[cunt], cunt));
         cfigs.push_back(move(inital.first[cunt]));
-        rank.push_back(move(inital.second[cunt]));
+        ranks.push_back(move(inital.second[cunt]));
     }
     cfigs.shrink_to_fit(); ranks.shrink_to_fit();
-    return pair(cfigs, rank);
+    return pair(cfigs, ranks);
 }
 
 Tab Asnci::find_table(Str inter_type)
