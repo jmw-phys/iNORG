@@ -77,4 +77,6 @@ public:
 	Str string();
 
 	std::array<UInt,10> cfg2nums();
+	
+	std::array<UInt,10> cfg2ex2nums(Int ex_pos);
 };

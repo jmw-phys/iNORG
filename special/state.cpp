@@ -263,6 +263,23 @@ std::array<UInt,10> StateStatistics::cfg2nums() {
 	return std::move(nums);
 }
 
+std::array<UInt,10> StateStatistics::cfg2ex2nums(Int ex_pos) {
+	// UInt nums[occ_n.nrows()];
+	std::array<UInt,10> nums;
+	MatOnb cf_temp(cfg.cf.mat(occ_n.nrows(), occ_n.ncols()));
+	if(ex_pos > 0) cf_temp[ABS(ex_pos) - 1][0].crt(0);
+	if(ex_pos < 0) cf_temp[ABS(ex_pos) - 1][0].ann(0);
+		
+	const VecOnb cf(cf_temp.vec());
+	for_Idx(i, 0, cf.size()){
+		Str cfig;
+		for_Int(j, 0, cf[i].get_ns()) cfig += cf[i][j];
+		const UInt num {std::stoul(cfig, nullptr, 2)};
+		nums[i] = num;
+	}
+	return std::move(nums);
+}
+
 //---------------------------------------------Private function---------------------------------------------
 
 //For the assertion that the imp is in the first division[0].

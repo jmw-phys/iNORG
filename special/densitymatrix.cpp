@@ -13,7 +13,7 @@ DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i
 {
 }
 
-DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, const Tab& tab) :Operator(mm_i, prmtr_i, scsp_i, tab)
+DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, const Tab& tab) :Operator(mm_i, prmtr_i, tab)
 {
 }
 

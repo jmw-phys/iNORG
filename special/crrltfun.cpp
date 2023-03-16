@@ -23,6 +23,12 @@ CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_
     ex_state(project_uplwer_parical_space(vgs_i, crtorann, pos_in_set, pos_in_div))
 {}
 
+CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab& table, const VecReal& ex_state_i, const Int crtorann_i)
+    :Operator(mm_i, prmtr_i, table),
+    old_nosp(NocSpace(mm_i, prmtr_i)), new_nosp(NocSpace(mm_i, prmtr_i)), crtorann(crtorann_i),
+    ex_state(ex_state_i)
+{}
+
 
 // ?CrrltFun::CrrltFun(const NocSpace& old_nosp_i, const Operator& main_op, const VecReal& vgs_i, const Int position = 0)
 // ?    :Operator(main_op),

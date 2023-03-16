@@ -11,18 +11,18 @@ using namespace std;
 
 Asnci::Asnci(const NORG& norg, Idx trncat_size):
     dim(trncat_size), mm(norg.mm), p(norg.p), hop_h(norg.scsp.hopint), mayhop(find_mayhop()),
-    nosp(norg.scsp), groundE(norg.groune_lst), groundS(norg.final_ground_state)
+    nosp(norg.scsp), groundE(norg.groune_lst), core_dim(Int(trncat_size / Int(mayhop.size() / 1.5)))
 {
     // inital = git_nci(norg);
-    trncat = truncation(git_nci(groundS));
+    trncat = truncation(git_nci(norg.final_ground_state));
 }
 
 Asnci::Asnci(const NORG& norg, Idx trncat_size, Int ex_pos):
     dim(trncat_size), mm(norg.mm), p(norg.p), hop_h(norg.scsp.hopint), mayhop(find_mayhop()),
-    nosp(norg.scsp), groundE(norg.groune_lst), groundS(norg.final_ground_state)
+    nosp(norg.scsp), groundE(norg.groune_lst), core_dim(Int(trncat_size / Int(mayhop.size() / 1.5)))
 {
     // inital = git_nci(norg);
-    trncat = truncation(git_nci(groundS, ex_pos));
+    trncat = truncation(git_nci(norg.final_ground_state, ex_pos));
 }
 
 NORG Asnci::get_norg(Tab table, Int mode) {
@@ -32,7 +32,7 @@ NORG Asnci::get_norg(Tab table, Int mode) {
 }
 
 
-void Asnci::asnci_gimp(Green& imp_i, Int pos)
+void Asnci::asnci_gimp(Green& imp_i, Int ex_pos)
 {
 	// VecInt idx(MAX(or_deg),0); Int cter(0);
 	// for_Int(i, 0, or_deg.size()) if(cter < or_deg[i]) idx[cter++] = i; 
@@ -41,18 +41,19 @@ void Asnci::asnci_gimp(Green& imp_i, Int pos)
 	// 	for(const auto ii: difference)
 	// 	{
 			// Operator opr_sub(mm, p, find_h_idx());
-			CrrltFun temp_green(mm, p, trncat, find_h_idx(), groundS, ABS(pos * 2));
+            Int crtorann = ex_pos>0 ? 1: -1;
+			CrrltFun temp_green(mm, p, find_h_idx(), find_ex_state(), crtorann);
 			if(imp_i.type_info() == STR("ImGreen")) {
 				ImGreen green_function(1, p);
-				if(pos > 0) temp_green.find_gf_greater(groundE, green_function);
-				if(pos < 0) temp_green.find_gf_lesser(groundE, green_function);
-				for_Int(n, 0, green_function.nomgs) imp_i[n][pos][pos] += green_function[n][0][0];
+				if(ex_pos > 0) temp_green.find_gf_greater(groundE, green_function);
+				if(ex_pos < 0) temp_green.find_gf_lesser(groundE, green_function);
+				for_Int(n, 0, green_function.nomgs) imp_i[n][ex_pos - 1][ex_pos - 1] += green_function[n][0][0];
 			}
 			if(imp_i.type_info() == STR("ReGreen")) {
 				ReGreen green_function(1, p);
-				if(pos > 0) temp_green.find_gf_greater(groundE, green_function);
-				if(pos < 0) temp_green.find_gf_lesser(groundE, green_function);
-				for_Int(n, 0, green_function.nomgs) imp_i[n][pos][pos] += green_function[n][0][0];
+				if(ex_pos > 0) temp_green.find_gf_greater(groundE, green_function);
+				if(ex_pos < 0) temp_green.find_gf_lesser(groundE, green_function);
+				for_Int(n, 0, green_function.nomgs) imp_i[n][ex_pos - 1][ex_pos - 1] += green_function[n][0][0];
 			}
 	// 	}
 	// 	if (mm) PIO("finished the " + STR(i) + " find_g_norg   " + present());
@@ -71,53 +72,55 @@ VEC<Int> Asnci::find_mayhop() {
     return move(mayhop_i);
 }
 
+// get the norg ground state to Nci's space
 Nci Asnci::git_nci(const VecReal& ground_state) {
     Nci                         natural_cfg;
     VEC<std::array<UInt,10>>&   cfigs(natural_cfg.first);
-    VEC<Real>&                  ranks(natural_cfg.second);
+    VEC<Real>&                  coefs(natural_cfg.second);
 
     VecIdx groundstate_idx(nosp.dim);
     for_Idx(i, 0, nosp.dim) groundstate_idx[i]=i;
     VecReal grndste_norm = SQR(ground_state);
-    slctsort(grndste_norm, groundstate_idx);
-    for_Int(i, 0, Int(dim / Int(mayhop.size() / 1.5))) {
+    slctsort(grndste_norm, groundstate_idx); 
+    for_Int(i, 0, core_dim) {
         // if(grndste_norm[i] > 1e-5){
         {
-            Idx ci_idx = groundstate_idx[i];
+            const Idx ci_idx = groundstate_idx[i];
             StateStatistics cig(ci_idx, nosp.wherein_NocSpace(ci_idx), nosp);
             cfigs.push_back(cig.cfg2nums());
-            ranks.push_back(move(grndste_norm[i]));
+            coefs.push_back(ground_state[ci_idx]);
         }
     }
-    expand(natural_cfg); cfigs.shrink_to_fit(); ranks.shrink_to_fit();
+    expand(natural_cfg); cfigs.shrink_to_fit(); coefs.shrink_to_fit();
     return natural_cfg;
 }
 
+// get the norg ground state's ex-state to Nci's space
 Nci Asnci::git_nci(const VecReal& ground_state, const Int ex_pos) {
     Nci                         natural_cfg;
     VEC<std::array<UInt,10>>&   cfigs(natural_cfg.first);
-    VEC<Real>&                  ranks(natural_cfg.second);
+    VEC<Real>&                  coefs(natural_cfg.second);
 
     VecIdx groundstate_idx(nosp.dim);
     for_Idx(i, 0, nosp.dim) groundstate_idx[i]=i;
     VecReal grndste_norm = SQR(ground_state);
     slctsort(grndste_norm, groundstate_idx);
-    for_Int(i, 0, Int(dim / Int(mayhop.size() / 1.5))) {
-            Idx ci_idx = groundstate_idx[i];
-            StateStatistics cig(ci_idx, nosp.wherein_NocSpace(ci_idx), nosp);
+    for_Int(i, 0, core_dim) {
+        const Idx ci_idx = groundstate_idx[i];
+        StateStatistics cig(ci_idx, nosp.wherein_NocSpace(ci_idx), nosp);
         if(check_ifinex(cig, ex_pos)){
-            cfigs.push_back(cig.cfg2nums());
-            ranks.push_back(move(grndste_norm[i]));
+            cfigs.push_back(cig.cfg2ex2nums(ex_pos));
+            coefs.push_back(ground_state[ci_idx]);
         }
     }
-    expand(natural_cfg); cfigs.shrink_to_fit(); ranks.shrink_to_fit();
+    expand(natural_cfg); cfigs.shrink_to_fit(); coefs.shrink_to_fit();
     return natural_cfg;
 }
 
 
 void Asnci::expand(Nci& natural_cfgs) {
     VEC<std::array<UInt,10>>&   cfigs(natural_cfgs.first);
-    VEC<Real>&                  ranks(natural_cfgs.second);
+    VEC<Real>&                  coefs(natural_cfgs.second);
 
     Vec<Str> cfigs_core;
     for_Idx(i, 0, cfigs.size()){
@@ -136,23 +139,25 @@ void Asnci::expand(Nci& natural_cfgs) {
                 nums[k] = num;
             }
             cfigs.push_back(nums);
-            ranks.push_back(cfi2rank(new_cfig, cfigs_core));
+            coefs.push_back(cfi2rank(new_cfig, cfigs_core));
         }
     }
 }
 
-Nci Asnci::truncation(const Nci& inital) {
+Nci Asnci::truncation(Nci inital) {
     VEC<std::array<UInt,10>>   cfigs(dim);
-    VEC<Real>                  ranks(dim);
+    VEC<Real>                  coefs(dim);
 
-    slctsort(ranks, cfigs);
+    VecReal norm = SQR(Vec(inital.second));
+    slctsort(norm, inital.first); norm = SQR(Vec(inital.second));
+    slctsort(norm, inital.second);
     for_Int(cunt, 0, dim){// add the map
         cfig_idx.insert(pair<array<UInt, 10>, Int>(inital.first[cunt], cunt));
         cfigs.push_back(move(inital.first[cunt]));
-        ranks.push_back(move(inital.second[cunt]));
+        coefs.push_back(move(inital.second[cunt]));
     }
-    cfigs.shrink_to_fit(); ranks.shrink_to_fit();
-    return pair(cfigs, ranks);
+    cfigs.shrink_to_fit(); coefs.shrink_to_fit();
+    return pair(cfigs, coefs);
 }
 
 Tab Asnci::find_table(Str inter_type)

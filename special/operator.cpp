@@ -291,23 +291,6 @@ VecReal Operator::sn_prtcl_ex_state(const Int imp_div, const VecReal ground_stat
 	return std::move(ex_state);
 }
 
-// (deprecated!!!)ONLY use for the imp_postition.
-VecReal Operator::particle_number_Inner_product(const Int imp_div, const Int crtann) const
-{
-	VecPartition row_H(mm.np(), mm.id(), dim);
-	VecReal ex_state_part(row_H.len(), 0.);
-	for_Int(h_i, row_H.bgn(), row_H.end())
-	{
-		Int subscsp(scsp.wherein_NocSpace(h_i));
-		ComDivs cfg(h_i - scsp.idx_div[subscsp], (scsp.div[subscsp]), (scsp.sit_mat), true);
-		if (crtann == +1)if (cfg.cf[imp_div].isuno(0))ex_state_part[h_i - row_H.bgn()] = 1.;
-		if (crtann == -1)if (cfg.cf[imp_div].isocc(0))ex_state_part[h_i - row_H.bgn()] = 1.;
-	}
-	VecReal ex_state(dim, 0.);
-	ex_state = mm.Allgatherv(ex_state_part, row_H);
-	return ex_state;
-}
-
 //------------------------------------------------------------------ io ------------------------------------------------------------------
 
 void Operator::save_the_Tab(Tab& tab, Str name) const{

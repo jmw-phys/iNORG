@@ -26,12 +26,12 @@ class Asnci
 	const Prmtr& p;					// parameters
 	const NocSpace& nosp;			// parameters
     const Real& groundE;            // The final ground state energy
-    const VecReal& groundS;         // The final ground state 
 
     VEC<Int> mayhop;                // the position of orbital hop may happen
     
 public:
     const MatReal hop_h;            // The hopping H(H_0)
+    const Idx core_dim;             // The core space size
     const Idx dim;                  // The truncated space size
     Nci trncat;                     // The truncation NCI
     // The cfig's idx
@@ -93,10 +93,11 @@ private:
         return rank;
     }
 
-    Nci truncation(const Nci& inital);
+    Nci truncation(Nci inital);
 
     Tab find_table(Str inter_type);
 
+    VecReal find_ex_state() {return VecReal(trncat.second); }
 public:
 
 // Asnci: mode = 0: assume NO converged;  
@@ -104,7 +105,7 @@ public:
 // Asnci(const NORG& norg, Idx trncat_size, const Int mode = 0);
 Asnci(const NORG& norg, Idx trncat_size);
 
-//
+// to use the ASNCI here we suppose the we alreadly find the ground state from NORG.
 Asnci(const NORG& norg, Idx trncat_size, Int ex_pos);
 
 // out put the NORG class with the table

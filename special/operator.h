@@ -32,12 +32,6 @@ public:
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i);
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab &tab);
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i, Str tab_name);
-	// For the ASNCI.
-	// Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, Asnci& nc);
-	
-	// Operator::Operator(const Operator &per):
-	// mm(per.mm), p(per.p), scsp(per.scsp), table(per.table) , 
-	// groundstate_energy(per.groundstate_energy), ground_state(per.ground_state){}
 	
 	// [i][0]row Idx; [i][1]colum Idx;[i][2] for the position for the hopint.
 	Tab find_h_idx();
@@ -55,9 +49,6 @@ public:
 	//here only support for the div[0] 
 	//$$\left|f_{0}\right\rangle=A\left|\psi_{0}\right\rangle$$
 	VecReal sn_prtcl_ex_state(const Int ex_orbital_position, const VecReal ground_state, const Int crtann)const;
-
-	//(deprecated)
-	VecReal particle_number_Inner_product(const Int position, const Int crtann)const;	
 
 	void save_the_Tab(Tab& tab, Str name) const;
 	Tab read_the_Tab(Str name) const;
