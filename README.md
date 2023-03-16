@@ -15,3 +15,8 @@ Version: v1.0.03 @ 2023.03.16:
     finished: checked the code has no bug; find these bug and pass though the compiler.
     doing   : Need to Projection form ground space in (n+-1) space. 
     tinking : need to change the Nci structure, since the compiler's warning.
+
+Version: v1.0.04 @ 2023.03.16:
+    finished: resit the Nci's structure, so no compiler's warning now.
+    next do : Need to Projection form ground space in (n+-1) space. 
+    tinking : is it fine not to build the H in (n \pm 1) subspace?

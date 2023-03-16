@@ -250,8 +250,9 @@ Str StateStatistics::string() {
 	return cfig;
 }
 
-UInt* StateStatistics::cfg2nums() {
-	UInt nums[occ_n.nrows()];
+std::array<UInt,10> StateStatistics::cfg2nums() {
+	// UInt nums[occ_n.nrows()];
+	std::array<UInt,10> nums;
 	const VecOnb& cf(cfg.cf);
 	for_Idx(i, 0, cf.size()){
 		Str cfig;
@@ -259,7 +260,7 @@ UInt* StateStatistics::cfg2nums() {
 		const UInt num {std::stoul(cfig, nullptr, 2)};
 		nums[i] = num;
 	}
-	return nums;
+	return std::move(nums);
 }
 
 //---------------------------------------------Private function---------------------------------------------

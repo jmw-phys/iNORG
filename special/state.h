@@ -76,5 +76,5 @@ public:
 
 	Str string();
 
-	UInt* cfg2nums();
+	std::array<UInt,10> cfg2nums();
 };

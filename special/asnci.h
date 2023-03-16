@@ -13,7 +13,11 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2023.03.03
 
 // typedef pair<VEC<Str>,VEC<Real>> Nci;
 // typedef pair<VEC<__uint128_t>,VEC<Real>> Nci;
-typedef std::pair<VEC<UInt*>,VEC<Real>> Nci;
+// typedef std::pair<VEC<UInt>,VEC<Real>> Nci;
+// typedef std::pair<MatInt,VecReal> Nci;
+
+
+typedef std::pair<VEC<std::array<UInt,10>>,VEC<Real>> Nci;
 typedef Vec<VEC<Int>> Tab;
 
 class Asnci 
@@ -31,11 +35,7 @@ class Asnci
 
     Real groundE;
     VEC<Int> mayhop;
-    struct ArrayCompare {
-        bool operator()(const UInt* a, const UInt* b) const {
-            return std::equal(a, a + *a, b);
-        }
-    };
+    
 
 
 public:
@@ -43,7 +43,7 @@ public:
     const Idx dim;                  // The truncated space size
     Nci trncat;                     // The truncation NCI
     // The cfig's idx
-    std::map<UInt*, Idx, ArrayCompare> cfig_idx;
+    std::map<std::array<UInt,10>, Int> cfig_idx;
 
 private:
 
@@ -92,7 +92,7 @@ private:
         return rank;
     }
 
-    Nci truncation(Nci inital);
+    Nci truncation(const Nci& inital);
 
     Tab find_table(Str inter_type);
 

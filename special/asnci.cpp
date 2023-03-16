@@ -34,9 +34,9 @@ VEC<Int> Asnci::find_mayhop() {
 }
 
 Nci Asnci::git_nci(const VecReal& ground_state) {
-    Nci         natural_cfg;
-    VEC<UInt*>& cfigs(natural_cfg.first);
-    VEC<Real>&  ranks(natural_cfg.second);
+    Nci                         natural_cfg;
+    VEC<std::array<UInt,10>>&   cfigs(natural_cfg.first);
+    VEC<Real>&                  ranks(natural_cfg.second);
 
     VecIdx groundstate_idx(nosp.dim);
     for_Idx(i, 0, nosp.dim) groundstate_idx[i]=i;
@@ -48,7 +48,7 @@ Nci Asnci::git_nci(const VecReal& ground_state) {
             Idx ci_idx = groundstate_idx[i];
             StateStatistics cig(ci_idx, nosp.wherein_NocSpace(ci_idx), nosp);
             cfigs.push_back(cig.cfg2nums());
-            ranks.push_back(grndste_norm[i]);
+            ranks.push_back(move(grndste_norm[i]));
         }
     }
     expand(natural_cfg); cfigs.shrink_to_fit(); ranks.shrink_to_fit();
@@ -57,8 +57,8 @@ Nci Asnci::git_nci(const VecReal& ground_state) {
 
 
 void Asnci::expand(Nci& natural_cfgs) {
-    VEC<UInt*>& cfigs(natural_cfgs.first);
-    VEC<Real>&  ranks(natural_cfgs.second);
+    VEC<std::array<UInt,10>>&   cfigs(natural_cfgs.first);
+    VEC<Real>&                  ranks(natural_cfgs.second);
 
     Vec<Str> cfigs_core;
     for_Idx(i, 0, cfigs.size()){
@@ -69,7 +69,7 @@ void Asnci::expand(Nci& natural_cfgs) {
     for_Idx(i, 0, cfigs_core.size()){
         for(const auto j : mayhop) if(judge(cfigs_core[i], j)) {
             Str new_cfig(change_cfg_str(cfigs_core[i], j));
-            UInt nbath_orb(0), nums[p.norbs];
+            std::array<UInt,10> nums;
             for_Int(k, 0, p.norbs) {
                 Str alpha;
                 for_Int(l, SUM_0toX(p.nI2B, k * 2), SUM_0toX(p.nI2B, (k+1) * 2)) alpha += new_cfig[l];
@@ -82,17 +82,17 @@ void Asnci::expand(Nci& natural_cfgs) {
     }
 }
 
-Nci Asnci::truncation(Nci inital) {
-
-    VEC<UInt*>& cfigs(inital.first);
-    VEC<Real>&  rank(inital.second);
+Nci Asnci::truncation(const Nci& inital) {
+    VEC<std::array<UInt,10>>   cfigs(dim);
+    VEC<Real>                  rank(dim);
 
     slctsort(rank, cfigs);
-    for_Idx(cunt, 0, dim){// add the map
-        cfigs[cunt]  = inital.first[cunt];
-        rank[cunt]  = inital.second[cunt];
-        cfig_idx.insert(pair<UInt*, Int>(cfigs[cunt], cunt));
+    for_Int(cunt, 0, dim){// add the map
+        cfig_idx.insert(pair<array<UInt, 10>, Int>(inital.first[cunt], cunt));
+        cfigs.push_back(move(inital.first[cunt]));
+        rank.push_back(move(inital.second[cunt]));
     }
+    cfigs.shrink_to_fit(); ranks.shrink_to_fit();
     return pair(cfigs, rank);
 }
 
@@ -181,8 +181,8 @@ Tab Asnci::find_h_idx()
 
 	// Int h_orb_j_idx(mat_hop_pos.size() + 5);
 
-    const VEC<UInt*>& cfigs(trncat.first);
-    const VEC<Real>&  ranks(trncat.second);
+    const VEC<std::array<UInt,10>>&   cfigs(trncat.first);
+    const VEC<Real>&                  ranks(trncat.second);
 
     Real uz(p.hubbU), jz = (p.jz);
     Idx nimp(p.norbs), nband(p.nband), norb(p.norbit);
@@ -244,7 +244,7 @@ Tab Asnci::find_h_idx()
                     else (ERR("some thing wrong in here!"));
             }
             Int Anticommutativity = crt > ann ? 1 : - 1;
-            UInt nums[p.norbs];
+            std::array<UInt,10>   nums;
             for_Int(k, 0, p.norbs) {
                 Str alpha;
                 for_Int(l, SUM_0toX(p.nI2B, k * 2), SUM_0toX(p.nI2B, (k+1) * 2)) alpha += new_cfig[l];
@@ -252,8 +252,7 @@ Tab Asnci::find_h_idx()
                 nums[k] = stoul(new_cfig, nullptr, 2);
             }
             if(crt >= 0 && ann >= 0) {
-
-				h_idx = {sparse_idx, Int(cfig_idx[nums]), Anticommutativity * (mat_hop_pos[crt][ann] + 1)};
+				h_idx = {sparse_idx, cfig_idx.at(nums), Anticommutativity * (mat_hop_pos[crt][ann] + 1)};
 				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 			}
         }
