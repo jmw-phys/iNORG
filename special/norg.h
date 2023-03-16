@@ -26,7 +26,7 @@ class NORG {
 	VecReal occnum_lst;						// occupation number record after one optimize iteration.
 	Real	groune_pre;						// ground state energy record before one optimize iteration.
 	Real energy_err;						// ground state energy Error: error between the two NORG iterations
-	Real occupation_err;						// occupation Error			: error between the two NORG iterations
+	Real occupation_err;					// occupation Error			: error between the two NORG iterations
 	Real correctionerr;						// correction Error			: error between two correction vector modify
 	mutable VecCmplx checkg_pre;			// correction vec check point before one optimize iteration.
 	mutable VecCmplx checkg_lst;			// correction vec check point after one optimize iteration.
@@ -134,7 +134,6 @@ public:
 	void get_gimp(Green& imp_i, VecInt or_deg);
 
 	// void asnci_gimp(Green& imp_i);
-	void asnci_gimp(Green& imp_i, VecInt or_deg);
 	
 	void find_g0(Green& imp_i);
 //--------------------------------------- for the io---------------------------------

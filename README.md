@@ -1,22 +1,27 @@
 # NORG
 The version of NORG for ZEN
 
-Version: v1.0.01 @ 2023.03.14:
+Version: v1.0.01 @ 2023.03.14
     finished: the NC space construct.
     doing   : the NC space Hop;{find_h_idx(const Asnci& nc)}.
     tinking : how to get the projection form ground space in (n+-1) space. 
 
-Version: v1.0.02 @ 2023.03.15:
+Version: v1.0.02 @ 2023.03.15
     finished: finish nc.find_h_idx(); fix the bug for the hamilton_value; fix the cfg2nums() function.
     doing   : Need to Projection form ground space in (n+-1) space. 
     tinking : check the code has no bug; check the Nci structure has no problem.
 
-Version: v1.0.03 @ 2023.03.16:
+Version: v1.0.03 @ 2023.03.16
     finished: checked the code has no bug; find these bug and pass though the compiler.
     doing   : Need to Projection form ground space in (n+-1) space. 
     tinking : need to change the Nci structure, since the compiler's warning.
 
-Version: v1.0.04 @ 2023.03.16:
+Version: v1.0.04 @ 2023.03.16
     finished: resit the Nci's structure, so no compiler's warning now.
     next do : Need to Projection form ground space in (n+-1) space. 
     tinking : is it fine not to build the H in (n \pm 1) subspace?
+
+Version: v1.0.05 @ 2023.03.16
+    finished: finished Projection form ground space in (n+-1) space. And make some cleaning.
+    next do : Let CrrltFun support Asnci.
+    tinking : Is it fine Operator construct nor use scsp's info, and if it's fine not to check the nppso?

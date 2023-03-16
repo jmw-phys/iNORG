@@ -8,17 +8,17 @@ using namespace std;
 
 
 Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i):
-	mm(mm_i), p(prmtr_i), scsp(s_i), table(find_h_idx())
+	mm(mm_i), p(prmtr_i), scsp(s_i), table(find_h_idx()), dim(s_i.dim)
 {
 }
 
-Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i,const Tab &per_table):
-	mm(mm_i), p(prmtr_i), scsp(s_i), table(per_table)
+Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i,const Tab &tab):
+	mm(mm_i), p(prmtr_i), scsp(NocSpace(mm_i, prmtr_i)), table(tab), dim(tab[0].size())
 {
 }
 
 Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i, Str tab_name):
-	mm(mm_i), p(prmtr_i), scsp(s_i), table(read_the_Tab(tab_name))
+	mm(mm_i), p(prmtr_i), scsp(s_i), table(read_the_Tab(tab_name)), dim(s_i.dim)
 {
 }
 
@@ -28,73 +28,11 @@ Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i,
 // {
 // }
 
-// (Deactivate) SparseH;
-SparseMatReal Operator::find_hmlt()
-{
-	clock_t t_find_hmlt;
-	TIME_BGN("find_hmlt" + NAV(mm.id()), t_find_hmlt);
-	VecPartition row_H(mm.np(), mm.id(), scsp.dim);
-	SparseMatReal hmlt_splited(row_H.len(), scsp.dim, mm);
-	// if (mm) WRN("H begin and end" + NAV3(row_H.len(), row_H.bgn(), row_H.end()));
-	
-	Int numbercount(0);		//test variable
-	for_Int(h_i, row_H.bgn(), row_H.end())
-	{
-		map<Idx, Real> va;
-		StateStatistics a(h_i, scsp.wherein_NocSpace(h_i), scsp);
-		// for the H_0 and H_imp (two fermi term diagonal) 
-		va[h_i] = 0.;
-		for (const auto &x : a.filled_spinless)
-		{
-			for(const auto &i : x)
-			{
-				va[h_i] += scsp.hopint[i][i];
-			}
-		}
-
-#define Nup a.cfg.cf
-#define Ndw a.cfg.cf
-#define ndiv scsp.ndivs
-		for_Int(i, 0, p.norg_sets)
-		{
-			va[h_i] -= scsp.mu[i] * Nup[i * ndiv][i] + scsp.mu[i] * Ndw[i * ndiv + 1][i];
-			va[h_i] += scsp.u_hbd * Nup[i * ndiv][i] * Ndw[i * ndiv + 1][i];
-			for_Int(j, 0, p.norg_sets) if (i != j)
-			{
-				va[h_i] += (scsp.u_hbd - 2 * scsp.j_ob) * Nup[i * ndiv][i] * Ndw[i * ndiv + 1][j];
-				va[h_i] += (scsp.u_hbd - 3 * scsp.j_ob) * 0.5 * Nup[i * ndiv][i] * Nup[i * ndiv][j];
-				va[h_i] += (scsp.u_hbd - 3 * scsp.j_ob) * 0.5 * Ndw[i * ndiv + 1][i] * Ndw[i * ndiv + 1][j];
-			}
-		}
-		// off_diagonal_term
-		// [i][0]:annihilation orbit's position; [i][1]:creation orbit's positon; [i][2]:Colum idx(i); [i][3]:sign(anticommutativity)
-		vector<VecInt> off_dt;
-		for_Int(idx_sets, 0, p.norg_sets){
-			vector<VecInt> off_dt_next(a.find_each_spiless_group_off_diagonal_term(a.divocchop_ingroup(a.div_idx, idx_sets),idx_sets));
-			off_dt.insert(off_dt.end(), off_dt_next.begin(), off_dt_next.end());
-		} 
-		for_Int(i, 0, off_dt.size()) {
-			if (va.find(off_dt[i][2]) == va.end()) va[off_dt[i][2]] = 0.;
-			else ERR("TO Think why off dianago has term?");
-			va[off_dt[i][2]] += off_dt[i][3] * scsp.hopint[off_dt[i][1]][off_dt[i][0]];	// for the hopintmatrix C^+C at imp is 0.
-		}
-		Int count(0);
-		for (auto it : va) if (it.second != 0.) { 
-			hmlt_splited.addelement(it.second, it.first, h_i - row_H.bgn()); 
-			++count;
-		}
-		if (count == 0)hmlt_splited.add_empty_row(h_i - row_H.bgn());
-		numbercount += va.size();
-	}
-	TIME_END("find_hmlt" + NAV2(mm.id(),numbercount), t_find_hmlt);
-	return hmlt_splited;
-}
-
 Tab Operator::find_h_idx()
 {
 	clock_t t_find_hmlt_table;
 	t_find_hmlt_table = clock(); // TIME_BGN("find_hmlt_table" + NAV(mm.id()), t_find_hmlt_table);
-	VecPartition row_H(mm.np(), mm.id(), scsp.dim);
+	VecPartition row_H(mm.np(), mm.id(), dim);
 	Tab h_idxs(3);
 	MatInt mat_hop_pos(scsp.hopint.nrows(),scsp.hopint.ncols());
 	for_Int(i, 0, mat_hop_pos.nrows()) for_Int(j, 0, mat_hop_pos.ncols()) mat_hop_pos[i][j] = i * mat_hop_pos.ncols() + j;
@@ -276,8 +214,8 @@ SparseMatReal Operator::find_hmlt(const Tab h_idx) const
 {
 	// clock_t t_find_hmlt;
 	// TIME_BGN("find_hmlt" + NAV(mm.id()), t_find_hmlt);
-	VecPartition row_H(mm.np(), mm.id(), scsp.dim);
-	SparseMatReal hmlt_splited(row_H.len(), scsp.dim, mm);
+	VecPartition row_H(mm.np(), mm.id(), dim);
+	SparseMatReal hmlt_splited(row_H.len(), dim, mm);
 	Real diagonal(0.);	Bool flag(false);
 	for_Idx(pos, 0, h_idx[2].size())
 	{
@@ -338,7 +276,7 @@ MatReal Operator::lowest_eigpairs(const Idx n, bool if_need_fast, Int wish_nev)
 
 VecReal Operator::sn_prtcl_ex_state(const Int imp_div, const VecReal ground_state, const Int crtann) const
 {
-	VecPartition row_H(mm.np(), mm.id(), scsp.dim);
+	VecPartition row_H(mm.np(), mm.id(), dim);
 	VecReal ex_state_part(row_H.len(), 0.);
 	for_Int(h_i, row_H.bgn(), row_H.end())
 	{
@@ -348,7 +286,7 @@ VecReal Operator::sn_prtcl_ex_state(const Int imp_div, const VecReal ground_stat
 		if (crtann == -1)if (cfg.cf[imp_div * scsp.ndivs].isocc(0))ex_state_part[h_i - row_H.bgn()] = 1.;
 	}
 	ex_state_part *= ground_state.truncate(row_H.bgn(), row_H.end());
-	VecReal ex_state(scsp.dim, 0.);
+	VecReal ex_state(dim, 0.);
 	ex_state = mm.Allgatherv(ex_state_part, row_H);
 	return std::move(ex_state);
 }
@@ -356,7 +294,7 @@ VecReal Operator::sn_prtcl_ex_state(const Int imp_div, const VecReal ground_stat
 // (deprecated!!!)ONLY use for the imp_postition.
 VecReal Operator::particle_number_Inner_product(const Int imp_div, const Int crtann) const
 {
-	VecPartition row_H(mm.np(), mm.id(), scsp.dim);
+	VecPartition row_H(mm.np(), mm.id(), dim);
 	VecReal ex_state_part(row_H.len(), 0.);
 	for_Int(h_i, row_H.bgn(), row_H.end())
 	{
@@ -365,7 +303,7 @@ VecReal Operator::particle_number_Inner_product(const Int imp_div, const Int crt
 		if (crtann == +1)if (cfg.cf[imp_div].isuno(0))ex_state_part[h_i - row_H.bgn()] = 1.;
 		if (crtann == -1)if (cfg.cf[imp_div].isocc(0))ex_state_part[h_i - row_H.bgn()] = 1.;
 	}
-	VecReal ex_state(scsp.dim, 0.);
+	VecReal ex_state(dim, 0.);
 	ex_state = mm.Allgatherv(ex_state_part, row_H);
 	return ex_state;
 }
@@ -380,7 +318,7 @@ void Operator::save_the_Tab(Tab& tab, Str name) const{
 	VecInt v_size = mm.Allgatherv(v_size_i, split_v_size);
 	if(mm) {// write the Tab's size's info
 		OFS ofs;	ofs.open(name + ".inf");
-		ofs << setw(9) << "dim" << setw(p_Real) << scsp.dim << endl;
+		ofs << setw(9) << "dim" << setw(p_Real) << dim << endl;
 		ofs << setw(9) << "size" << setw(p_Real) << size << endl;
 		for_Int(i, 0, mm.np())	{
 			ofs << setw(9) << "size_np"+STR(i) << setw(p_Real) << v_size[i] << endl;

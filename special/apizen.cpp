@@ -13,68 +13,23 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	p.after_modify_prmtr(); p.recalc_partical_number();
 	if(mm) p.print();
 	ImGreen hb(nband, p);
-	// {// add the symmetry (part 1/2)
-	// 	VecCmplx temp_hyb(imfrq_hybrid_function.ncols());
-	// 	for_Int(i, 0, hb.nomgs) temp_hyb[i] = SUM(imfrq_hybrid_function.tr()[i])/Real(nband);
-	// 	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband) imfrq_hybrid_function[i][j] = temp_hyb[j];
-	// 	p.eimp = AVG(p.eimp);
-	// }
 	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)  hb.g[j][i][i] = - imfrq_hybrid_function[i][j];
 	hb.write_zen("hb_zen", "Read");
 	Bath bth(mm, p);
 	bth.bath_fit(hb, or_deg_idx.truncate(0,nband));					if(mm)	bth.write_ose_hop(dmft_cnt);
-	// {// add the symmetry (part 2/2)
-	// 	Int temp_size(bth.vec_ose[0].size());
-	// 	VecReal ose(temp_size, 0.), hop(temp_size, 0.);
-	// 	for_Int(i, 0, temp_size) for_Int(j,0,nband) {ose[i] += bth.vec_ose[j][i];hop[i] += bth.vec_hop[j][i];}
-	// 	for_Int(i, 0, temp_size) for_Int(j,0,nband) {bth.vec_ose[j][i] = ose[i]/Real(nband);bth.vec_hop[j][i] = hop[i]/Real(nband);}
-	// 	if(mm)	bth.write_ose_hop(dmft_cnt);
-	// }
 	if(mm) std::cout << std::endl;						// blank line
-
-
-	// {// test hyb
-	// 	ImGreen hb_test(1, p);
-	// 	for_Int(j, 0, hb.nomgs) hb_test[j][0][0] = hb.g[j][0][0];
-	// 	hb_test.write("zic002.mb.hb_d(3)");
-	// }
-	
 
 
 	Impurity imp(mm, p, bth, or_deg_idx.truncate(0,nband));
 	ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 	if (mm) hb_imp.write_zen("hb_imp", "Fit");
 	imp.update();											if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
-	// if(mm) WRN(NAV(imp.h0))
-	// ImGreen g0(p.norbit, p);	imp.find_all_g0(g0);		// if(mm)WRN(NAV(g0.particle_number().diagonal()));
-	// NORG norg(mm, p, "mainspace");
-	
-
-
 
 	NORG norg(choose_cauculation_style("freze_orb", imp));
 
-
-	// test for only one space.
-		// Int band1(p.npartical[0]), band2(p.npartical[0]-2);
-		// p.npartical = {band1, band1, band1, band1, band2, band2, band1, band1, band2, band2};
-		// p.according_nppso(p.npartical);
-		// NORG norg(mm, p);
-		// IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
-		// if (ifs_a) for_Int(i, 0, norg.uormat.size()) biread(ifs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
-		// norg.up_date_h0_to_solve(imp.h0);
-		// if (mm)	{
-		// 	OFS ofs_a;
-		// 	ofs_a.open("ru" + norg.scsp.nppso_str() + ".bi");
-		// 	for_Int(i, 0, norg.uormat.size()) biwrite(ofs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
-		// }
-
-	// Occler opcler(mm,p);
-	// NORG norg(opcler.find_ground_state_partical(imp.h0, or_deg_idx.truncate(0,nband)));
-	// NORG norg(opcler.find_ground_state_partical(imp.h0));
 	if (mm)	{
 		norg.write_occupation_info();
 		std::cout << "\nnorg ground state energy: " << norg.groune_lst  << "  " << present() << std::endl;
-		std::cout << std::endl;								// blank line
+		std::cout << std::endl;							// blank line
 	}
 	// if(mm) WRN(NAV(or_deg_idx))
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);					if (mm)	g0imp.write_zen("g0imp");

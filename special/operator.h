@@ -18,6 +18,7 @@ public:
 	const MyMpi& mm;				// parameters
 	const Prmtr& p;					// parameters
 	const NocSpace& scsp;			// NocSpace
+	const Idx dim;
 
 	Tab table;						// The movement by two femi operator contain.
 	Real groundstate_energy;		// The ground state energy on this shortcut restratin.
@@ -29,7 +30,7 @@ private:
 public:
 	// Expand the Shortcut space under Number of particles(NumberSpa).
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i);
-	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i, const Tab &per_table);
+	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab &tab);
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i, Str tab_name);
 	// For the ASNCI.
 	// Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, Asnci& nc);
@@ -43,8 +44,6 @@ public:
 
 	void clear(){ for_Int(i, 0, 3) VEC<int> ().swap(table[i]);}
 
-	// (Deactivate) Find the Hamiltonian operator at shortcut space, separated storage in different processes.
-	SparseMatReal find_hmlt();
 	// By using the find_h_idx() to find the idx first then speed up the procedure.
 	SparseMatReal find_hmlt(const Tab h_idx) const;
 

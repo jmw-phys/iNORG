@@ -12,13 +12,13 @@ CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_
 {}
 
 CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_nosp_i, const NocSpace& main_nosp, const Tab& table, const VecReal& vgs_i, const Int position)
-    :Operator(mm_i, prmtr_i, main_nosp, table),
+    :Operator(mm_i, prmtr_i, table),
     old_nosp(old_nosp_i), new_nosp(main_nosp), crtorann(main_nosp.nspa - old_nosp.nspa),
     ex_state(project_uplwer_parical_space(vgs_i, crtorann, position))
 {}
 
 CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_nosp_i, const NocSpace& main_nosp, const Tab& table, const VecReal& vgs_i, const Int pos_in_set, const Int pos_in_div)
-    :Operator(mm_i, prmtr_i, main_nosp, table),
+    :Operator(mm_i, prmtr_i, table),
     old_nosp(old_nosp_i), new_nosp(main_nosp), crtorann(main_nosp.nspa - old_nosp.nspa),
     ex_state(project_uplwer_parical_space(vgs_i, crtorann, pos_in_set, pos_in_div))
 {}

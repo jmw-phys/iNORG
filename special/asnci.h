@@ -25,19 +25,11 @@ class Asnci
 	const MyMpi& mm;				// parameters
 	const Prmtr& p;					// parameters
 	const NocSpace& nosp;			// parameters
+    const Real& groundE;            // The final ground state energy
+    const VecReal& groundS;         // The final ground state 
 
-    // using namespace std;
-    // VEC<Str>            cfig_inital;
-    // VEC<Real>           rank_inital;
-    // Vec<Str>            cfig_trncat;
-    // Vec<Real>           rank_trncat;
-    // Nci inital;    
-
-    Real groundE;
-    VEC<Int> mayhop;
+    VEC<Int> mayhop;                // the position of orbital hop may happen
     
-
-
 public:
     const MatReal hop_h;            // The hopping H(H_0)
     const Idx dim;                  // The truncated space size
@@ -50,6 +42,8 @@ private:
     VEC<Int> find_mayhop();
     
     Nci git_nci(const VecReal& ground_state);
+
+    Nci git_nci(const VecReal& ground_state, const Int ex_pos);
     
     void expand(Nci& natural_cfgs);
 
@@ -65,11 +59,18 @@ private:
     }
 
     bool judge(const Str& cfg_str,const Int& pos) {
-        bool flag(true);
         Int crt(pos/hop_h.ncols()), ann(pos%hop_h.ncols());
-        flag = (cfg_str[ann]=='1') ? true : false;
-        flag = (cfg_str[crt]=='0') ? true : false;
-        return flag;
+        if(cfg_str[ann]!='1') return false;
+        if(cfg_str[crt]!='0') return false;
+        return true;
+    }
+
+    bool check_ifinex(const StateStatistics& cig, const Int& ex_pos) {
+        // bool flag(true);
+        Int pos(ABS(ex_pos));
+        if(ex_pos > 0 && cig.occ_n.tr()[0][pos] == 0) true;
+        if(ex_pos < 0 && cig.occ_n.tr()[0][pos] == 1) true;
+        return false;
     }
 
     Str change_cfg_str(const Str& cfg_str, Int pos) {
@@ -100,7 +101,11 @@ public:
 
 // Asnci: mode = 0: assume NO converged;  
 //        mode = 1: NO converg with adaptive sampling configuration interaction.
-Asnci(const NORG& norg, Idx trncat_size, const Int mode = 0);
+// Asnci(const NORG& norg, Idx trncat_size, const Int mode = 0);
+Asnci(const NORG& norg, Idx trncat_size);
+
+//
+Asnci(const NORG& norg, Idx trncat_size, Int ex_pos);
 
 // out put the NORG class with the table
 NORG get_norg(Tab table, Int mode = 0);
@@ -108,5 +113,6 @@ NORG get_norg(Tab table, Int mode = 0);
 // out put the Table
 Tab find_h_idx();
 
+void asnci_gimp(Green& imp_i, Int pos);
 
 };
