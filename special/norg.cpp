@@ -23,6 +23,15 @@ NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i) :
 // 	show_the_nozero_number_of_tabel();
 // }
 
+NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab& table) :	
+	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()),
+	occupation_err(1.), energy_err(1.), correctionerr(1.), h0(prmtr_i.norbit, prmtr_i.norbit, 0.), occnum_pre(SUM(prmtr_i.nI2B), 0.),
+	iter_norg_cnt(0), groune_pre(1.e99), groune_lst(0.), occnum_lst(SUM(prmtr_i.nI2B), 0.),
+	scsp(mm_i, prmtr_i, h0, prmtr_i.npartical, table), oneedm(mm, prmtr_i, scsp, table),norg_stable_count(0)
+{
+
+}
+
 NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, Str tab_name) :
 	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()),
 	occupation_err(1.), energy_err(1.), correctionerr(1.), h0(prmtr_i.norbit, prmtr_i.norbit, 0.), occnum_pre(SUM(prmtr_i.nI2B), 0.),
@@ -255,7 +264,7 @@ void NORG::get_gimp(Green& imp_i, VecInt or_deg)
 	}
 	for_Int(i, 0, or_deg.size()) for_Int(n, 0, imp_i.nomgs) imp_i[n][i][i] = imp_i[n][idx[or_deg[i] - 1]][idx[or_deg[i] - 1]];
 }
-
+/*
 void NORG::asnci_gimp(Green& imp_i, VecInt or_deg)
 {
 	VecInt idx(MAX(or_deg),0); Int cter(0);
@@ -266,7 +275,7 @@ void NORG::asnci_gimp(Green& imp_i, VecInt or_deg)
 		for(const auto ii: difference)
 		{
 			// NocSpace scsp_sub(mm, p, h0, nppso(p.npartical, ii));
-			Asnci nc((*this), 1e6);
+			// Asnci nc((*this), 1e6);
 			Operator opr_sub(mm, p, nc);
 			CrrltFun temp_green(mm, p, scsp, nc, opr_sub.table, final_ground_state, i * 2);
 			if(imp_i.type_info() == STR("ImGreen")) {
@@ -286,6 +295,7 @@ void NORG::asnci_gimp(Green& imp_i, VecInt or_deg)
 	}
 	for_Int(i, 0, or_deg.size()) for_Int(n, 0, imp_i.nomgs) imp_i[n][i][i] = imp_i[n][idx[or_deg[i] - 1]][idx[or_deg[i] - 1]];
 }
+*/
 
 void NORG::find_g0(Green& imp_i)
 {

@@ -13,6 +13,10 @@ DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i
 {
 }
 
+DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, const Tab& tab) :Operator(mm_i, prmtr_i, scsp_i, tab)
+{
+}
+
 MatReal DensityMat::one_electron_density_matrix(Int wish_nev)
 {
 	MatReal multi_oedm(p.norbit, p.norbit, 0.);		// one - electron density matrix at the Multi - states.

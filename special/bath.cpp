@@ -120,7 +120,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_contest(const VecReal& a0)
 	const HybErr hyberr(p, hb, nb);
 	const Int np = a0.size();
 	const Int ntry_fine = MAX(16, 3 * mm.np() - 1);
-	const Int ntry = MAX(128 * ntry_fine, 2000);
+	const Int ntry = MAX(64 * ntry_fine, 2000);
 	const Real tol = 1.e-12;
 	Int nmin = 0;		// number of fittings reaching the minimum
 	MPI_Status status;
@@ -256,5 +256,4 @@ void Bath::regularize_ose_hop() {
 	// after a unitary transformation, hop can always be
 	// non-negative when there is only one impurity site
 	hop = ABS(hop);
-	for_Int(i, 0, ose.size()) if (ABS(ose[i]) > p.hubbU * 8) hop[i] = ose[i] = 0.;
 }

@@ -112,7 +112,7 @@ Tab Asnci::find_table(Str inter_type)
     return h_idxs;
 }
 
-Real Asnci::hamilton_value(const Str alpha, const Str beta_i = Str()) {
+Real Asnci::hamilton_value(const Str alpha, const Str beta_i) {
     Real value(0.), uz(p.hubbU), jz = (p.jz);
     Idx nimp(p.norbs), nband(p.nband), norb(p.norbit);
     if(beta_i.length() == 0 || (alpha == beta_i)) {

@@ -10,6 +10,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
 // impurity model
 // At the Shortcut space(NocSpace) we set first divison as impurity, and the active orbital(bath site) on the middle.  
 
+typedef Vec<VEC<Int>> Tab;
 class NocSpace {
 
 private:
@@ -133,6 +134,7 @@ public:
 	NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const MatReal& imp_i_h0, const Int& NumberSpa);
 	NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const MatReal& imp_i_h0, const VecInt& nppso_i);
 	NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const MatReal& imp_i_h0, const VecInt& nppso_i, Str tab_name);
+	NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const MatReal& imp_i_h0, const VecInt& nppso_i, const Tab& tab);
 	
 	// bool ifin_NocSpace(VecInt& ud) const;
 	bool ifin_NocSpace(MatInt& ud) const;

@@ -8,7 +8,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
 #include "prmtr.h"
 #include "nocspace.h"
 #include "state.h"
-#include "asnci.h"
+// #include "asnci.h"
 
 // impurity model
 typedef Vec<VEC<Int>> Tab;
@@ -18,7 +18,6 @@ public:
 	const MyMpi& mm;				// parameters
 	const Prmtr& p;					// parameters
 	const NocSpace& scsp;			// NocSpace
-	// const Asnci& nc;				// asnci
 
 	Tab table;						// The movement by two femi operator contain.
 	Real groundstate_energy;		// The ground state energy on this shortcut restratin.
@@ -33,8 +32,7 @@ public:
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i, const Tab &per_table);
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i, Str tab_name);
 	// For the ASNCI.
-	// Operator(const NORG& norg, const Asnci& asnci);
-	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, Asnci& nc);
+	// Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, Asnci& nc);
 	
 	// Operator::Operator(const Operator &per):
 	// mm(per.mm), p(per.p), scsp(per.scsp), table(per.table) , 

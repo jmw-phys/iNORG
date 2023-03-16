@@ -13,7 +13,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
 #include "crrvec.h"
 #include "krylov.h"
 #include "impurity.h"
-#include "asnci.h"
+// #include "asnci.h"
 
 // impurity model
 

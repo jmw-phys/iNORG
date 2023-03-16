@@ -14,6 +14,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2023.03.03
 // typedef pair<VEC<Str>,VEC<Real>> Nci;
 // typedef pair<VEC<__uint128_t>,VEC<Real>> Nci;
 typedef std::pair<VEC<UInt*>,VEC<Real>> Nci;
+typedef Vec<VEC<Int>> Tab;
 
 class Asnci 
 {

@@ -22,11 +22,11 @@ Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i,
 {
 }
 
-Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, Asnci& nc):
-	scsp(NocSpace(mm_i, prmtr_i)), // blank
-	mm(mm_i), p(prmtr_i), table(nc.find_h_idx())
-{
-}
+// Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, Asnci& nc):
+// 	scsp(NocSpace(mm_i, prmtr_i)), // blank
+// 	mm(mm_i), p(prmtr_i), table(nc.find_h_idx())
+// {
+// }
 
 // (Deactivate) SparseH;
 SparseMatReal Operator::find_hmlt()

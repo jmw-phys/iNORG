@@ -51,6 +51,16 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const MatReal& imp_i
 	if(mm) WRN("Begin find_combined_number_subspaces()"+ NAV(dim));
 }
 
+// using the table to construce the NOC space.
+NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const MatReal& imp_i_h0, const VecInt& nppso_i, const Tab& tab) :
+	mm(mm_i), p(prmtr_i), ndivs(prmtr_i.ndiv), nspa(SUM(nppso_i)), sit_mat(p.norg_sets, prmtr_i.ndiv, 0),
+	hopint(imp_i_h0), coefficient((p.norbit * p.norbit) + 5, 0.), nppso(nppso_i),
+	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), shortcut_countvec(prmtr_i.ndiv, 0), dim(tab[0].size())
+{
+	set_control();
+	if(mm) WRN("Begin find_combined_number_subspaces()"+ NAV(dim));
+}
+
 void NocSpace::set_control()
 {
 	control_divs = p.control_divs;
