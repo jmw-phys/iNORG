@@ -31,6 +31,7 @@ public:
 	// Expand the Shortcut space under Number of particles(NumberSpa).
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i);
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab &tab);
+	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i,const Tab &per_table);
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i, Str tab_name);
 	
 	// [i][0]row Idx; [i][1]colum Idx;[i][2] for the position for the hopint.

@@ -17,6 +17,11 @@ Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i,const Tab &tab):
 {
 }
 
+Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i,const Tab &per_table):
+	mm(mm_i), p(prmtr_i), scsp(s_i), table(per_table), dim(s_i.dim)
+{
+}
+
 Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i, Str tab_name):
 	mm(mm_i), p(prmtr_i), scsp(s_i), table(read_the_Tab(tab_name)), dim(s_i.dim)
 {

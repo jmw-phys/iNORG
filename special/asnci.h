@@ -26,11 +26,11 @@ class Asnci
 	const Prmtr& p;					// parameters
 	const NocSpace& nosp;			// parameters
     const Real& groundE;            // The final ground state energy
+    const MatReal hop_h;            // The hopping H(H_0)
 
     VEC<Int> mayhop;                // the position of orbital hop may happen
     
 public:
-    const MatReal hop_h;            // The hopping H(H_0)
     const Idx core_dim;             // The core space size
     const Idx dim;                  // The truncated space size
     Nci trncat;                     // The truncation NCI

@@ -476,7 +476,8 @@ void NORG::write_occupation_info() const {
 
 void NORG::write_state_info(Int iter_cnt) const {
 	using namespace std;
-	OFS ofs_app_state(tox + STR(iter_cnt) + "write_state_info.txt", ios::app);
+	// OFS ofs_app_state(STR(iter_cnt) + "write_state_info.txt", ios::app);
+	OFS ofs_app_state; ofs_app_state.open(STR(iter_cnt) + "write_state_info.txt");
 	ofs_app_state << setw(4) << "iter_cnt";
 	ofs_app_state << "\t" << setw(w_Real) << "state";
 	ofs_app_state << "\t" << setw(w_Real) << "state_norm";
@@ -484,6 +485,7 @@ void NORG::write_state_info(Int iter_cnt) const {
 	ofs_app_state << endl; 
 	VecReal temp_norm_state = SQR(final_ground_state);
 	VecReal temp_norm__sort = temp_norm_state; sort(temp_norm__sort);
+	if(mm) WRN(NAV3(final_ground_state.norm(),temp_norm_state.norm(),temp_norm__sort.norm()));
 	for_Int(i, 0, final_ground_state.size()) 
 	{
 		ofs_app_state << iofmt("sci");
@@ -494,7 +496,6 @@ void NORG::write_state_info(Int iter_cnt) const {
 		ofs_app_state << endl; 
 	}
 	ofs_app_state.close();
-
 }
 
 

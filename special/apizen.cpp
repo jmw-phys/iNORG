@@ -24,7 +24,7 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 	if (mm) hb_imp.write_zen("hb_imp", "Fit");
 	imp.update();											if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 
-	NORG norg(choose_cauculation_style("freze_orb", imp));
+	NORG norg(choose_cauculation_style("one_pcl_test", imp));
 
 	if (mm)	{
 		norg.write_occupation_info();
@@ -34,7 +34,9 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);					if (mm)	g0imp.write_zen("g0imp");
 	ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));	if (mm) gfimp.write_zen("gfimp");
+	/*
 	{
+		if(mm) WRN("Done here, before g_asnci")
 		ImGreen g_asnci(p.nband, p);
 		VecInt or_deg = or_deg_idx.truncate(0,nband);
 		VecInt idx(MAX(or_deg),0); Int cter(0);
@@ -42,13 +44,17 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 		for (int &i : idx) {
 			StdVecInt difference = {(i+1), -(i+1)};
 			for(const auto ii: difference)	{
-				Asnci nci(norg, 1e6, ii);
-				nci.asnci_gimp(g_asnci, ii);
+				if(mm) WRN("Done here, before Asnci")
+				Asnci nci(norg, Int(1e4), ii);
+				// nci.asnci_gimp(g_asnci, ii);
+				if(mm) WRN("Done here, after Asnci")
 			}
 		}
 		for_Int(i, 0, or_deg.size()) for_Int(n, 0, g_asnci.nomgs) g_asnci[n][i][i] = g_asnci[n][idx[or_deg[i] - 1]][idx[or_deg[i] - 1]];
 		if (mm) gfimp.write_zen("gfimp");
 	}
+	*/
+
 	// ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp);				if (mm) gfimp.write_zen("gfimp");
 	// if(mm) gfimp.write_occupation_info();
 	// if(mm) WRN(NAV(gfimp.particle_number().diagonal()));
@@ -233,7 +239,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		NORG norg(opcler.find_ground_state_partical(imp.h0, or_deg_idx.truncate(0,nband)));
 		return norg;
 	}	
-	if(mode == "freze_orb"){
+	if(mode == "ful_pcl_sch"){
 		Occler opcler(mm,p);
 		VEC<MatReal> uormat;
 		VecInt ordeg(concat(or_deg_idx.truncate(0,nband),or_deg_idx.truncate(0,nband)).mat(2,nband).tr().vec()), nppso;
@@ -276,8 +282,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		}
 		return frezeorb;
 	}
-	if(mode == "freze_test"){
-		/*
+	if(mode == "one_pcl_test"){
 		Occler opcler(mm,p);
 		VEC<MatReal> uormat;
 		VecInt ordeg(concat(or_deg_idx.truncate(0,nband),or_deg_idx.truncate(0,nband)).mat(2,nband).tr().vec()), nppso;
@@ -286,21 +291,18 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		controler[0] = {0, -1, p.control_divs[0][2], 0, p.control_divs[0][4], 1};
 		{
 			Int band1(p.npartical[0]), band2(p.npartical[0]);
-			p.npartical = {band1, band1, band1, band1, band2, band2, band1, band1, band2, band2};
+			if(nband == 5) p.npartical = {band1, band1, band1, band1, band2, band2, band1, band1, band2, band2};
+			if(nband == 3) {p.npartical = {band1, band1, band1, band1, band1, band1}; p.npartical += 1; }
 			p.according_nppso(p.npartical);
 			NORG norg(mm, p);
 			IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
 			if (ifs_a) for_Int(i, 0, norg.uormat.size()) biread(ifs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
 			norg.up_date_h0_to_solve(imp.h0);
-			if (mm)	{
-				OFS ofs_a;
-				ofs_a.open("ru" + norg.scsp.nppso_str() + ".bi");
-				for_Int(i, 0, norg.uormat.size()) biwrite(ofs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
-			}
 
 			uormat = norg.uormat;
 			occnum = norg.occnum.mat(p.norg_sets, p.nbath/p.norg_sets); occweight = occnum;
 			nppso = norg.scsp.nppso;
+			if(mm) norg.write_state_info(0);
 		}
 		for_Int(i, 0, p.norg_sets) for_Int(j, 0, p.ndiv) if(occnum[i][j] > 0.5) occweight[i][j] = 1 - occnum[i][j];
 
@@ -308,8 +310,8 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 			Int o(0), freze_o(0), e(0), freze_e(0), orb_rep(0), nooc_o(0), nooc_e(0);
 			for_Int(j, 0, p.norg_sets) {orb_rep = j; if(ordeg[j] == i + 1) break;}
 			o = nppso[orb_rep] - 1; e = p.nI2B[orb_rep] - nppso[orb_rep];
-			for_Int(j, 0, o) 							if(occweight[orb_rep][j] < 1e-5) freze_o++;
-			for_Int(j, nppso[orb_rep], p.nI2B[orb_rep])	if(occweight[orb_rep][j] < 1e-5) freze_e++;
+			for_Int(j, 0, o) 							if(occweight[orb_rep][j] < 1e-6) freze_o++;
+			for_Int(j, nppso[orb_rep], p.nI2B[orb_rep])	if(occweight[orb_rep][j] < 1e-6) freze_e++;
 			nooc_o = o - freze_o; nooc_e = e - freze_e;
 			controler[i+1] = VecInt{1, freze_o, nooc_o, 1, nooc_e, freze_e };
 		}
@@ -328,8 +330,8 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 			OFS ofs_a;
 			ofs_a.open("ru" + frezeorb.scsp.nppso_str() + ".bi");
 			for_Int(i, 0, frezeorb.uormat.size()) biwrite(ofs_a, CharP(frezeorb.uormat[i].p()), frezeorb.uormat[i].szof());
+			frezeorb.write_state_info(1);
 		}
 		return frezeorb;
-		*/
 	}
 }

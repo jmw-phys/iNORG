@@ -3,3 +3,5 @@ archive/
 *.o
 bi/
 console/
+* calc/
+tools/test_list/
