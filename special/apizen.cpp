@@ -34,9 +34,8 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);					if (mm)	g0imp.write_zen("g0imp");
 	ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));	if (mm) gfimp.write_zen("gfimp");
-	/*
+	
 	{
-		if(mm) WRN("Done here, before g_asnci")
 		ImGreen g_asnci(p.nband, p);
 		VecInt or_deg = or_deg_idx.truncate(0,nband);
 		VecInt idx(MAX(or_deg),0); Int cter(0);
@@ -44,16 +43,14 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 		for (int &i : idx) {
 			StdVecInt difference = {(i+1), -(i+1)};
 			for(const auto ii: difference)	{
-				if(mm) WRN("Done here, before Asnci")
-				Asnci nci(norg, Int(1e4), ii);
+				Asnci nci(norg, Int(10000), ii);
 				// nci.asnci_gimp(g_asnci, ii);
-				if(mm) WRN("Done here, after Asnci")
 			}
 		}
 		for_Int(i, 0, or_deg.size()) for_Int(n, 0, g_asnci.nomgs) g_asnci[n][i][i] = g_asnci[n][idx[or_deg[i] - 1]][idx[or_deg[i] - 1]];
 		if (mm) gfimp.write_zen("gfimp");
 	}
-	*/
+	
 
 	// ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp);				if (mm) gfimp.write_zen("gfimp");
 	// if(mm) gfimp.write_occupation_info();

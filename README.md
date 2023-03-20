@@ -35,3 +35,8 @@ Version: v1.0.07 @ 2023.03.17
     finished: The code can running fine when only use the NORG.
     next do : Debuging...
     tinking : What's the Rank equation comes from?
+
+Version: v1.0.08 @ 2023.03.20
+    finished: Check to find the ground state Max coefficient; double check the "cfig to arry" and "arry to cfig" function.
+    next do : Check the "expand(natural_cfg)" function.
+    tinking : What's the Rank equation comes from?

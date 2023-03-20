@@ -51,6 +51,13 @@ private:
 
 	// find the div's idx according to the "newdiv".
 	Int find_newdiv_idx(MatInt newdiv);
+
+	inline UInt vectorBoolToInt(const VecBool &vec) {
+		UInt result = 0;
+		for_Int(i, 0, vec.size()) result |= (vec[i] << i);
+		return result;
+	}
+
 public:
 	//state(Int idxD, VecInt bases_i) :idx(idxD), bases(bases_i) {};
 	StateStatistics(const Int& h_i, const Int& comdiv_idx, const NocSpace& s_i);
@@ -76,7 +83,7 @@ public:
 
 	Str string();
 
-	std::array<UInt,10> cfg2nums();
+	std::array<UInt,6> cfg2nums();
 	
-	std::array<UInt,10> cfg2ex2nums(Int ex_pos);
+	std::array<UInt,6> cfg2ex2nums(Int ex_pos);
 };

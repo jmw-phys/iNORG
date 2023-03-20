@@ -240,19 +240,23 @@ VEC<MatInt> StateStatistics::interation_soc_hop(const Int& ComDiv)
 }
 
 Str StateStatistics::string() {
-	Str cfig;
 	const VecOnb& cf(cfg.cf);
+	Str cfig;
 	for_Int(i, 0, cf.size()){
 		for_Int(j, 0, cf[i].get_ns()){
-			cfig += cf[i][j];
+			cfig += cf[i][j] ? '1':'0';
 		}
 	}
+	Vec<Char> ci(cfig.length());
+	for_Int(i, 0, ci.size()) ci[i] = cfig[i];
+	if(space.mm) WRN(NAV(ci.mat(space.p.norbs,space.p.nI2B[0]+1)));
 	return cfig;
 }
 
-std::array<UInt,10> StateStatistics::cfg2nums() {
+/* version 1
+std::array<UInt,6> StateStatistics::cfg2nums() {
 	// UInt nums[occ_n.nrows()];
-	std::array<UInt,10> nums;
+	std::array<UInt,6> nums;
 	const VecOnb& cf(cfg.cf);
 	for_Idx(i, 0, cf.size()){
 		Str cfig;
@@ -262,13 +266,54 @@ std::array<UInt,10> StateStatistics::cfg2nums() {
 	}
 	return std::move(nums);
 }
+*/
 
-std::array<UInt,10> StateStatistics::cfg2ex2nums(Int ex_pos) {
-	// UInt nums[occ_n.nrows()];
-	std::array<UInt,10> nums;
+// version 2
+std::array<UInt,6> StateStatistics::cfg2nums() {
+	std::array<UInt,6> nums;
 	MatOnb cf_temp(cfg.cf.mat(occ_n.nrows(), occ_n.ncols()));
-	if(ex_pos > 0) cf_temp[ABS(ex_pos) - 1][0].crt(0);
-	if(ex_pos < 0) cf_temp[ABS(ex_pos) - 1][0].ann(0);
+	
+	for_Int(row, 0, occ_n.nrows()){
+		const VecOnb cf(cf_temp[row]);
+		VecBool cfig(SUM(occ_n[row]), false);
+		Int cunt = 0;
+		for_Idx(i, 0, cf.size()){
+			for_Int(j, 0, cf[i].get_ns()) cfig[cunt++] = cf[i].isocc(j);
+		}
+		nums[row] = vectorBoolToInt(cfig);
+	}
+	return std::move(nums);
+}
+
+// version 2
+std::array<UInt,6> StateStatistics::cfg2ex2nums(Int ex_pos) {
+	std::array<UInt,6> nums;
+	MatOnb cf_temp(cfg.cf.mat(occ_n.nrows(), occ_n.ncols()));
+	Idx pos(ABS(ex_pos) - 1);
+	cf_temp[pos][0] = ex_pos > 0 ? cf_temp[pos][0].crt(0) : cf_temp[pos][0].ann(0);
+	
+	for_Int(row, 0, occ_n.nrows()){
+		const VecOnb cf(cf_temp[row]);
+		VecBool cfig(SUM(occ_n[row]), false);
+		Int cunt = 0;
+		for_Idx(i, 0, cf.size()){
+			for_Int(j, 0, cf[i].get_ns()) cfig[cunt++] = cf[i].isocc(j);
+		}
+		nums[row] = vectorBoolToInt(cfig);
+	}
+
+	return std::move(nums);
+}
+
+/*  version 1
+std::array<UInt,6> StateStatistics::cfg2ex2nums(Int ex_pos) {
+	// UInt nums[occ_n.nrows()];
+	std::array<UInt,6> nums;
+	MatOnb cf_temp(cfg.cf.mat(occ_n.nrows(), occ_n.ncols()));
+	Idx pos(ABS(ex_pos) - 1);
+	// if(ex_pos > 0) cf_temp = cf_temp[pos][0].crt(0);
+	// if(ex_pos < 0) cf_temp = cf_temp[pos][0].ann(0);
+	cf_temp[pos][0] = ex_pos > 0 ? cf_temp[pos][0].crt(0) : cf_temp[pos][0].ann(0);
 		
 	const VecOnb cf(cf_temp.vec());
 	for_Idx(i, 0, cf.size()){
@@ -279,6 +324,7 @@ std::array<UInt,10> StateStatistics::cfg2ex2nums(Int ex_pos) {
 	}
 	return std::move(nums);
 }
+*/
 
 //---------------------------------------------Private function---------------------------------------------
 

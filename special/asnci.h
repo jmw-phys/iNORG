@@ -3,8 +3,9 @@
 coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2023.03.03
 */
 
-
 #include <bitset>
+#include <algorithm>
+#include <vector>
 #include <string>
 #include"norg.h"
 
@@ -17,7 +18,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2023.03.03
 // typedef std::pair<MatInt,VecReal> Nci;
 
 
-typedef std::pair<VEC<std::array<UInt,10>>,VEC<Real>> Nci;
+typedef std::pair<VEC<std::array<UInt,6>>,VEC<Real>> Nci;
 typedef Vec<VEC<Int>> Tab;
 
 class Asnci 
@@ -35,9 +36,18 @@ public:
     const Idx dim;                  // The truncated space size
     Nci trncat;                     // The truncation NCI
     // The cfig's idx
-    std::map<std::array<UInt,10>, Int> cfig_idx;
+    std::map<std::array<UInt,6>, Int> cfig_idx;
 
 private:
+    inline VecIdx sort_indexes(const VecReal& vec) {
+        VecIdx idx(vec.size());
+        std::iota(idx.begin(), idx.end(), 0);
+
+        std::sort(idx.begin(), idx.end(),
+                [&vec](int i, int j) { return vec[i] > vec[j]; });
+
+        return idx;
+    }
 
     VEC<Int> find_mayhop();
     
@@ -47,12 +57,17 @@ private:
     
     void expand(Nci& natural_cfgs);
 
-    Str to_binary_string(unsigned long num) {
-        using namespace std;
-        bitset<sizeof(unsigned long) * 8> binary(num);
-        return binary.to_string();
-    }
+    // Str to_binary_string(unsigned long num) {
+    //     using namespace std;
+    //     bitset<sizeof(unsigned long) * 8> binary(num);
+    //     return binary.to_string();
+    // }
 
+    VecBool intsToVectorBool(std::array<UInt,6> nums);
+
+	std::array<UInt,6> VectorBoolToints(const VecBool &vec);
+
+/*
     bool judge(Str& cfg_str) {
         for_Idx(i, 0, cfg_str.size()) if((cfg_str[i] != '1' && cfg_str[i] != '0')) return false;
         return true;
@@ -64,15 +79,22 @@ private:
         if(cfg_str[crt]!='0') return false;
         return true;
     }
+*/
 
-    bool check_ifinex(const StateStatistics& cig, const Int& ex_pos) {
-        // bool flag(true);
-        Int pos(ABS(ex_pos));
-        if(ex_pos > 0 && cig.occ_n.tr()[0][pos] == 0) true;
-        if(ex_pos < 0 && cig.occ_n.tr()[0][pos] == 1) true;
+    bool judge(const VecBool& cfg, const Int& pos) {
+        Int crt(pos / hop_h.ncols()), ann(pos % hop_h.ncols());
+        if((cfg[ann]) && (!cfg[crt]))return true;
         return false;
     }
 
+    bool check_ifinex(const StateStatistics& cig, const Int& ex_pos) {
+        // bool flag(true);
+        Idx pos(ABS(ex_pos) - 1);
+        if(ex_pos > 0 && cig.cfg.cf[pos].isuno(0)) return true;
+        if(ex_pos < 0 && cig.cfg.cf[pos].isocc(0)) return true;
+        return false;
+    }
+/*
     Str change_cfg_str(const Str& cfg_str, Int pos) {
         Int crt(pos/hop_h.ncols()), ann(pos%hop_h.ncols());
         Str temp_c = cfg_str;
@@ -80,24 +102,20 @@ private:
         temp_c[crt] = (temp_c[crt]=='0') ? '1' : 'x';
         return temp_c;
     }
+*/
+
+    VecBool change_cfg(const VecBool& cfg, Int pos);
 
     // The hamilton form:
-    Real hamilton_value(const Str alpha, const Str beta_i = Str());
+    Real hamilton_value(const VecBool& alpha, const VecBool& beta_i = VecBool());
 
-    Real cfi2rank(Str alpha, Vec<Str> beta) {
-        Real rank(0.);
-        for_Idx(i, 0, beta.size()){
-            Real upper = hamilton_value(alpha, beta[i]);
-            rank += upper / (groundE - hamilton_value(alpha));
-        }
-        return rank;
-    }
+    Real cfi2rank(const VecBool& alpha, const Vec<VecBool>& beta);
 
     Nci truncation(Nci inital);
 
-    Tab find_table(Str inter_type);
+    VecReal find_ex_state() {return VecReal(trncat.second);}
 
-    VecReal find_ex_state() {return VecReal(trncat.second); }
+    Str show_string(const std::array<UInt,6>& cifg);
 public:
 
 // Asnci: mode = 0: assume NO converged;  
