@@ -45,3 +45,8 @@ Version: v1.0.09 @ 2023.03.21
     finished: expand(natural_cfg) finised, but the hamilton_value still has some problem didn't fixed!
     next do : using the deflection to fix the Sgm.
     tinking : What's the Rank equation comes from? How do I converge the new space's ground state to the new n+/n- subspace?
+
+Version: v1.0.10 @ 2023.03.21
+    finished: using the deflection to fix the Sgm.
+    next do : need to find the ground state in new space.
+    tinking : What's the Rank equation comes from? How do I converge the new space's ground state to the new n+/n- subspace?
