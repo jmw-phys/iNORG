@@ -11,7 +11,7 @@ using namespace std;
 
 Asnci::Asnci(const NORG& norg, Idx trncat_size):
     dim(trncat_size), mm(norg.mm), p(norg.p), hop_h(norg.scsp.hopint), mayhop(find_mayhop()),
-    nosp(norg.scsp), groundE(norg.groune_lst), core_dim(Int(trncat_size / Int(mayhop.size() / 1.5)))
+    nosp(norg.scsp), groundE(norg.groune_lst), core_dim(Int(trncat_size / Int(mayhop.size() / 4.0)))
 {
     // inital = git_nci(norg);
     trncat = truncation(git_nci(norg.final_ground_state));
@@ -19,12 +19,12 @@ Asnci::Asnci(const NORG& norg, Idx trncat_size):
 
 Asnci::Asnci(const NORG& norg, Idx trncat_size, Int ex_pos):
     dim(trncat_size), mm(norg.mm), p(norg.p), hop_h(norg.scsp.hopint), mayhop(find_mayhop()),
-    nosp(norg.scsp), groundE(norg.groune_lst), core_dim(Int(trncat_size / Int(mayhop.size() / 1.5)))
+    nosp(norg.scsp), groundE(norg.groune_lst), core_dim(Int(trncat_size / Int(mayhop.size() / 4.0)))
 {
     Nci nci = git_nci(norg.final_ground_state, ex_pos);
-    // ! trncat = truncation(nci);
+    trncat = truncation(nci);
 
-    // ! trncat = truncation(git_nci(norg.final_ground_state, ex_pos));
+    // trncat = truncation(git_nci(norg.final_ground_state, ex_pos));
 }
 
 NORG Asnci::get_norg(Tab table, Int mode) {
@@ -68,8 +68,10 @@ void Asnci::asnci_gimp(Green& imp_i, Int ex_pos)
 
 VEC<Int> Asnci::find_mayhop() {
     VEC<Int>    mayhop_i;
+    if(mm) WRN(NAVC1(hop_h));
     if(hop_h.size() == 0) ERR("hop_h.size() = 0");
-    for_Int(i, 0, hop_h.size())  if(ABS(hop_h.vec()[i]) > 1e-6) mayhop_i.push_back(i);
+    // for_Int(i, 0, hop_h.size())  if(ABS(hop_h.vec()[i]) > 1e-6) mayhop_i.push_back(i);
+    for_Int(i, 0, hop_h.size())  if(ABS(hop_h.vec()[i]) > 0.0) mayhop_i.push_back(i);
     mayhop_i.shrink_to_fit();
     return move(mayhop_i);
 }
@@ -124,7 +126,7 @@ Str Asnci::show_string(const std::array<UInt,6>& cifg) {
 Nci Asnci::git_nci(const VecReal& ground_state) {
     Nci                         natural_cfg;
     VEC<array<UInt,6>>&         cfigs(natural_cfg.first);
-    VEC<Real>&                  coefs(natural_cfg.second);
+    VEC<Real>&                  ranks(natural_cfg.second);
 
     VecReal grndste_norm = SQR(ground_state);
     VecIdx groundstate_idx(sort_indexes(grndste_norm));
@@ -134,10 +136,10 @@ Nci Asnci::git_nci(const VecReal& ground_state) {
             const Idx& ci_idx = groundstate_idx[i];
             StateStatistics cig(ci_idx, nosp.wherein_NocSpace(ci_idx), nosp);
             cfigs.push_back(cig.cfg2nums());
-            coefs.push_back(ground_state[ci_idx]);
+            ranks.push_back(ground_state[ci_idx]);
         }
     }
-    expand(natural_cfg); cfigs.shrink_to_fit(); coefs.shrink_to_fit();
+    expand(natural_cfg); cfigs.shrink_to_fit(); ranks.shrink_to_fit();
     return natural_cfg;
 }
 
@@ -145,7 +147,7 @@ Nci Asnci::git_nci(const VecReal& ground_state) {
 Nci Asnci::git_nci(const VecReal& ground_state, const Int ex_pos) {
     Nci                         natural_cfg;
     VEC<array<UInt,6>>&         cfigs(natural_cfg.first);
-    VEC<Real>&                  coefs(natural_cfg.second);
+    VEC<Real>&                  ranks(natural_cfg.second);
 
     VecReal grndste_norm = SQR(ground_state);
     VecIdx groundstate_idx(sort_indexes(grndste_norm));
@@ -159,28 +161,26 @@ Nci Asnci::git_nci(const VecReal& ground_state, const Int ex_pos) {
         //     if(mm) WRN(NAV4(i,ci_idx,grndste_norm[ci_idx],ex_pos));
         //     if(mm) show_string(cig.cfg2nums());
         // }
-
         if(check_ifinex(cig, ex_pos)){
             cfigs.push_back(cig.cfg2ex2nums(ex_pos));
             
             // {// test for the cfig we in put.
                 // if(mm) cig.string();
-                if(mm) WRN(NAV(ex_pos));
-                if(mm) show_string(cig.cfg2ex2nums(ex_pos));
+                // if(mm) WRN(NAV(ex_pos));
+                // if(mm) show_string(cig.cfg2ex2nums(ex_pos));
             // }
-
-            coefs.push_back(ground_state[ci_idx]);
         }
     }
-    if(mm) WRN("Done here, finish the git_nci() clc, need to expand"+NAV2(cfigs.size(),coefs.size()))
-    // ! expand(natural_cfg); cfigs.shrink_to_fit(); coefs.shrink_to_fit();
+    for_Int(i, 0, core_dim) ranks.push_back(cfi2rank(cfigs[i], cfigs));
+    if(mm) WRN("Done here, finish the git_nci() clc, need to expand"+NAV2(cfigs.size(),ranks.size()))
+    expand(natural_cfg); cfigs.shrink_to_fit(); ranks.shrink_to_fit();
     return natural_cfg;
 }
 
 
 void Asnci::expand(Nci& natural_cfgs) {
     VEC<array<UInt,6>>&        cfigs(natural_cfgs.first);
-    VEC<Real>&                  coefs(natural_cfgs.second);
+    VEC<Real>&                 ranks(natural_cfgs.second);
 
     Vec<VecBool> cfigs_core(cfigs.size());
     for_Idx(i, 0, cfigs.size()){
@@ -189,40 +189,50 @@ void Asnci::expand(Nci& natural_cfgs) {
     for_Idx(i, 0, cfigs_core.size()){
         for(const auto j : mayhop) if(judge(cfigs_core[i], j)) {
             VecBool new_cfig(change_cfg(cfigs_core[i], j));
+            Real rank = cfi2rank(new_cfig, cfigs_core);
+            if(rank > 0.){
+                ranks.push_back(cfi2rank(new_cfig, cfigs_core));
+                cfigs.push_back(VectorBoolToints(new_cfig));
+            }
 
-            cfigs.push_back(VectorBoolToints(new_cfig));
+
             {// test
                 // VecBool a(80, false);
                 // VecInt b(10, 2);
                 // array<UInt,10> c;
                 // if(mm) WRN(NAV3((a.szof()), sizeof(b.szof()), sizeof(c)));
                 // if(mm) show_string(cfigs[i]);
+                // if(mm) {Int orbit_idx(j/(p.nI2B[0]+1)%p.norbs),ctr(j/(p.norbs*(p.nI2B[0]+1))%(p.nI2B[0]+1)), ann(j%(p.norbs*(p.nI2B[0]+1))%(p.nI2B[0]+1));
+                //         WRN(NAV5(i, SQR(ranks[i]), orbit_idx, ctr, ann));}
+                // if(mm) show_string(VectorBoolToints(new_cfig));
                 // if(mm) show_string(VectorBoolToints(intsToVectorBool(cfigs[i])));
                 // if(mm) WRN(NAV3(j,j/(p.nI2B[0]+1), j%(p.nI2B[0]+1)));
                 // if(mm) show_string(VectorBoolToints(new_cfig));
-                // if(mm) show_string(VectorBoolToints(new_cfig));
                 // if(mm) show_string(VectorBoolToints(intsToVectorBool(VectorBoolToints(new_cfig))));
             }
-
-            // coefs.push_back(cfi2rank(new_cfig, cfigs_core));
         }
     }
+    if(mm) WRN(NAV(cfigs.size()));
 }
 
 Nci Asnci::truncation(Nci inital) {
-    VEC<array<UInt,6>>   cfigs(dim);
-    VEC<Real>                  coefs(dim);
+    VEC<array<UInt,6>>  cfigs;
+    VEC<Real>           ranks;
 
     VecReal norm = SQR(Vec(inital.second));
     VecIdx groundstate_idx(sort_indexes(norm));
+    dim = dim < inital.first.size() ? dim : inital.first.size();
+    if(mm) WRN(NAV(dim));
     for_Int(cunt, 0, dim){// add the map
         const Idx& ci_idx = groundstate_idx[cunt];
         cfig_idx.insert(pair<array<UInt,6>, Int>(inital.first[ci_idx], ci_idx));
-        cfigs.push_back(move(inital.first[ci_idx]));
-        coefs.push_back(move(inital.second[ci_idx]));
+        cfigs.push_back((inital.first[ci_idx]));
+        ranks.push_back((inital.second[ci_idx]));
     }
-    cfigs.shrink_to_fit(); coefs.shrink_to_fit();
-    return pair(cfigs, coefs);
+    cfigs.shrink_to_fit(); ranks.shrink_to_fit();
+
+    if(mm) WRN(NAV(Vec(ranks).truncate(0,1024)));
+    return pair(cfigs, ranks);
 }
 
 Real Asnci::cfi2rank(const VecBool& alpha, const Vec<VecBool>& beta) {
@@ -234,6 +244,18 @@ Real Asnci::cfi2rank(const VecBool& alpha, const Vec<VecBool>& beta) {
     return rank;
 }
 
+Real Asnci::cfi2rank(const array<UInt,6>& alpha_number, const VEC<array<UInt,6>>& betas_number) {
+    Real rank(0.);
+
+    VecBool alpha(intsToVectorBool(alpha_number));
+    Vec<VecBool> cfigs_core(betas_number.size());
+    for_Idx(i, 0, betas_number.size()) cfigs_core[i] = intsToVectorBool(betas_number[i]);
+
+    rank = cfi2rank(alpha, cfigs_core);
+    return rank;
+}
+
+// ?! The H_a,b need to consider the Anticommutativity？
 Real Asnci::hamilton_value(const VecBool& alpha, const VecBool& beta_i) {
     Real value(0.), uz(p.hubbU), jz = (p.jz);
     Idx nimp(p.norbs), nband(p.nband), norb(p.norbit);
@@ -272,7 +294,12 @@ Real Asnci::hamilton_value(const VecBool& alpha, const VecBool& beta_i) {
         Int crt(-1), ann(-1);
         for_Int(i, 0, norb) if(alpha[i] ^ beta_i[i])  beta_i[i] ? ann = i : crt = i;
         if(crt >= 0 && ann >= 0) value = crt > ann ? hop_h[crt][ann] : - hop_h[crt][ann];
-        else (ERR("some thing wrong in here!"+NAV2(alpha.string(),beta_i.string())));
+        else {
+            if(mm) {
+                WRN("some thing wrong in here!");
+                show_string(VectorBoolToints(alpha)); show_string(VectorBoolToints(beta_i));}
+            // ERR("some thing wrong in here!"+NAV2(alpha.string(),beta_i.string()));
+            }
         return value;
     }
 }

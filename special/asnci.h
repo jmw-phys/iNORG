@@ -33,7 +33,7 @@ class Asnci
     
 public:
     const Idx core_dim;             // The core space size
-    const Idx dim;                  // The truncated space size
+    Idx dim;                  // The truncated space size
     Nci trncat;                     // The truncation NCI
     // The cfig's idx
     std::map<std::array<UInt,6>, Int> cfig_idx;
@@ -110,6 +110,8 @@ private:
     Real hamilton_value(const VecBool& alpha, const VecBool& beta_i = VecBool());
 
     Real cfi2rank(const VecBool& alpha, const Vec<VecBool>& beta);
+
+    Real cfi2rank(const std::array<UInt,6>& alpha_number, const VEC<std::array<UInt,6>>& betas_number);
 
     Nci truncation(Nci inital);
 

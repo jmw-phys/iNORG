@@ -40,3 +40,8 @@ Version: v1.0.08 @ 2023.03.20
     finished: Check to find the ground state Max coefficient; double check the "cfig to arry" and "arry to cfig" function.
     next do : Check the "expand(natural_cfg)" function.
     tinking : What's the Rank equation comes from?
+
+Version: v1.0.09 @ 2023.03.21
+    finished: expand(natural_cfg) finised, but the hamilton_value still has some problem didn't fixed!
+    next do : using the deflection to fix the Sgm.
+    tinking : What's the Rank equation comes from? How do I converge the new space's ground state to the new n+/n- subspace?
