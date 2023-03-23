@@ -54,8 +54,19 @@ private:
     Nci git_nci(const VecReal& ground_state);
 
     Nci git_nci(const VecReal& ground_state, const Int ex_pos);
+
+    Nci git_nci_no_rank(const VecReal& ground_state, const Int ex_pos);
     
     void expand(Nci& natural_cfgs);
+
+    VecBool back2nospace(const VecBool& new_cfig, const Int change_pos){
+        Mat<bool> cfig(new_cfig.mat(nosp.sit_mat.nrows(),nosp.sit_mat.ncols()));
+        Idx pos(ABS(change_pos) - 1);
+        cfig[change_pos][0] ^= 1;
+        return cfig.vec();
+    }
+
+    void expand_no_rank(Nci& natural_cfgs, const VecIdx& prob_idx, const Int& ex_pos);
 
     // Str to_binary_string(unsigned long num) {
     //     using namespace std;

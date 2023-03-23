@@ -47,6 +47,11 @@ Version: v1.0.09 @ 2023.03.21
     tinking : What's the Rank equation comes from? How do I converge the new space's ground state to the new n+/n- subspace?
 
 Version: v1.0.10 @ 2023.03.21
-    finished: using the deflection to fix the Sgm.
+    finished: using the deflection to fix the Sgm. (may be failed)
     next do : need to find the ground state in new space.
     tinking : What's the Rank equation comes from? How do I converge the new space's ground state to the new n+/n- subspace?
+
+Version: v1.0.11 @ 2023.03.23
+    finished: git_nci_no_rank(const VecReal& ground_state, const Int ex_pos).
+    next do : test this function.
+    tinking : Rank equation was writting some thing wrong? why it will calc the minus number?

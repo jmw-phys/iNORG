@@ -11,7 +11,8 @@ using namespace std;
 
 Asnci::Asnci(const NORG& norg, Idx trncat_size):
     dim(trncat_size), mm(norg.mm), p(norg.p), hop_h(norg.scsp.hopint), mayhop(find_mayhop()),
-    nosp(norg.scsp), groundE(norg.groune_lst), core_dim(Int(trncat_size / Int(mayhop.size() / 4.0)))
+    nosp(norg.scsp), groundE(norg.groune_lst), 
+    core_dim(Int(trncat_size / Int(mayhop.size() )))
 {
     // inital = git_nci(norg);
     trncat = truncation(git_nci(norg.final_ground_state));
@@ -19,10 +20,15 @@ Asnci::Asnci(const NORG& norg, Idx trncat_size):
 
 Asnci::Asnci(const NORG& norg, Idx trncat_size, Int ex_pos):
     dim(trncat_size), mm(norg.mm), p(norg.p), hop_h(norg.scsp.hopint), mayhop(find_mayhop()),
-    nosp(norg.scsp), groundE(norg.groune_lst), core_dim(Int(trncat_size / Int(mayhop.size() / 4.0)))
+    nosp(norg.scsp), groundE(norg.groune_lst), 
+    core_dim(Int(trncat_size / Int(mayhop.size() / 4.0)))
 {
-    Nci nci = git_nci(norg.final_ground_state, ex_pos);
-    trncat = truncation(nci);
+    // !Nci nci = git_nci(norg.final_ground_state, ex_pos);
+    // !trncat = truncation(nci);
+    Nci nci(git_nci_no_rank(norg.final_ground_state, ex_pos));
+    dim = nci.first.size();
+    // add the map
+    for_Int(cunt, 0, dim) cfig_idx.insert(pair<array<UInt,6>, Int>(nci.first[cunt], cunt));
 
     // trncat = truncation(git_nci(norg.final_ground_state, ex_pos));
 }
@@ -135,6 +141,12 @@ Nci Asnci::git_nci(const VecReal& ground_state) {
         {
             const Idx& ci_idx = groundstate_idx[i];
             StateStatistics cig(ci_idx, nosp.wherein_NocSpace(ci_idx), nosp);
+
+            // {// open to test the ground state.            
+            //     if(mm) cig.string();
+            //     if(mm) WRN(NAV4(i,ci_idx,grndste_norm[ci_idx],ex_pos));
+            //     if(mm) show_string(cig.cfg2nums());
+            // }
             cfigs.push_back(cig.cfg2nums());
             ranks.push_back(ground_state[ci_idx]);
         }
@@ -156,11 +168,6 @@ Nci Asnci::git_nci(const VecReal& ground_state, const Int ex_pos) {
         const Idx& ci_idx = groundstate_idx[i];
         StateStatistics cig(ci_idx, nosp.wherein_NocSpace(ci_idx), nosp);
 
-        // {// open to test the ground state.            
-        //     if(mm) cig.string();
-        //     if(mm) WRN(NAV4(i,ci_idx,grndste_norm[ci_idx],ex_pos));
-        //     if(mm) show_string(cig.cfg2nums());
-        // }
         if(check_ifinex(cig, ex_pos)){
             cfigs.push_back(cig.cfg2ex2nums(ex_pos));
             
@@ -172,8 +179,47 @@ Nci Asnci::git_nci(const VecReal& ground_state, const Int ex_pos) {
         }
     }
     for_Int(i, 0, core_dim) ranks.push_back(cfi2rank(cfigs[i], cfigs));
+
+    {
+        VecReal probability(core_dim); for_Int(i, 0, core_dim) probability[i] = grndste_norm[groundstate_idx[i]];
+        if(mm) WRN(NAV(probability.truncate(0,100)));
+
+        VecReal norm = SQR(Vec(ranks));
+        VecIdx ranks_idx(sort_indexes(norm));
+        VecReal ranks_sort(core_dim); for_Int(i, 0, core_dim) ranks_sort[i] = ranks[ranks_idx[i]];
+        if(mm) WRN(NAV(ranks_sort.truncate(0,100)));
+    }
     if(mm) WRN("Done here, finish the git_nci() clc, need to expand"+NAV2(cfigs.size(),ranks.size()))
-    expand(natural_cfg); cfigs.shrink_to_fit(); ranks.shrink_to_fit();
+    // expand(natural_cfg); cfigs.shrink_to_fit(); ranks.shrink_to_fit();
+    return natural_cfg;
+}
+
+// get the  FULL norg ground state's ex-state
+Nci Asnci::git_nci_no_rank(const VecReal& ground_state, const Int ex_pos) {
+    Nci                         natural_cfg;
+    VEC<array<UInt,6>>&         cfigs(natural_cfg.first);
+    VEC<Real>&                  coefs(natural_cfg.second);
+
+    VecReal grndste_norm = SQR(ground_state);
+    VecIdx groundstate_idx(sort_indexes(grndste_norm));
+
+    for_Int(i, 0, ground_state.size()) {
+        const Idx& ci_idx = groundstate_idx[i];
+        StateStatistics cig(ci_idx, nosp.wherein_NocSpace(ci_idx), nosp);
+
+        if(check_ifinex(cig, ex_pos)){
+            cfigs.push_back(cig.cfg2ex2nums(ex_pos));
+            // {// test for the cfig we in put.
+                // if(mm) cig.string();
+                // if(mm) WRN(NAV(ex_pos));
+                // if(mm) show_string(cig.cfg2ex2nums(ex_pos));
+            // }
+            coefs.push_back(ground_state[ci_idx]);
+        }
+    }
+
+    if(mm) WRN("Done here, finish the git_nci() clc, need to expand"+NAV2(cfigs.size(),coefs.size()))
+    expand_no_rank(natural_cfg, groundstate_idx, ex_pos); cfigs.shrink_to_fit(); coefs.shrink_to_fit();
     return natural_cfg;
 }
 
@@ -215,6 +261,26 @@ void Asnci::expand(Nci& natural_cfgs) {
     if(mm) WRN(NAV(cfigs.size()));
 }
 
+void Asnci::expand_no_rank(Nci& natural_cfgs, const VecIdx& prob_idx, const Int& ex_pos) {
+    VEC<array<UInt,6>>&        cfigs(natural_cfgs.first);
+    VEC<Real>&                 coefs(natural_cfgs.second);
+
+    Vec<VecBool> cfigs_core(cfigs.size());
+    for_Idx(i, 0, core_dim){
+        cfigs_core[i] = intsToVectorBool(cfigs[prob_idx[i]]);
+    }
+    for_Idx(i, 0, cfigs_core.size()){
+        for(const auto j : mayhop) if(judge(cfigs_core[i], j)) {
+                VecBool new_cfig(change_cfg(cfigs_core[i], j));
+            if(!nosp.ifin_NocSpace(back2nospace(new_cfig, -ex_pos), nosp.nppso)){
+                cfigs.push_back(VectorBoolToints(new_cfig));
+                coefs.push_back(0.);
+            }
+        }
+    }
+    if(mm) WRN(NAV2(cfigs.size(),coefs.size()));
+}
+
 Nci Asnci::truncation(Nci inital) {
     VEC<array<UInt,6>>  cfigs;
     VEC<Real>           ranks;
@@ -231,7 +297,7 @@ Nci Asnci::truncation(Nci inital) {
     }
     cfigs.shrink_to_fit(); ranks.shrink_to_fit();
 
-    if(mm) WRN(NAV(Vec(ranks).truncate(0,1024)));
+    // if(mm) WRN(NAV(Vec(ranks).truncate(0,1024)));
     return pair(cfigs, ranks);
 }
 
@@ -295,9 +361,9 @@ Real Asnci::hamilton_value(const VecBool& alpha, const VecBool& beta_i) {
         for_Int(i, 0, norb) if(alpha[i] ^ beta_i[i])  beta_i[i] ? ann = i : crt = i;
         if(crt >= 0 && ann >= 0) value = crt > ann ? hop_h[crt][ann] : - hop_h[crt][ann];
         else {
-            if(mm) {
-                WRN("some thing wrong in here!");
-                show_string(VectorBoolToints(alpha)); show_string(VectorBoolToints(beta_i));}
+            // if(mm) {
+            //     WRN("some thing wrong in here!");
+            //     show_string(VectorBoolToints(alpha)); show_string(VectorBoolToints(beta_i));}
             // ERR("some thing wrong in here!"+NAV2(alpha.string(),beta_i.string()));
             }
         return value;

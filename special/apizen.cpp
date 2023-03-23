@@ -43,19 +43,20 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 		for (int &i : idx) {
 			StdVecInt difference = {(i+1), -(i+1)};
 			for(const auto ii: difference)	{
-				Asnci nci(norg, Int(10000), ii);
+				Asnci nci(norg, Int(1000), ii);
 				// ! nci.asnci_gimp(g_asnci, ii);
 			}
 		}
 		for_Int(i, 0, or_deg.size()) for_Int(n, 0, g_asnci.nomgs) g_asnci[n][i][i] = g_asnci[n][idx[or_deg[i] - 1]][idx[or_deg[i] - 1]];
-		if (mm) gfimp.write_zen("gfimp");
+		if (mm) g_asnci.write_zen("g_asnci");
 	}
 
 	// ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp);				if (mm) gfimp.write_zen("gfimp");
 	// if(mm) gfimp.write_occupation_info();
 	// if(mm) WRN(NAV(gfimp.particle_number().diagonal()));
-	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();	if (mm) seimp.write_zen("seimp_before_fix");
-	seimp = fix_se(seimp);													if (mm) seimp.write_zen("seimp");
+	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();	
+	// if (mm) seimp.write_zen("before_fix_seimp");						seimp = fix_se(seimp);
+	if (mm) seimp.write_zen("seimp");
 }
 
 void APIzen::test_for_fitting(const Bath& bth, const ImGreen& hby_i, Int num)
@@ -338,8 +339,12 @@ ImGreen APIzen::fix_se(const ImGreen& se) const{
     ImGreen se_fix(se);
     MatReal mat_nfit(se.norbs, se.norbs);
     MatReal mat_slope(se.norbs, se.norbs);
-    MatReal mat_term_2(se.norbs, se.norbs);
-    MatReal mat_term_0(se.norbs, se.norbs);
+    // MatReal mat_term_2(se.norbs, se.norbs);
+    // MatReal mat_term_0(se.norbs, se.norbs);
+
+	//A*e^(\alpha(iw))
+    MatReal mat_A(se.norbs, se.norbs);
+    MatReal mat_alpha(se.norbs, se.norbs);
     for_Int(row, 0, se.norbs) {
         // for_Int(col, 0, se.norbs) {
 			Int col = row; Int abandon_n = se.nomgs-1;
@@ -348,7 +353,7 @@ ImGreen APIzen::fix_se(const ImGreen& se) const{
                 if(imag(se[abandon_n][row][col]) > 0.) break;
             }
             
-            Int n_fit=0; Real max_slope(0.);
+            Int n_fit = 0; Real max_slope(0.);
             //if(abandon_n < p.fit_max_omg){
                 for_Int(n, abandon_n, p.fit_max_omg) {
                     Real slope = imag(se[n][row][col]) / se.omg(n);
@@ -358,17 +363,27 @@ ImGreen APIzen::fix_se(const ImGreen& se) const{
                     }
                 }
             //}
-            Real term_2 = (real(se[n_fit + 1][row][col]) - real(se[n_fit][row][col])) / (2 * se.omg(n_fit) * 2 * se.unit_omg);
-            Real term_0 = real(se[n_fit][row][col]) - term_2 * SQR(se.omg(n_fit));
-            for_Int(n, 0, n_fit) {
-                se_fix[n][row][col] = term_0 + term_2 * SQR(se.omg(n)) + I * max_slope * se.omg(n);
-            }
+            // Real term_2 = (real(se[n_fit + 1][row][col]) - real(se[n_fit][row][col])) / (2 * se.omg(n_fit) * 2 * se.unit_omg);
+            // Real term_0 = real(se[n_fit][row][col]) - term_2 * SQR(se.omg(n_fit));
+            // for_Int(n, 0, n_fit) {
+            //     se_fix[n][row][col] = term_0 + term_2 * SQR(se.omg(n)) + I * max_slope * se.omg(n);
+            // }
+
+            Real term_alpha = atan(imag(se[n_fit][row][col])/real(se[n_fit][row][col]))/se.omg(n_fit);
+            Real term_A = imag(se[n_fit][row][col])/(sin(term_alpha*se.omg(n_fit)));
+            for_Int(n, 0, n_fit) se_fix[n][row][col] = term_A * std::exp(term_alpha * se.z_omg[n_fit]);
+
             mat_nfit[row][col] = n_fit;
             mat_slope[row][col] = max_slope;
-            mat_term_2[row][col] = term_2;
-            mat_term_0[row][col] = term_0;
+            mat_A[row][col] = term_A;
+            mat_alpha[row][col] = term_alpha;
+            // mat_term_2[row][col] = term_2;
+            // mat_term_0[row][col] = term_0;
         // }
     }
+
+	if(mm) PIO(NAVC4(mat_nfit.diagonal().mat(1,p.nband),mat_slope.diagonal().mat(1,p.nband),mat_A.diagonal().mat(1,p.nband),mat_alpha.diagonal().mat(1,p.nband)))
+	
     // if(mm){
     //     OFS ofs(iox + "zic" + prefill0(iter_cnt, 3) + ".mat_fix" + ".log" + ".txt");
     //     ofs<< "mat_nfit" << "\n" << mat_nfit << endl;

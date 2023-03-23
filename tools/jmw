@@ -1,0 +1,11 @@
+#!/bin/bash
+#SBATCH -p G1Part_sce
+#SBATCH -o
+#SBATCH -e
+#SBATCH -N 2
+#SBATCH --ntasks-per-node 28
+#SBATCH -c 1
+#SBATCH -J jmw
+#SBATCH --exclusive
+
+mpirun -n 56 ./norg ->Ajmw.txt

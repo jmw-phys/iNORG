@@ -142,6 +142,8 @@ public:
 	bool ifin_NocSpace(MatInt& spilss_div, const VecInt& nppso) const;
 	bool suit_NOOC(MatInt& spilss_div, const VecInt& nppso) const;
 	
+	bool ifin_NocSpace(const VecBool new_cfig, const VecInt& nppso) const;
+
 	bool ifin_NocSpace_more_strict(MatInt& spilss_div, const VecInt& nppso) const;
 
 	Int wherein_NocSpace(const Int& h_i) const;

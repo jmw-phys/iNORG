@@ -524,6 +524,35 @@ bool NocSpace::suit_NOOC(MatInt& spilss_div, const VecInt& nppso) const
 	// else ERR("nooc_mode in put was wrong!");
 }
 
+bool NocSpace::ifin_NocSpace(const VecBool new_cfig, const VecInt& nppso) const
+{
+	MatInt spilss_div(sit_mat.nrows(), sit_mat.ncols(), 0);
+	{//chnage new_cfig to spilss_div
+		VecInt sit_vec(sit_mat.vec());
+		for_Int(i, 0, sit_vec.size()) for_Int(j, SUM_0toX(sit_vec, i), SUM_0toX(sit_vec, i+1)) spilss_div.vec()[i] += new_cfig[j] ? 1 : 0;
+	}
+
+
+	if(ndivs%2) ERR("ndivs is not a even number!");
+	for_Int(i, 0, p.norg_sets)	if( sit_mat[i][0] + sit_mat[i][ndivs/2] < nppso[i] - SUM(spilss_div[i]) || nppso[i] - SUM(spilss_div[i]) < 0) return false;
+
+	// if(mm) WRN(NAV(spilss_div));
+	MatInt tmp_cntrl_divs = concat(control_divs.tr().truncate_row(1, ndivs/2).vec(), \
+	control_divs.tr().truncate_row(ndivs/2+1, ndivs).vec()).mat(spilss_div.ncols(),spilss_div.nrows()+1).tr();
+	// if(mm) WRN(NAV(tmp_cntrl_divs));
+	for_Int(i, 1, tmp_cntrl_divs.nrows()) for_Int(j, 0, ndivs - 2) if (spilss_div[i - 1][j] < 0 || spilss_div[i - 1][j] > tmp_cntrl_divs[i][j]) return false;
+	VecInt spils_c(spilss_div.ncols(), 0), zero(1,0);
+	for_Int(j, 0, spilss_div.ncols()) for_Int(i, 0, spilss_div.nrows()) spils_c[j] += spilss_div[i][j];
+	VecInt countvec = concat(concat(zero,spils_c.truncate(0, spils_c.size()/2)),concat(zero,spils_c.truncate(spils_c.size()/2, spils_c.size())));
+	// if(mm) WRN(NAV(countvec));
+	for_Int(i, 1, ndivs) if(!check_each_column(i, countvec)) return false;
+	if(p.nooc_mode == STR("nooc")) return true;
+	else if(p.nooc_mode == STR("cpnooc")) {for_Int(i, 1, ndivs/2 - 1) if(check_correlated_column(i, countvec)) return false;}
+	else if(p.nooc_mode == STR("cnooc")) {for_Int(i, 1, ndivs/2) if(check_correlated_column(i, countvec)) return false;}
+	return true;
+	// else ERR("nooc_mode in put was wrong!");
+}
+
 bool NocSpace::ifin_NocSpace_more_strict(MatInt& spilss_div, const VecInt& nppso) const
 {
 	for_Int(i, 0, p.norg_sets)	if(SUM(spilss_div[i]) != nppso[i]) return false;
