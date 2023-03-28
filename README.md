@@ -60,3 +60,8 @@ Version: v1.0.12 @ 2023.03.28
     finished: change the state function, use vecbool to express; add the H to save the final coefficient.
     next do : Now face the problem with the calc Green.
     tinking : Rank equation was writting some thing wrong? why it will calc the minus number?
+
+Version: v1.0.13 @ 2023.03.28
+    finished: fix some print out problem.
+    next do : (same as prev)
+    tinking : (same as prev)
