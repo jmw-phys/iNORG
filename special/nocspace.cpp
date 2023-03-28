@@ -91,12 +91,17 @@ VecReal NocSpace::set_row_primeter_by_gived_mat(const VEC<MatReal>& uormat_i, co
 	VecReal coefficient_i(hopint.vec());
 	VecReal check_point(1, 0.); coefficient_i.reset(concat(check_point, coefficient_i));
 	// // VecReal orbital_correction({ u_hbd, (u_hbd - (2 * j_ob)), (u_hbd - (3 * j_ob)), (u_hbd - (3 * j_ob)) });
-	// // VecReal orbital_correction({ u_hbd, p.hubbU12, p.hubbU12, p.hubbU12 });
+	// // VecReal orbital_correction({ u_hbd, p.U12, p.U12, p.U12 });
 	// {U, U':u d, U':u u, U':d d}
-	VecReal orbital_correction({ p.hubbU, p.uprime, p.uprime - p.jz, p.uprime - p.jz });
-	// VecReal orbital_correction({ p.hubbU * 0.25, p.uprime * 0.25, (p.uprime - p.jz) * 0.25, (p.uprime - p.jz) * 0.25 });
-	// VecReal orbital_correction({ 0.25 * p.hubbU, 0. * p.hubbU, 0. * p.hubbU, 0. * p.hubbU });
+	VecReal orbital_correction({ p.U, p.Uprm, p.Uprm - p.jz, p.Uprm - p.jz });
+	// VecReal orbital_correction({ p.U * 0.25, p.Uprm * 0.25, (p.Uprm - p.jz) * 0.25, (p.Uprm - p.jz) * 0.25 });
+	// VecReal orbital_correction({ 0.25 * p.U, 0. * p.U, 0. * p.U, 0. * p.U });
 	return concat(coefficient_i, orbital_correction);
+}
+
+VecReal set_row_primeter_byfullH(const VEC<MatReal>& uormat_i, const MatReal& h0, const Mat<MatReal>& h_inter)
+{
+	
 }
 
 // find all the combined number subspaces OR find all the combined number subspaces with special partical control.
@@ -638,7 +643,7 @@ void NocSpace::print(std::ostream& os) const
 #define nocspace_print(var, comment) print(os, NAME(var), STR(var), comment)
 
 	using namespace std;
-	Str cnooc = p.nooc_mode;
+	Str NOOC = p.nooc_mode;
 	Str nppsos = nppso_str(nppso);
 
 
@@ -649,14 +654,14 @@ void NocSpace::print(std::ostream& os) const
 	nocspace_print(nspa, "The amount of partical's number.");
 	nocspace_print(dim, "the dimension of the Shortcut space.");
 	// nocspace_print(ndivs, "The amount of divisons's number. ");
-	nocspace_print(cnooc, "Correlation nature orbital occupation constraint.");
+	nocspace_print(NOOC, "Correlation nature orbital occupation constraint.");
 	nocspace_print(control_divs, "to set the number of division and the shortcut restratin.");
 	// nocspace_print(h0, "transformed hopping integral");
 	// nocspace_print(mu, "-mu");
-	nocspace_print(p.hubbU, " The Hubbard term U.");
-    nocspace_print(p.uprime, "The U^' term");
+	nocspace_print(p.U, "The Hubbard term U.");
+    nocspace_print(p.Uprm, "The U^' term");
     nocspace_print(p.jz, "The hund coupling");
-	// u_hbd, p.hubbU12, p.hubbU12, p.hubbU12
+	// u_hbd, p.U12, p.U12, p.U12
 
 	os << "// prmtr print end  " << present() << endl;
 

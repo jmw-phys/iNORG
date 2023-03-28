@@ -37,9 +37,9 @@ void Prmtr::set_inert_values()
 
 void Prmtr::set_values() {
     //model related
-    hubbU = 4.;
+    U = 4.;
     jz = 0.7;
-    uprime = hubbU - 2 * jz;
+    Uprm = U - 2 * jz;
     mu = 0.;
     bandw = 50.;
 
@@ -77,7 +77,7 @@ void Prmtr::after_modify_prmtr() const
     norbit = SUM(control_divs.tr()[0]) + nbath;
     // npartical.reset(norg_sets, 0);
     // for_Int(i, 0, norg_sets) npartical[i] = SUM(control_divs[i + 1])/2;
-    uprime = hubbU - 2 * jz;
+    Uprm = U - 2 * jz;
     derive_ImGreen();
 }
 
@@ -131,8 +131,8 @@ void Prmtr::derive() {
     Re_z.reset(nfreq);
     for_Int(n, 0, nfreq) Re_z[n] = Cmplx(freq_low + n * dlt_freq, eta_freq);
 
-    // max_omg = 4 * SQRT(SQR(hubbU) + DOT(t, t));    
-    // max_omg = 2 * (ABS(hubbU) + 8 * SQRT(DOT(t, t) - t[0] * t[0]));
+    // max_omg = 4 * SQRT(SQR(U) + DOT(t, t));    
+    // max_omg = 2 * (ABS(U) + 8 * SQRT(DOT(t, t) - t[0] * t[0]));
     max_omg = unit_omg * 8193 * 2;
 
     num_omg = Int_ROUND(max_omg / unit_omg / 2);
@@ -173,8 +173,8 @@ void Prmtr::print(std::ostream &os) const {
    	prmtr_print(cnooc, "Correlation nature orbital occupation constraint.");
     prmtr_print(control_divs, "to set the number of division and the shortcut restratin.");
     // prmtr_print(stage2, "to set the number of division and the shortcut restratin @ stage2.");
-    prmtr_print(hubbU, "The hubbard U interaction strength");
-    prmtr_print(uprime, "The U^' term");
+    prmtr_print(U, "The hubbard U interaction strength");
+    prmtr_print(Uprm, "The U^' term");
     prmtr_print(jz, "The hund coupling");
     prmtr_print(mu, "The chemical potential");
     // for_Int(i,0,t.size()) prmtr_print(t[i], "quarter bandwidth");

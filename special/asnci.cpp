@@ -357,7 +357,7 @@ Real Asnci::cfi2rank(const array<UInt,6>& alpha_number, const VEC<array<UInt,6>>
 
 // ?! The H_a,b need to consider the Anticommutativity？
 Real Asnci::hamilton_value(const VecBool& alpha, const VecBool& beta_i) {
-    Real value(0.), uz(p.hubbU), jz = (p.jz);
+    Real value(0.), uz(p.U), jz = (p.jz);
     Idx nimp(p.norbs), nband(p.nband), norb(p.norbit);
     if(beta_i.size() == 0 || (alpha == beta_i)) {
         // Vec<Char> a_cfig(alpha.size()); for_Int(i, 0, a_cfig.size()) a_cfig[i] = alpha[i];
@@ -424,7 +424,7 @@ Tab Asnci::find_h_idx()
     const VEC<array<UInt,6>>&   cfigs(trncat.first);
     const VEC<Real>&                  ranks(trncat.second);
 
-    Real uz(p.hubbU), jz = (p.jz);
+    Real uz(p.U), jz = (p.jz);
     Idx nimp(p.norbs), nband(p.nband), norb(p.norbit);
     
     Idx cut_H_need(0);
