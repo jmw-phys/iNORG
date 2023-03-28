@@ -52,11 +52,15 @@ private:
 	// find the div's idx according to the "newdiv".
 	Int find_newdiv_idx(MatInt newdiv);
 
-	inline UInt vectorBoolToInt(const VecBool &vec) {
-		UInt result = 0;
-		for_Int(i, 0, vec.size()) result |= (vec[i] << i);
-		return result;
-	}
+	// inline UInt vectorBoolToInt(const VecBool &vec) {
+	// 	UInt result = 0;
+	// 	// Int_for(i, 0, vec.size()) result |= (vec[i] << i);
+	// 	Int_for(i, 0, vec.size()) {
+	// 		result <<= 1;
+    //         if (vec[i]) result |= 1;
+	// 	}
+	// 	return result;
+	// }
 
 public:
 	//state(Int idxD, VecInt bases_i) :idx(idxD), bases(bases_i) {};
@@ -81,9 +85,9 @@ public:
 	// [i][0]:annihilation orbit's position; [i][1]:creation orbit's positon; [i][2]:Colum idx(i); [i][3]:sign(fermion anticommutativity)
 	VEC<VecInt> off_diagonal_soc_term(const VEC<MatInt> &hop_soc);
 
-	Str string();
+	Mat<Char> show_cfg();
 
-	std::array<UInt,6> cfg2nums();
+	VecBool cfg2vecbool();
 	
-	std::array<UInt,6> cfg2ex2nums(Int ex_pos);
+	VecBool cfgex2vecbool(Int ex_pos) ;
 };

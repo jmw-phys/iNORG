@@ -239,7 +239,7 @@ VEC<MatInt> StateStatistics::interation_soc_hop(const Int& ComDiv)
 	return hop_soc;
 }
 
-Str StateStatistics::string() {
+Mat<Char> StateStatistics::show_cfg() {
 	const VecOnb& cf(cfg.cf);
 	Str cfig;
 	for_Int(i, 0, cf.size()){
@@ -249,8 +249,8 @@ Str StateStatistics::string() {
 	}
 	Vec<Char> ci(cfig.length());
 	for_Int(i, 0, ci.size()) ci[i] = cfig[i];
-	if(space.mm) WRN(NAV(ci.mat(space.p.norbs,space.p.nI2B[0]+1)));
-	return cfig;
+	// if(space.mm) WRN(NAV(ci.mat(space.p.norbs,space.p.nI2B[0]+1)));
+	return ci.mat(space.p.norbs,space.p.nI2B[0]+1);
 }
 
 /* version 1
@@ -269,40 +269,40 @@ std::array<UInt,6> StateStatistics::cfg2nums() {
 */
 
 // version 2
-std::array<UInt,6> StateStatistics::cfg2nums() {
-	std::array<UInt,6> nums;
-	MatOnb cf_temp(cfg.cf.mat(occ_n.nrows(), occ_n.ncols()));
+VecBool StateStatistics::cfg2vecbool() {
+	const VecOnb cf(cfg.cf);
 	
-	for_Int(row, 0, occ_n.nrows()){
-		const VecOnb cf(cf_temp[row]);
-		VecBool cfig(SUM(occ_n[row]), false);
-		Int cunt = 0;
-		for_Idx(i, 0, cf.size()){
-			for_Int(j, 0, cf[i].get_ns()) cfig[cunt++] = cf[i].isocc(j);
+	Str cfig;
+	for_Int(i, 0, cf.size()){
+		for_Int(j, 0, cf[i].get_ns()){
+			cfig += cf[i][j] ? '1':'0';
 		}
-		nums[row] = vectorBoolToInt(cfig);
 	}
-	return std::move(nums);
+	VecBool ci(cfig.length());
+	for_Int(i, 0, ci.size()) ci[i] = cfig[i] == '1' ? true : false;
+
+	return std::move(ci);
 }
 
 // version 2
-std::array<UInt,6> StateStatistics::cfg2ex2nums(Int ex_pos) {
-	std::array<UInt,6> nums;
+VecBool StateStatistics::cfgex2vecbool(Int ex_pos) {
+	
 	MatOnb cf_temp(cfg.cf.mat(occ_n.nrows(), occ_n.ncols()));
 	Idx pos(ABS(ex_pos) - 1);
 	cf_temp[pos][0] = ex_pos > 0 ? cf_temp[pos][0].crt(0) : cf_temp[pos][0].ann(0);
 	
-	for_Int(row, 0, occ_n.nrows()){
-		const VecOnb cf(cf_temp[row]);
-		VecBool cfig(SUM(occ_n[row]), false);
-		Int cunt = 0;
-		for_Idx(i, 0, cf.size()){
-			for_Int(j, 0, cf[i].get_ns()) cfig[cunt++] = cf[i].isocc(j);
+	const VecOnb cf(cf_temp.vec());
+	
+	Str cfig;
+	for_Int(i, 0, cf.size()){
+		for_Int(j, 0, cf[i].get_ns()){
+			cfig += cf[i][j] ? '1':'0';
 		}
-		nums[row] = vectorBoolToInt(cfig);
 	}
+	VecBool ci(cfig.length());
+	for_Int(i, 0, ci.size()) ci[i] = cfig[i] == '1' ? true : false;
 
-	return std::move(nums);
+	return std::move(ci);
 }
 
 /*  version 1

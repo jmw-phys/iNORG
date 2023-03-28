@@ -55,3 +55,8 @@ Version: v1.0.11 @ 2023.03.23
     finished: git_nci_no_rank(const VecReal& ground_state, const Int ex_pos).
     next do : test this function.
     tinking : Rank equation was writting some thing wrong? why it will calc the minus number?
+
+Version: v1.0.12 @ 2023.03.28
+    finished: change the state function, use vecbool to express; add the H to save the final coefficient.
+    next do : Now face the problem with the calc Green.
+    tinking : Rank equation was writting some thing wrong? why it will calc the minus number?

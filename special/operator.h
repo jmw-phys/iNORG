@@ -19,6 +19,7 @@ public:
 	const Prmtr& p;					// parameters
 	const NocSpace& scsp;			// NocSpace
 	const Idx dim;
+    const VecReal& coefficient;      // coefficient for all the H's terms
 
 	Tab table;						// The movement by two femi operator contain.
 	Real groundstate_energy;		// The ground state energy on this shortcut restratin.
@@ -30,7 +31,7 @@ private:
 public:
 	// Expand the Shortcut space under Number of particles(NumberSpa).
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i);
-	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab &tab);
+	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab &tab, const VecReal& coefficient_i);
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i,const Tab &per_table);
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i, Str tab_name);
 	

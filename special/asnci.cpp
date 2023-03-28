@@ -11,8 +11,9 @@ using namespace std;
 
 Asnci::Asnci(const NORG& norg, Idx trncat_size):
     dim(trncat_size), mm(norg.mm), p(norg.p), hop_h(norg.scsp.hopint), mayhop(find_mayhop()),
-    nosp(norg.scsp), groundE(norg.groune_lst), 
-    core_dim(Int(trncat_size / Int(mayhop.size() )))
+    nosp(norg.scsp), groundE(norg.groune_lst), coefficient(norg.scsp.coefficient),
+    // core_dim(Int(trncat_size / Int(mayhop.size() )))
+    core_dim(trncat_size)
 {
     // inital = git_nci(norg);
     trncat = truncation(git_nci(norg.final_ground_state));
@@ -20,15 +21,35 @@ Asnci::Asnci(const NORG& norg, Idx trncat_size):
 
 Asnci::Asnci(const NORG& norg, Idx trncat_size, Int ex_pos):
     dim(trncat_size), mm(norg.mm), p(norg.p), hop_h(norg.scsp.hopint), mayhop(find_mayhop()),
-    nosp(norg.scsp), groundE(norg.groune_lst), 
-    core_dim(Int(trncat_size / Int(mayhop.size() / 4.0)))
+    nosp(norg.scsp), groundE(norg.groune_lst), coefficient(norg.scsp.coefficient),
+    // core_dim(Int(trncat_size / Int(mayhop.size() / 4.0)))
+    core_dim(trncat_size),
+    trncat(git_nci_no_rank(norg.final_ground_state, ex_pos))
 {
     // !Nci nci = git_nci(norg.final_ground_state, ex_pos);
     // !trncat = truncation(nci);
-    Nci nci(git_nci_no_rank(norg.final_ground_state, ex_pos));
-    dim = nci.first.size();
+    // trncat = git_nci_no_rank(norg.final_ground_state, ex_pos);
+
+    dim = trncat.first.size();
+
     // add the map
-    for_Int(cunt, 0, dim) cfig_idx.insert(pair<array<UInt,6>, Int>(nci.first[cunt], cunt));
+
+
+
+    if(mm) WRN(NAV2(dim,cfig_idx.size()))
+    // // for_Int(i, 0, dim) cfig_idx.insert(pair<array<UInt,6>, Int>(trncat.first[i], i));
+    for_Int(i, 0, dim) {
+        if(!cfig_idx.insert(make_pair(trncat.first[i], i)).second){
+            
+            if(mm) WRN(NAV3(show_string(trncat.first[i]), cfig_idx.at(trncat.first[i]), i));
+            
+        }
+    }
+    // // for_Int(i, 0, dim) cfig_idx[trncat.first[i]] = i;
+
+
+    if(mm) WRN(NAV(cfig_idx.size()))
+    find_h_idx();
 
     // trncat = truncation(git_nci(norg.final_ground_state, ex_pos));
 }
@@ -42,31 +63,22 @@ NORG Asnci::get_norg(Tab table, Int mode) {
 
 void Asnci::asnci_gimp(Green& imp_i, Int ex_pos)
 {
-	// VecInt idx(MAX(or_deg),0); Int cter(0);
-	// for_Int(i, 0, or_deg.size()) if(cter < or_deg[i]) idx[cter++] = i; 
-	// for (int &i : idx) {
-	// 	StdVecInt difference = {(i+1), -(i+1)};
-	// 	for(const auto ii: difference)
-	// 	{
-			// Operator opr_sub(mm, p, find_h_idx());
-            Int crtorann = ex_pos>0 ? 1: -1;
-			CrrltFun temp_green(mm, p, find_h_idx(), find_ex_state(), crtorann);
-			if(imp_i.type_info() == STR("ImGreen")) {
-				ImGreen green_function(1, p);
-				if(ex_pos > 0) temp_green.find_gf_greater(groundE, green_function);
-				if(ex_pos < 0) temp_green.find_gf_lesser(groundE, green_function);
-				for_Int(n, 0, green_function.nomgs) imp_i[n][ex_pos - 1][ex_pos - 1] += green_function[n][0][0];
-			}
-			if(imp_i.type_info() == STR("ReGreen")) {
-				ReGreen green_function(1, p);
-				if(ex_pos > 0) temp_green.find_gf_greater(groundE, green_function);
-				if(ex_pos < 0) temp_green.find_gf_lesser(groundE, green_function);
-				for_Int(n, 0, green_function.nomgs) imp_i[n][ex_pos - 1][ex_pos - 1] += green_function[n][0][0];
-			}
-	// 	}
-	// 	if (mm) PIO("finished the " + STR(i) + " find_g_norg   " + present());
-	// }
-	// for_Int(i, 0, or_deg.size()) for_Int(n, 0, imp_i.nomgs) imp_i[n][i][i] = imp_i[n][idx[or_deg[i] - 1]][idx[or_deg[i] - 1]];
+    Int crtorann = ex_pos > 0 ? 1 : -1, pos(ABS(ex_pos) - 1);
+    Operator oper(mm, p, find_h_idx(), coefficient);
+    CrrltFun temp_green(mm, p, oper, find_ex_state(), crtorann);
+    if (imp_i.type_info() == STR("ImGreen"))
+    {
+        ImGreen green_function(1, p);
+        if (ex_pos > 0) temp_green.find_gf_greater(groundE, green_function);
+        if (ex_pos < 0) temp_green.find_gf_lesser(groundE, green_function);
+        // for_Int(n, 0, green_function.nomgs) imp_i[n][pos][pos] += green_function[n][0][0];
+    }
+    if(imp_i.type_info() == STR("ReGreen")) {
+        ReGreen green_function(1, p);
+        if(ex_pos > 0) temp_green.find_gf_greater(groundE, green_function);
+        if(ex_pos < 0) temp_green.find_gf_lesser(groundE, green_function);
+        // for_Int(n, 0, green_function.nomgs) imp_i[n][pos][pos] += green_function[n][0][0];
+    }
 }
 
 
@@ -74,15 +86,15 @@ void Asnci::asnci_gimp(Green& imp_i, Int ex_pos)
 
 VEC<Int> Asnci::find_mayhop() {
     VEC<Int>    mayhop_i;
-    if(mm) WRN(NAVC1(hop_h));
     if(hop_h.size() == 0) ERR("hop_h.size() = 0");
     // for_Int(i, 0, hop_h.size())  if(ABS(hop_h.vec()[i]) > 1e-6) mayhop_i.push_back(i);
     for_Int(i, 0, hop_h.size())  if(ABS(hop_h.vec()[i]) > 0.0) mayhop_i.push_back(i);
     mayhop_i.shrink_to_fit();
+    if(mm) WRN(NAV2(hop_h, mayhop_i.size()));
     return move(mayhop_i);
 }
 
-VecBool Asnci::intsToVectorBool(std::array<UInt,6> nums) {
+VecBool Asnci::ints2vecbool(std::array<UInt,6> nums) {
     VecBool cfig(p.norbit, false);
     for_Int(i, 0, p.norbs){
         UInt num = nums[i];
@@ -95,7 +107,17 @@ VecBool Asnci::intsToVectorBool(std::array<UInt,6> nums) {
     return cfig;
 }
 
-std::array<UInt,6> Asnci::VectorBoolToints(const VecBool &vec) {
+VecBool Asnci::back2nospace(const VecBool& new_cfig, const Int change_pos){
+    Mat<bool> cfig(new_cfig.mat(nosp.sit_mat.nrows(), p.nI2B[0]+1));
+    Idx pos(ABS(change_pos) - 1);
+    // cfig[pos][0] ^= 1;
+    if(change_pos > 0 && !cfig[pos][0]) cfig[pos][0] = true;
+    else if(change_pos < 0 && cfig[pos][0]) cfig[pos][0] = false;
+    else cfig.reset();
+    return cfig.vec();
+}
+
+std::array<UInt,6> Asnci::vecbool2ints(const VecBool &vec) {
     std::array<UInt,6> nums;
     for_Int(i, 0, nums.size()){
         UInt result = 0;
@@ -120,12 +142,12 @@ VecBool Asnci::change_cfg(const VecBool& cfg, Int pos) {
     return cfg_new;
 }
 
-Str Asnci::show_string(const std::array<UInt,6>& cifg) {
-    VecBool cfg(intsToVectorBool(cifg));
+Mat<Char> Asnci::show_string(const std::array<UInt,6>& cifg) {
+    VecBool cfg(ints2vecbool(cifg));
     Vec<Char> out(cfg.size());
     for_Int(i,0,cfg.size()) out[i] = cfg[i] ? '1':'0';
-    if(mm) WRN(NAV(out.mat(p.norbs,p.nI2B[0]+1)));
-    return out.string();
+    // if(mm) WRN(NAV(out.mat(p.norbs,p.nI2B[0]+1)));
+    return out.mat(p.norbs,p.nI2B[0]+1);
 }
 
 // get the norg ground state to Nci's space
@@ -147,7 +169,7 @@ Nci Asnci::git_nci(const VecReal& ground_state) {
             //     if(mm) WRN(NAV4(i,ci_idx,grndste_norm[ci_idx],ex_pos));
             //     if(mm) show_string(cig.cfg2nums());
             // }
-            cfigs.push_back(cig.cfg2nums());
+            cfigs.push_back(vecbool2ints(cig.cfg2vecbool()));
             ranks.push_back(ground_state[ci_idx]);
         }
     }
@@ -169,7 +191,7 @@ Nci Asnci::git_nci(const VecReal& ground_state, const Int ex_pos) {
         StateStatistics cig(ci_idx, nosp.wherein_NocSpace(ci_idx), nosp);
 
         if(check_ifinex(cig, ex_pos)){
-            cfigs.push_back(cig.cfg2ex2nums(ex_pos));
+            cfigs.push_back(vecbool2ints(cig.cfgex2vecbool(ex_pos)));
             
             // {// test for the cfig we in put.
                 // if(mm) cig.string();
@@ -204,22 +226,23 @@ Nci Asnci::git_nci_no_rank(const VecReal& ground_state, const Int ex_pos) {
     VecIdx groundstate_idx(sort_indexes(grndste_norm));
 
     for_Int(i, 0, ground_state.size()) {
-        const Idx& ci_idx = groundstate_idx[i];
+        const Idx ci_idx = groundstate_idx[i];
         StateStatistics cig(ci_idx, nosp.wherein_NocSpace(ci_idx), nosp);
 
         if(check_ifinex(cig, ex_pos)){
-            cfigs.push_back(cig.cfg2ex2nums(ex_pos));
+            cfigs.push_back(vecbool2ints(cig.cfgex2vecbool(ex_pos)));
             // {// test for the cfig we in put.
                 // if(mm) cig.string();
                 // if(mm) WRN(NAV(ex_pos));
-                // if(mm) show_string(cig.cfg2ex2nums(ex_pos));
+                // if(mm) WRN(NAV3(ci_idx, cig.show_cfg(), show_string(vecbool2ints(cig.cfgex2vecbool(ex_pos)))))
             // }
             coefs.push_back(ground_state[ci_idx]);
         }
     }
 
     if(mm) WRN("Done here, finish the git_nci() clc, need to expand"+NAV2(cfigs.size(),coefs.size()))
-    expand_no_rank(natural_cfg, groundstate_idx, ex_pos); cfigs.shrink_to_fit(); coefs.shrink_to_fit();
+    if(mm) WRN(NAV(coefs[core_dim - 1]));
+    // expand_no_rank(natural_cfg, groundstate_idx, ex_pos); cfigs.shrink_to_fit(); coefs.shrink_to_fit();
     return natural_cfg;
 }
 
@@ -230,7 +253,7 @@ void Asnci::expand(Nci& natural_cfgs) {
 
     Vec<VecBool> cfigs_core(cfigs.size());
     for_Idx(i, 0, cfigs.size()){
-        cfigs_core[i] = intsToVectorBool(cfigs[i]);
+        cfigs_core[i] = ints2vecbool(cfigs[i]);
     }
     for_Idx(i, 0, cfigs_core.size()){
         for(const auto j : mayhop) if(judge(cfigs_core[i], j)) {
@@ -238,7 +261,7 @@ void Asnci::expand(Nci& natural_cfgs) {
             Real rank = cfi2rank(new_cfig, cfigs_core);
             if(rank > 0.){
                 ranks.push_back(cfi2rank(new_cfig, cfigs_core));
-                cfigs.push_back(VectorBoolToints(new_cfig));
+                cfigs.push_back(vecbool2ints(new_cfig));
             }
 
 
@@ -250,11 +273,11 @@ void Asnci::expand(Nci& natural_cfgs) {
                 // if(mm) show_string(cfigs[i]);
                 // if(mm) {Int orbit_idx(j/(p.nI2B[0]+1)%p.norbs),ctr(j/(p.norbs*(p.nI2B[0]+1))%(p.nI2B[0]+1)), ann(j%(p.norbs*(p.nI2B[0]+1))%(p.nI2B[0]+1));
                 //         WRN(NAV5(i, SQR(ranks[i]), orbit_idx, ctr, ann));}
-                // if(mm) show_string(VectorBoolToints(new_cfig));
-                // if(mm) show_string(VectorBoolToints(intsToVectorBool(cfigs[i])));
+                // if(mm) show_string(vecbool2ints(new_cfig));
+                // if(mm) show_string(vecbool2ints(ints2vecbool(cfigs[i])));
                 // if(mm) WRN(NAV3(j,j/(p.nI2B[0]+1), j%(p.nI2B[0]+1)));
-                // if(mm) show_string(VectorBoolToints(new_cfig));
-                // if(mm) show_string(VectorBoolToints(intsToVectorBool(VectorBoolToints(new_cfig))));
+                // if(mm) show_string(vecbool2ints(new_cfig));
+                // if(mm) show_string(vecbool2ints(ints2vecbool(vecbool2ints(new_cfig))));
             }
         }
     }
@@ -265,20 +288,31 @@ void Asnci::expand_no_rank(Nci& natural_cfgs, const VecIdx& prob_idx, const Int&
     VEC<array<UInt,6>>&        cfigs(natural_cfgs.first);
     VEC<Real>&                 coefs(natural_cfgs.second);
 
-    Vec<VecBool> cfigs_core(cfigs.size());
+    Vec<VecBool> cfigs_core(core_dim);
     for_Idx(i, 0, core_dim){
-        cfigs_core[i] = intsToVectorBool(cfigs[prob_idx[i]]);
+        cfigs_core[i] = ints2vecbool(cfigs[i]);
     }
-    for_Idx(i, 0, cfigs_core.size()){
+    for_Idx(i, 0, core_dim){
         for(const auto j : mayhop) if(judge(cfigs_core[i], j)) {
-                VecBool new_cfig(change_cfg(cfigs_core[i], j));
-            if(!nosp.ifin_NocSpace(back2nospace(new_cfig, -ex_pos), nosp.nppso)){
-                cfigs.push_back(VectorBoolToints(new_cfig));
+            // if(mm) WRN(NAV(show_string(vecbool2ints(cfigs_core[i]))));
+            VecBool new_cfig(change_cfg(cfigs_core[i], j));
+
+            // if(mm) WRN(NAV(show_string(vecbool2ints(new_cfig))));
+
+            // if(back2nospace(new_cfig, -ex_pos).size() > 1){
+                // if(mm) WRN(NAV(show_string(vecbool2ints(back2nospace(new_cfig, -ex_pos)))));}
+            // else if(mm) WRN("we skip this cfig.");
+
+            VecBool new_cfig_innorg (back2nospace(new_cfig, -ex_pos));
+            if (new_cfig_innorg.size() > 1 && !nosp.ifin_NocSpace(new_cfig_innorg, nosp.nppso))
+            {
+                // if(mm) WRN(NAV(show_string(vecbool2ints(new_cfig))));
+                cfigs.push_back(vecbool2ints(new_cfig));
                 coefs.push_back(0.);
             }
         }
     }
-    if(mm) WRN(NAV2(cfigs.size(),coefs.size()));
+    if(mm) WRN(NAV2(cfigs.size(), coefs.size()));
 }
 
 Nci Asnci::truncation(Nci inital) {
@@ -313,9 +347,9 @@ Real Asnci::cfi2rank(const VecBool& alpha, const Vec<VecBool>& beta) {
 Real Asnci::cfi2rank(const array<UInt,6>& alpha_number, const VEC<array<UInt,6>>& betas_number) {
     Real rank(0.);
 
-    VecBool alpha(intsToVectorBool(alpha_number));
+    VecBool alpha(ints2vecbool(alpha_number));
     Vec<VecBool> cfigs_core(betas_number.size());
-    for_Idx(i, 0, betas_number.size()) cfigs_core[i] = intsToVectorBool(betas_number[i]);
+    for_Idx(i, 0, betas_number.size()) cfigs_core[i] = ints2vecbool(betas_number[i]);
 
     rank = cfi2rank(alpha, cfigs_core);
     return rank;
@@ -363,7 +397,7 @@ Real Asnci::hamilton_value(const VecBool& alpha, const VecBool& beta_i) {
         else {
             // if(mm) {
             //     WRN("some thing wrong in here!");
-            //     show_string(VectorBoolToints(alpha)); show_string(VectorBoolToints(beta_i));}
+            //     show_string(vecbool2ints(alpha)); show_string(vecbool2ints(beta_i));}
             // ERR("some thing wrong in here!"+NAV2(alpha.string(),beta_i.string()));
             }
         return value;
@@ -392,9 +426,10 @@ Tab Asnci::find_h_idx()
 
     Real uz(p.hubbU), jz = (p.jz);
     Idx nimp(p.norbs), nband(p.nband), norb(p.norbit);
-
+    
+    Idx cut_H_need(0);
 	for_Int(h_i, row_H.bgn(), row_H.end()) {
-        VecBool a_cfig(Vec(intsToVectorBool(cfigs[h_i])));
+        VecBool a_cfig(Vec(ints2vecbool(cfigs[h_i])));
 		
 		// To save as sparse matrix, [0]: row number;[1]: colum number;[2]: idx.
 		VecInt h_idx(3, 0);
@@ -441,15 +476,22 @@ Tab Asnci::find_h_idx()
         for(const auto j : mayhop) if(judge(a_cfig, j)) {
             VecBool b_cfig(change_cfg(a_cfig, j));
             Int crt(-1), ann(-1);
-            for_Int(i, 0, norb) if(a_cfig[i] ^ b_cfig[i]) b_cfig[i] ? ann = i : crt = i;
+            for_Int(i, 0, norb) if(a_cfig[i] != b_cfig[i]) b_cfig[i] ? ann = i : crt = i;
             Int Anticommutativity = crt > ann ? 1 : - 1;
-            array<UInt,6>   nums(VectorBoolToints(b_cfig));
+            array<UInt,6>   nums(vecbool2ints(b_cfig));
+
             if(crt >= 0 && ann >= 0) {
-				h_idx = {sparse_idx, cfig_idx.at(nums), Anticommutativity * (mat_hop_pos[crt][ann] + 1)};
-				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-			}
+                auto it = cfig_idx.find(nums);
+                if (it != cfig_idx.end()) {
+                    	h_idx = {sparse_idx, it->second, Anticommutativity * (mat_hop_pos[crt][ann] + 1)};
+                    	for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+                } else {
+                    cut_H_need++;
+                }
+            }
         }
 	}
+    if(mm) WRN(NAV(cut_H_need));
 	// TIME_END("t_find_hmlt_table" + NAV(mm.id()), t_find_hmlt_table);
 	for_Int(jj, 0, 3) h_idxs[jj].shrink_to_fit();
 	return std::move(h_idxs);

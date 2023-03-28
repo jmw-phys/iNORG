@@ -645,7 +645,7 @@ void NocSpace::print(std::ostream& os) const
 	os << "// NORG setting" << endl;
 
 	// nocspace_print(ndivs, "The amount of divisons's number. ");
-	nocspace_print(nppsos, "The number of partical per spin orbital number(upper spin part). ");
+	nocspace_print(nppsos, "The number of partical per spin orbital. ");
 	nocspace_print(nspa, "The amount of partical's number.");
 	nocspace_print(dim, "the dimension of the Shortcut space.");
 	// nocspace_print(ndivs, "The amount of divisons's number. ");

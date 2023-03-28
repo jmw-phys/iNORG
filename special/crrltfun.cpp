@@ -23,8 +23,8 @@ CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_
     ex_state(project_uplwer_parical_space(vgs_i, crtorann, pos_in_set, pos_in_div))
 {}
 
-CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab& table, const VecReal& ex_state_i, const Int crtorann_i)
-    :Operator(mm_i, prmtr_i, table),
+CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const Operator& oper, const VecReal ex_state_i, const Int crtorann_i)
+    :Operator(oper),
     old_nosp(NocSpace(mm_i, prmtr_i)), new_nosp(NocSpace(mm_i, prmtr_i)), crtorann(crtorann_i),
     ex_state(ex_state_i)
 {}
@@ -370,59 +370,3 @@ bool CrrltFun::if_in_this_orbital(const VecOnb &exd_cf, const Int crtann, const 
     if (crtann == +1) return exd_cf[norg_set * new_nosp.ndivs].isuno(orbit_pos_in_div);
     ERR("Some thing wrong with this function, if_in_this_orbital ()!")
 }
-
-//
-//
-//VecReal CrrltFun::project_uplwer_parical_space(const VecReal& initial_vector, const Int crtann, const Int imp_div, const Int orbit_pos_in_div)const
-//// By using the C^+ or C on a spinless orbital(for the spinless reason ONE normal orbital has two spinless orbits).
-//// the imp_div only suppose for the even number.
-//{
-//    clock_t t_find_lowerhmlt;
-//    TIME_BGN("find_lowerhmlt" + NAV(mm.id()), t_find_lowerhmlt);
-//    VecPartition row_H(mm.np(), mm.id(), new_nosp.dim);
-//    VecReal ex_state_part(row_H.len(), 0.);
-//    for_Int(h_i, row_H.bgn(), row_H.end())
-//    {
-//        const Int subscsp(new_nosp.wherein_NocSpace(h_i));
-//        const ComDivs cfg(h_i - new_nosp.idx_div[subscsp], Mat2Vec(new_nosp.div[subscsp]), Mat2Vec(new_nosp.sit_mat), true);
-//        //spinless term
-//        if (crtann == -1) {
-//            //for_Int(updw, imp_div, imp_div + 2) {// use the now cfg to find the idx
-//                if (cfg.cf[0 + imp_div * new_nosp.ndivs].isuno(orbit_pos_in_div)) {
-//                    MatInt newdiv(new_nosp.div[subscsp]);
-//                    ++newdiv[imp_div][0];
-//                    if (old_nosp.ifin_NocSpace_for_green(newdiv)) {
-//                        VecOnb find_old_cfg(cfg.cf);
-//                        find_old_cfg[0 + imp_div * new_nosp.ndivs] = find_old_cfg[0 + imp_div * new_nosp.ndivs].crt(orbit_pos_in_div);
-//                        Int begin_idx(-1);
-//                        for_Int(j, 0, old_nosp.div.size()) if (old_nosp.div[j] == newdiv) { begin_idx = old_nosp.idx_div[j]; break; }
-//                        if (begin_idx == -1)ERR("wrong with ex_state" + NAV2(cfg.ne, newdiv));
-//                        ComDivs n(find_old_cfg, Mat2Vec(newdiv), Mat2Vec(old_nosp.sit_mat));
-//                        ex_state_part[h_i - row_H.bgn()] += initial_vector[begin_idx + n.idx];
-//                    }
-//                }
-//            //}
-//        }
-//        else if (crtann == +1) {
-//            //for_Int(updw, imp_div, imp_div + 2) {// use the now cfg to find the idx
-//                if (cfg.cf[0 + imp_div * new_nosp.ndivs].isocc(orbit_pos_in_div)) {
-//                    MatInt newdiv(new_nosp.div[subscsp]);
-//                    --newdiv[imp_div][0];
-//                    if (old_nosp.ifin_NocSpace_for_green(newdiv)) {
-//                        VecOnb find_old_cfg(cfg.cf);
-//                        find_old_cfg[0 + imp_div * new_nosp.ndivs] = find_old_cfg[0 + imp_div * new_nosp.ndivs].ann(orbit_pos_in_div);
-//                        Int begin_idx(-1);
-//                        for_Int(j, 0, old_nosp.div.size()) if (old_nosp.div[j] == newdiv) { begin_idx = old_nosp.idx_div[j]; break; }
-//                        if (begin_idx == -1)ERR("wrong with ex_state" + NAV2(cfg.ne, newdiv));
-//                        ComDivs n(find_old_cfg, Mat2Vec(newdiv), Mat2Vec(old_nosp.sit_mat));
-//                        ex_state_part[h_i - row_H.bgn()] += initial_vector[begin_idx + n.idx];
-//                    }
-//                }
-//            //}
-//        }
-//    }
-//    VecReal ex_state(new_nosp.dim, 0.);
-//    ex_state = mm.Allgatherv(ex_state_part, row_H);
-//    TIME_END("find_lowerhmlt" + NAV(mm.id()), t_find_lowerhmlt);
-//    return ex_state;
-//}

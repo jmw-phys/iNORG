@@ -28,12 +28,13 @@ class Asnci
 	const NocSpace& nosp;			// parameters
     const Real& groundE;            // The final ground state energy
     const MatReal hop_h;            // The hopping H(H_0)
+    const VecReal coefficient;      // coefficient for all the H's terms
 
     VEC<Int> mayhop;                // the position of orbital hop may happen
     
 public:
     const Idx core_dim;             // The core space size
-    Idx dim;                  // The truncated space size
+    Idx dim;                        // The truncated space size
     Nci trncat;                     // The truncation NCI
     // The cfig's idx
     std::map<std::array<UInt,6>, Int> cfig_idx;
@@ -59,12 +60,7 @@ private:
     
     void expand(Nci& natural_cfgs);
 
-    VecBool back2nospace(const VecBool& new_cfig, const Int change_pos){
-        Mat<bool> cfig(new_cfig.mat(nosp.sit_mat.nrows(),nosp.sit_mat.ncols()));
-        Idx pos(ABS(change_pos) - 1);
-        cfig[change_pos][0] ^= 1;
-        return cfig.vec();
-    }
+    VecBool back2nospace(const VecBool& new_cfig, const Int change_pos);
 
     void expand_no_rank(Nci& natural_cfgs, const VecIdx& prob_idx, const Int& ex_pos);
 
@@ -74,9 +70,9 @@ private:
     //     return binary.to_string();
     // }
 
-    VecBool intsToVectorBool(std::array<UInt,6> nums);
+    VecBool ints2vecbool(std::array<UInt,6> nums);
 
-	std::array<UInt,6> VectorBoolToints(const VecBool &vec);
+	std::array<UInt,6> vecbool2ints(const VecBool &vec);
 
 /*
     bool judge(Str& cfg_str) {
@@ -128,7 +124,7 @@ private:
 
     VecReal find_ex_state() {return VecReal(trncat.second);}
 
-    Str show_string(const std::array<UInt,6>& cifg);
+    Mat<Char> show_string(const std::array<UInt,6>& cifg);
 public:
 
 // Asnci: mode = 0: assume NO converged;  
