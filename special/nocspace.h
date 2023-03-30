@@ -128,6 +128,10 @@ private:
 public:
 	// It assume that we already have the hopint from the Impurity class, but still have not rotated it yet.
 	VecReal set_row_primeter_by_gived_mat(const VEC<MatReal>& uormat_i, const MatReal& h0);
+
+	// It assume that we already have the hopint and h_inter from the Impurity class, with four Fermi interaction.
+	VecReal set_row_primeter_byfullH(const VEC<MatReal>& uormat_i, const MatReal& h0, const Mat<MatReal>& h_inter);
+
 	// Expand the Shortcut space under Number of particles(NumberSpa).
 	NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i): mm(mm_i), p(prmtr_i) {};
 	NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const Int& NumberSpa);

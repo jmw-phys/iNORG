@@ -215,6 +215,96 @@ Tab Operator::find_h_idx()
 	return std::move(h_idxs);
 }
 
+Tab Operator::find_fullH_idx()
+{
+	clock_t t_find_hmlt_table;
+	t_find_hmlt_table = clock(); // TIME_BGN("find_hmlt_table" + NAV(mm.id()), t_find_hmlt_table);
+	VecPartition row_H(mm.np(), mm.id(), dim);
+	Tab h_idxs(3);
+	MatInt mat_hop_pos(scsp.hopint.nrows(),scsp.hopint.ncols());
+	for_Int(i, 0, mat_hop_pos.nrows()) for_Int(j, 0, mat_hop_pos.ncols()) mat_hop_pos[i][j] = i * mat_hop_pos.ncols() + j;
+	Mat<MatInt> tensor_u(scsp.hopint.nrows(), scsp.hopint.ncols(), mat_hop_pos);
+	for_Int(i, 0, tensor_u.nrows()) for_Int(l, 0, tensor_u.ncols()) for_Int(j, 0, mat_hop_pos.nrows()) for_Int(k, 0, mat_hop_pos.ncols())
+		tensor_u[i][l][j][k] = (i * tensor_u.ncols() + l) * mat_hop_pos.size() + j * mat_hop_pos.ncols() + k;
+
+	for_Int(h_i, row_H.bgn(), row_H.end()) {
+		// To save as sparse matrix, [0]: row number;[1]: colum number;[2]: idx.
+		VecInt h_idx(3, 0);
+		Int sparse_idx(h_i - row_H.bgn());
+		//WRN("wherein_NocSpace" + NAV(h_i - scsp.idx_div[scsp.wherein_NocSpace(h_i)]));
+
+		//! Diagonal term.
+		StateStatistics a(h_i, scsp.wherein_NocSpace(h_i), scsp);
+		for (const auto &x : a.filled_spinless) {
+			for (const auto &i : x) {
+				h_idx = { sparse_idx, h_i, mat_hop_pos[i][i] + 1 };
+				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+			}
+		}
+
+
+		#define ndiv scsp.ndivs
+		{ // normal form of interation.
+		// add the U.
+		for_Int(i, 0, p.nband) if( a.cfg.cf[(i * 2) * ndiv].isocc(0) && a.cfg.cf[(i * 2 + 1) * ndiv].isocc(0) ){
+			h_idx = { sparse_idx, h_i, int(mat_hop_pos.size()) + 1 + tensor_u[(i * 2) * ndiv][(i * 2) * ndiv][(i * 2 + 1) * ndiv][(i * 2 + 1) * ndiv]};
+			for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+		}
+
+		// add the up-down term.
+		for_Int(i, 0, p.nband) {
+			for_Int(j, 0, p.nband) if(i != j && a.cfg.cf[(i * 2) * ndiv].isocc(0) && a.cfg.cf[(j * 2 + 1) * ndiv].isocc(0) ){
+				h_idx = { sparse_idx, h_i, int(mat_hop_pos.size()) + 1 + tensor_u[(i * 2) * ndiv][(i * 2) * ndiv][(j * 2 + 1) * ndiv][(j * 2 + 1) * ndiv]};
+				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+			}
+		}
+
+		// add the up-up term.
+		for_Int(i, 0, p.nband) {
+			for_Int(j, 0, p.nband) if(i != j && a.cfg.cf[(i * 2) * ndiv].isocc(0) && a.cfg.cf[(j * 2) * ndiv].isocc(0) ){
+				h_idx = { sparse_idx, h_i, int(mat_hop_pos.size()) + 1 + tensor_u[(i * 2) * ndiv][(i * 2) * ndiv][(j * 2) * ndiv][(j * 2) * ndiv]};
+				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+			}
+		}
+
+		// add the down-down term.
+		for_Int(i, 0, p.nband) {
+			for_Int(j, 0, p.nband) if(i != j && a.cfg.cf[(i * 2 + 1) * ndiv].isocc(0) && a.cfg.cf[(j * 2 + 1) * ndiv].isocc(0) ){
+				h_idx = { sparse_idx, h_i, int(mat_hop_pos.size()) + 1 + tensor_u[(i * 2 + 1) * ndiv][(i * 2 + 1) * ndiv][(j * 2 + 1) * ndiv][(j * 2 + 1) * ndiv]};
+				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+			}
+		}
+		}
+
+		//! off-Diagonal term.
+		for_Int(idx_sets, 0, p.norg_sets)
+		{
+			{
+				// off_diagonal_term Two-Fermi
+				// i[0]:annihilation orbit's position; i[1]:creation orbit's positon; i[2]:Colum idx(i); i[3]:sign(anticommutativity)
+				VEC<VecInt> off_dt_next(a.find_each_spiless_group_off_diagonal_term(a.divocchop_ingroup(a.div_idx, idx_sets), idx_sets));
+				for (const auto &i : off_dt_next){
+					h_idx = {sparse_idx, i[2], i[3] * (mat_hop_pos[i[1]][i[0]] + 1)};
+					for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+				}
+			}
+
+			{
+				// off_diagonal_term Four-Fermi
+				// [0]~[3] i-j-k-l orbit's position(C^+_i C^+_j C_k C_l); [4]:Colum idx(i);[5]:sign(fermion anticommutativity)
+				VEC<array<int, 6>> off_dt_next(a.find_off_diagonal_term_fourFermi(a.divs_change_fourFermi(a.div_idx, idx_sets), idx_sets));
+				for (const auto &i : off_dt_next){
+					h_idx = {sparse_idx, i[4], i[5] * int(mat_hop_pos.size()) + 1 + tensor_u[i[0]][i[3]][i[1]][i[2]]};
+					for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+				}
+			}
+		}
+	}
+	// TIME_END("t_find_hmlt_table" + NAV(mm.id()), t_find_hmlt_table);
+	for_Int(jj, 0, 3) h_idxs[jj].shrink_to_fit();
+	return std::move(h_idxs);
+}
+
 SparseMatReal Operator::find_hmlt(const Tab h_idx) const
 {
 	// clock_t t_find_hmlt;

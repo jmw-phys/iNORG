@@ -58,10 +58,15 @@ Version: v1.0.11 @ 2023.03.23
 
 Version: v1.0.12 @ 2023.03.28
     finished: change the state function, use vecbool to express; add the H to save the final coefficient.
-    next do : Now face the problem with the calc Green.
-    tinking : Rank equation was writting some thing wrong? why it will calc the minus number?
+    next do : Now face the problem with the calc Green. (Hold}
+    tinking : Rank equation was writting some thing wrong? why it will calc the minus number? (Hold}
 
 Version: v1.0.13 @ 2023.03.28
     finished: fix some print out problem.
     next do : (same as prev)
     tinking : (same as prev)
+
+Version: v1.0.14 @ 2023.03.30
+    finished: add the rotation for tensor H index. (Finished the find_fullH_idx() function.)
+    next do : let prgramm test find_fullH_idx() in three band.
+    tinking : Thinking about the possibility of the any mistake.

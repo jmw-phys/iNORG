@@ -99,9 +99,48 @@ VecReal NocSpace::set_row_primeter_by_gived_mat(const VEC<MatReal>& uormat_i, co
 	return concat(coefficient_i, orbital_correction);
 }
 
-VecReal set_row_primeter_byfullH(const VEC<MatReal>& uormat_i, const MatReal& h0, const Mat<MatReal>& h_inter)
+
+// C^+_i C^+_j C_k C_l h_inter from [i][l][j][k] to [alpha][eta][beta][gamma]
+VecReal NocSpace::set_row_primeter_byfullH(const VEC<MatReal>& uormat_i, const MatReal& h0, const Mat<MatReal>& h_inter)
 {
-	
+	hopint = h0;
+	MatReal transform_uormat(dmat(p.norbit, 1.));
+	Int counter(0);
+	if (!uormat_i.empty()) {
+		for (const auto& uormat_ii : uormat_i)
+		{
+			counter++;
+			for_Int(i, 0, uormat_ii.nrows()) {
+				for_Int(j, 0, uormat_ii.ncols()) {
+					transform_uormat[i + counter][j + counter] = uormat_ii[i][j];
+				}
+			}
+			counter += uormat_ii.nrows();
+		}
+	}
+	hopint = transform_uormat * hopint * transform_uormat.ct();
+
+	Mat<MatReal> h_correcation = h_inter;
+	for_Int(alpha, 0, p.norbit) {
+		for_Int(eta, 0, p.norbit) {
+			MatReal h_inter_bta_gmm(p.norbit, p.norbit, 0.);
+			for_Int(i, 0, p.norbit) {
+				for_Int(l, 0, p.norbit) {
+					h_inter_bta_gmm += transform_uormat[alpha][i] * transform_uormat.ct()[l][eta] * transform_uormat * h_inter[i][l] * transform_uormat.ct();
+				}
+			} 
+			h_correcation[alpha][eta] = h_inter_bta_gmm;
+		}
+	} 
+
+	VecReal coefficient_i(hopint.vec());
+	VecReal check_point(1, 0.); coefficient_i.reset(concat(check_point, coefficient_i));
+	// // {U, U':u d, U':u u, U':d d}
+	// VecReal orbital_correction({ p.U, p.Uprm, p.Uprm - p.jz, p.Uprm - p.jz });
+	VecReal orbital_correction(0);
+	for_Int(i, 0, h_correcation.vec().size()) orbital_correction.reset(concat(orbital_correction, h_correcation.vec()[i].vec()));
+
+	return concat(coefficient_i, orbital_correction);
 }
 
 // find all the combined number subspaces OR find all the combined number subspaces with special partical control.
