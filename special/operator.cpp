@@ -8,7 +8,7 @@ using namespace std;
 
 
 Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i):
-	mm(mm_i), p(prmtr_i), scsp(s_i), table(find_h_idx()), dim(s_i.dim), coefficient(scsp.coefficient)
+	mm(mm_i), p(prmtr_i), scsp(s_i), table(find_fullH_idx()), dim(s_i.dim), coefficient(scsp.coefficient)
 {
 }
 
@@ -27,14 +27,9 @@ Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i,
 {
 }
 
-// Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, Asnci& nc):
-// 	scsp(NocSpace(mm_i, prmtr_i)), // blank
-// 	mm(mm_i), p(prmtr_i), table(nc.find_h_idx())
-// {
-// }
-
-Tab Operator::find_h_idx()
-{
+//! Abandon, 
+// this function can fully represent by the "find_fullH_idx()" function.
+Tab Operator::find_h_idx(){
 	clock_t t_find_hmlt_table;
 	t_find_hmlt_table = clock(); // TIME_BGN("find_hmlt_table" + NAV(mm.id()), t_find_hmlt_table);
 	VecPartition row_H(mm.np(), mm.id(), dim);
@@ -134,7 +129,7 @@ Tab Operator::find_h_idx()
 		// 	for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 		// }
 
-	/* 
+		/* 
 		#define ndiv scsp.ndivs
 
 		for_Int(i, 0, p.norg_sets)
@@ -186,7 +181,7 @@ Tab Operator::find_h_idx()
 				}
 			}
 		}
- 	*/
+ 		*/
 
 		for_Int(idx_sets, 0, p.norg_sets)
 		{
@@ -215,6 +210,7 @@ Tab Operator::find_h_idx()
 	return std::move(h_idxs);
 }
 
+
 Tab Operator::find_fullH_idx()
 {
 	clock_t t_find_hmlt_table;
@@ -242,38 +238,17 @@ Tab Operator::find_fullH_idx()
 			}
 		}
 
-
-		#define ndiv scsp.ndivs
-		{ // normal form of interation.
-		// add the U.
-		for_Int(i, 0, p.nband) if( a.cfg.cf[(i * 2) * ndiv].isocc(0) && a.cfg.cf[(i * 2 + 1) * ndiv].isocc(0) ){
-			h_idx = { sparse_idx, h_i, int(mat_hop_pos.size()) + 1 + tensor_u[(i * 2) * ndiv][(i * 2) * ndiv][(i * 2 + 1) * ndiv][(i * 2 + 1) * ndiv]};
-			for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-		}
-
-		// add the up-down term.
-		for_Int(i, 0, p.nband) {
-			for_Int(j, 0, p.nband) if(i != j && a.cfg.cf[(i * 2) * ndiv].isocc(0) && a.cfg.cf[(j * 2 + 1) * ndiv].isocc(0) ){
-				h_idx = { sparse_idx, h_i, int(mat_hop_pos.size()) + 1 + tensor_u[(i * 2) * ndiv][(i * 2) * ndiv][(j * 2 + 1) * ndiv][(j * 2 + 1) * ndiv]};
-				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+		for_Int(set_i, 0, p.norbs) {
+			for_Int(set_j, 0, p.norbs) {
+				VEC<Int> N_veci(a.filled_spinless[set_i]), N_vecj(a.filled_spinless[set_j]);
+				for (const auto& N_i : N_veci) for (const auto& N_j : N_vecj) 
+					if ((set_i == set_j && N_i != N_j) || (set_i != set_j)) {
+						if (N_i == N_j) ERR("N_i == N_j");
+						Int interact_pos = mat_hop_pos.size() + 1 + tensor_u[N_i][N_j][N_j][N_i];
+						h_idx = { sparse_idx, h_i, interact_pos };
+						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+					}
 			}
-		}
-
-		// add the up-up term.
-		for_Int(i, 0, p.nband) {
-			for_Int(j, 0, p.nband) if(i != j && a.cfg.cf[(i * 2) * ndiv].isocc(0) && a.cfg.cf[(j * 2) * ndiv].isocc(0) ){
-				h_idx = { sparse_idx, h_i, int(mat_hop_pos.size()) + 1 + tensor_u[(i * 2) * ndiv][(i * 2) * ndiv][(j * 2) * ndiv][(j * 2) * ndiv]};
-				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-			}
-		}
-
-		// add the down-down term.
-		for_Int(i, 0, p.nband) {
-			for_Int(j, 0, p.nband) if(i != j && a.cfg.cf[(i * 2 + 1) * ndiv].isocc(0) && a.cfg.cf[(j * 2 + 1) * ndiv].isocc(0) ){
-				h_idx = { sparse_idx, h_i, int(mat_hop_pos.size()) + 1 + tensor_u[(i * 2 + 1) * ndiv][(i * 2 + 1) * ndiv][(j * 2 + 1) * ndiv][(j * 2 + 1) * ndiv]};
-				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-			}
-		}
 		}
 
 		//! off-Diagonal term.
@@ -289,7 +264,7 @@ Tab Operator::find_fullH_idx()
 				}
 			}
 
-			{
+			if(p.if_norg_imp){
 				// off_diagonal_term Four-Fermi
 				// [0]~[3] i-j-k-l orbit's position(C^+_i C^+_j C_k C_l); [4]:Colum idx(i);[5]:sign(fermion anticommutativity)
 				VEC<array<int, 6>> off_dt_next(a.find_off_diagonal_term_fourFermi(a.divs_change_fourFermi(a.div_idx, idx_sets), idx_sets));

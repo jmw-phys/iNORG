@@ -54,7 +54,9 @@ public:
 	// New prmtr for NORG solver.
 	Int norg_sets;					// number of norg sets (spinless orbital).
 	Int iter_max_norg;				// the max NORG iteration times.
-	mutable VecInt nI2B;			// number of bath sites to each impurity.
+	bool if_norg_imp;				// if norg rotate NO with impurity orbitals, if true, the imp_orb will rotate, treated same as bath orbital.
+	mutable VecInt nI2B;			// the number of bath sites for each impurity.
+	mutable VecInt nO2sets;			// The number of orbital to each sets.
 	mutable VecInt npartical;		// number of particals.
 	mutable Int nbath;				// number of bath sites, must be an integer multiple of 4 
 	mutable Int norbit;				// number of NORG orbital(imp + bath).

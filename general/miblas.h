@@ -311,6 +311,27 @@ inline void MUL(Mat<double> &a, const Mat<double> &b, const Mat<double> &c)
 		M, N, P, alpha, A, P, B, N, beta, C, N);
 }
 
+// matrix-matrix multiplication a = b + c
+inline void ADD(Mat<double> &a, const Mat<double> &b, const Mat<double> &c)
+{
+#ifdef _CHECK_DIMENSION_MATCH_
+	ASSERT_EQ3(a.nrows(), b.nrows(), b.ncols(), c.nrows(), c.ncols(), a.ncols());
+#endif
+	if (!a.nrows() || !a.ncols()) return;
+	if (!b.ncols()) { a = 0.; return; }
+	MKL_INT M = (MKL_INT)a.nrows();
+	MKL_INT N = (MKL_INT)a.ncols();
+	MKL_INT P = (MKL_INT)b.ncols();
+	double alpha = 1.0;
+	double beta = 1.0;
+	double *A = b.p();
+	double *B = c.p();
+	double *C = a.p();
+	// cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, k, alpha, A, k, B, n, beta, C, n);
+	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, 
+		M, N, P, alpha, A, P, B, N, beta, C, N);
+}
+
 // matrix-matrix multiplication a = b * c
 inline void MUL(Mat<MKL_Complex16> &a, const Mat<MKL_Complex16> &b, const Mat<MKL_Complex16> &c)
 {

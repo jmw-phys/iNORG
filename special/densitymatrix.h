@@ -12,6 +12,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
 class DensityMat : public Operator
 {
 public:
+	// bool full_rotation;				// If true, the impurity will rotate and be treated the same as bath orbital.
 	VEC<MatReal> dm;				// density matrix
 	// VEC<MatCmplx> dm_cmplx;		// density matrix
 	// occupation number: for each row stand the bath's occupation for one specific imp orbit.
@@ -42,11 +43,11 @@ private:
 	void find_density_matrix_by_Crrvec(VEC < MatReal>& D_splited, const Crrvec& corstate_i);
 
 public:
-	DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i);
-	DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, Str tab_name);
-	DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, const Tab& tab);
+	DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, bool imp_rotation = false);
+	DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, Str tab_name, bool imp_rotation = false);
+	DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, const Tab& tab, bool imp_rotation = false);
 
-	// Only diagonalize the bath orbital, but reture the whole orbital unitary orbital rotation matrix U
+	// base the imp_rotation decide whether impurity join in, return the whole orbital unitary orbital rotation matrix U.
 	VEC<MatReal> find_unitary_orbital_rotation_matrix();
 
 	// To update calculate density matrix.

@@ -7,10 +7,10 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2023.03.03
 #include "asnci.h"
 
 using namespace std;
-
+// ! NOW this class need to modify since need rotation the whole impurity.
 
 Asnci::Asnci(const NORG& norg, Idx trncat_size):
-    dim(trncat_size), mm(norg.mm), p(norg.p), hop_h(norg.scsp.hopint), mayhop(find_mayhop()),
+    dim(trncat_size), mm(norg.mm), p(norg.p), impH(norg.impH), mayhop(find_mayhop()),
     nosp(norg.scsp), groundE(norg.groune_lst), coefficient(norg.scsp.coefficient),
     // core_dim(Int(trncat_size / Int(mayhop.size() )))
     core_dim(trncat_size)
@@ -20,7 +20,7 @@ Asnci::Asnci(const NORG& norg, Idx trncat_size):
 }
 
 Asnci::Asnci(const NORG& norg, Idx trncat_size, Int ex_pos):
-    dim(trncat_size), mm(norg.mm), p(norg.p), hop_h(norg.scsp.hopint), mayhop(find_mayhop()),
+    dim(trncat_size), mm(norg.mm), p(norg.p), impH(norg.impH), mayhop(find_mayhop()),
     nosp(norg.scsp), groundE(norg.groune_lst), coefficient(norg.scsp.coefficient),
     // core_dim(Int(trncat_size / Int(mayhop.size() / 4.0)))
     core_dim(trncat_size),
@@ -49,14 +49,14 @@ Asnci::Asnci(const NORG& norg, Idx trncat_size, Int ex_pos):
 
 
     if(mm) WRN(NAV(cfig_idx.size()))
-    find_h_idx();
+    find_fullH_idx();
 
     // trncat = truncation(git_nci(norg.final_ground_state, ex_pos));
 }
 
 NORG Asnci::get_norg(Tab table, Int mode) {
     NORG norg(mm, p, table);
-    norg.up_date_h0_to_solve(hop_h, mode);
+    norg.up_date_h0_to_solve(impH, mode);
     return norg;    
 }
 
@@ -64,7 +64,7 @@ NORG Asnci::get_norg(Tab table, Int mode) {
 void Asnci::asnci_gimp(Green& imp_i, Int ex_pos)
 {
     Int crtorann = ex_pos > 0 ? 1 : -1, pos(ABS(ex_pos) - 1);
-    Operator oper(mm, p, find_h_idx(), coefficient);
+    Operator oper(mm, p, find_fullH_idx(), coefficient);
     CrrltFun temp_green(mm, p, oper, find_ex_state(), crtorann);
     if (imp_i.type_info() == STR("ImGreen"))
     {
@@ -86,11 +86,11 @@ void Asnci::asnci_gimp(Green& imp_i, Int ex_pos)
 
 VEC<Int> Asnci::find_mayhop() {
     VEC<Int>    mayhop_i;
-    if(hop_h.size() == 0) ERR("hop_h.size() = 0");
+    if(impH.first.size() == 0) ERR("hop_h.size() = 0");
     // for_Int(i, 0, hop_h.size())  if(ABS(hop_h.vec()[i]) > 1e-6) mayhop_i.push_back(i);
-    for_Int(i, 0, hop_h.size())  if(ABS(hop_h.vec()[i]) > 0.0) mayhop_i.push_back(i);
+    for_Int(i, 0, impH.first.size())  if(ABS(impH.first.vec()[i]) > 0.0) mayhop_i.push_back(i);
     mayhop_i.shrink_to_fit();
-    if(mm) WRN(NAV2(hop_h, mayhop_i.size()));
+    if(mm) WRN(NAV2(impH.first, mayhop_i.size()));
     return move(mayhop_i);
 }
 
@@ -132,7 +132,7 @@ std::array<UInt,6> Asnci::vecbool2ints(const VecBool &vec) {
 
 VecBool Asnci::change_cfg(const VecBool& cfg, Int pos) {
     VecBool cfg_new(cfg);
-    Int crt(pos / hop_h.ncols()), ann(pos % hop_h.ncols());
+    Int crt(pos / impH.first.ncols()), ann(pos % impH.first.ncols());
     if((!(!cfg[crt]) && cfg[ann])) {
         Str cf; cf.reserve(cfg.size());
         for (const auto &b : cfg) cf += b ? '1':'0';
@@ -365,7 +365,7 @@ Real Asnci::hamilton_value(const VecBool& alpha, const VecBool& beta_i) {
 
         // add the on site energy.
         for_Int(i, 0, norb) {
-                if(a_cfig[i]) value += hop_h[i][i];
+                if(a_cfig[i]) value += impH.first[i][i];
             }
 
         VecBool impcfig = a_cfig.mat(nband, p.nI2B[0] + 1).tr()[0];
@@ -393,7 +393,7 @@ Real Asnci::hamilton_value(const VecBool& alpha, const VecBool& beta_i) {
     else {
         Int crt(-1), ann(-1);
         for_Int(i, 0, norb) if(alpha[i] ^ beta_i[i])  beta_i[i] ? ann = i : crt = i;
-        if(crt >= 0 && ann >= 0) value = crt > ann ? hop_h[crt][ann] : - hop_h[crt][ann];
+        if(crt >= 0 && ann >= 0) value = crt > ann ? impH.first[crt][ann] : - impH.first[crt][ann];
         else {
             // if(mm) {
             //     WRN("some thing wrong in here!");
@@ -405,14 +405,14 @@ Real Asnci::hamilton_value(const VecBool& alpha, const VecBool& beta_i) {
 }
 
 
-Tab Asnci::find_h_idx()
+Tab Asnci::find_fullH_idx()
 {
 	clock_t t_find_hmlt_table;
 	t_find_hmlt_table = clock(); 
     // TIME_BGN("find_hmlt_table" + NAV(mm.id()), t_find_hmlt_table);
 	VecPartition row_H(mm.np(), mm.id(), dim);
 	Tab h_idxs(3);
-	MatInt mat_hop_pos(hop_h.nrows(),hop_h.ncols());
+	MatInt mat_hop_pos(impH.first.nrows(), impH.first.ncols());
 	for_Int(i, 0, mat_hop_pos.nrows()) for_Int(j, 0, mat_hop_pos.ncols()) mat_hop_pos[i][j] = i * mat_hop_pos.ncols() + j;
 	Int h_hbd_idx(mat_hop_pos.size()	+ 1);
 	Int h_orb_ud_idx(mat_hop_pos.size() + 2);

@@ -6,20 +6,23 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
 #define nip p.norg_sets
 #define i2b p.nI2B
 #define nob p.norbit
+
+/*
 // the NocSpace, is start frome the shortcutspace.
 NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const Int& NumberSpa) :
 	mm(mm_i), p(prmtr_i), ndivs(prmtr_i.ndiv), nspa(NumberSpa), sit_mat(p.norg_sets, prmtr_i.ndiv, 0),
-	hopint(nob, nob, 0.), coefficient((p.norbit * p.norbit) + 5, 0.),
+	hopint(nob, nob, 0.),
 	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), shortcut_countvec(prmtr_i.ndiv, 0), dim(0)
 {
 	set_control();
 	find_combined_number_subspaces();
 	//WRN("Finish finding the subspace and the Dim is:" + NAV(dim));
 }
+*/
 
-NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const MatReal& imp_i_h0, const Int& NumberSpa) :
+NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const Int& NumberSpa) :
  	mm(mm_i), p(prmtr_i), ndivs(prmtr_i.ndiv), nspa(NumberSpa), sit_mat(p.norg_sets, prmtr_i.ndiv, 0),
- 	hopint(imp_i_h0), coefficient((p.norbit * p.norbit) + 5, 0.),
+	hopint(nob, nob, 0.), coefficient(int(std::pow(nob,4) + hopint.size() + 1), 0.),
  	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), shortcut_countvec(prmtr_i.ndiv, 0), dim(0)
 {
  	set_control();
@@ -27,9 +30,9 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const MatReal& imp_i
 }
 
 // nppso mean: number of partical per spin orbital.
-NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const MatReal& imp_i_h0, const VecInt& nppso_i) :
+NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_i) :
 	mm(mm_i), p(prmtr_i), ndivs(prmtr_i.ndiv), nspa(SUM(nppso_i)), sit_mat(p.norg_sets, prmtr_i.ndiv, 0),
-	hopint(imp_i_h0), coefficient((p.norbit * p.norbit) + 5, 0.), nppso(nppso_i),
+	hopint(nob, nob, 0.), coefficient(int(std::pow(nob,4) + hopint.size() + 1), 0.), nppso(nppso_i),
 	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), shortcut_countvec(prmtr_i.ndiv, 0), dim(0)
 {
 	set_control();
@@ -42,9 +45,9 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const MatReal& imp_i
 }
 
 // nppso mean: number of partical per spin orbital.
-NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const MatReal& imp_i_h0, const VecInt& nppso_i, Str tab_name) :
+NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_i, Str tab_name) :
 	mm(mm_i), p(prmtr_i), ndivs(prmtr_i.ndiv), nspa(SUM(nppso_i)), sit_mat(p.norg_sets, prmtr_i.ndiv, 0),
-	hopint(imp_i_h0), coefficient((p.norbit * p.norbit) + 5, 0.), nppso(nppso_i),
+	hopint(nob, nob, 0.), coefficient(int(std::pow(nob,4) + hopint.size() + 1), 0.), nppso(nppso_i),
 	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), shortcut_countvec(prmtr_i.ndiv, 0), dim(read_the_Tab(tab_name))
 {
 	set_control();
@@ -52,9 +55,9 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const MatReal& imp_i
 }
 
 // using the table to construce the NOC space.
-NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const MatReal& imp_i_h0, const VecInt& nppso_i, const Tab& tab) :
+NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_i, const Tab& tab) :
 	mm(mm_i), p(prmtr_i), ndivs(prmtr_i.ndiv), nspa(SUM(nppso_i)), sit_mat(p.norg_sets, prmtr_i.ndiv, 0),
-	hopint(imp_i_h0), coefficient((p.norbit * p.norbit) + 5, 0.), nppso(nppso_i),
+	hopint(nob, nob, 0.), coefficient(int(std::pow(nob,4) + hopint.size() + 1), 0.), nppso(nppso_i),
 	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), shortcut_countvec(prmtr_i.ndiv, 0), dim(tab[0].size())
 {
 	set_control();
@@ -69,8 +72,8 @@ void NocSpace::set_control()
 	// sit_mat.reset(control_divs.truncate_row(1, control_divs.nrows()));
 }
 
-
-VecReal NocSpace::set_row_primeter_by_gived_mat(const VEC<MatReal>& uormat_i, const MatReal& h0)
+/*
+VecReal NocSpace::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const MatReal& h0)
 {
 	hopint = h0;
 	MatReal transform_uormat(dmat(p.norbit, 1.));
@@ -101,7 +104,7 @@ VecReal NocSpace::set_row_primeter_by_gived_mat(const VEC<MatReal>& uormat_i, co
 
 
 // C^+_i C^+_j C_k C_l h_inter from [i][l][j][k] to [alpha][eta][beta][gamma]
-VecReal NocSpace::set_row_primeter_byfullH(const VEC<MatReal>& uormat_i, const MatReal& h0, const Mat<MatReal>& h_inter)
+VecReal NocSpace::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const MatReal& h0, const Mat<MatReal>& h_inter)
 {
 	hopint = h0;
 	MatReal transform_uormat(dmat(p.norbit, 1.));
@@ -142,6 +145,7 @@ VecReal NocSpace::set_row_primeter_byfullH(const VEC<MatReal>& uormat_i, const M
 
 	return concat(coefficient_i, orbital_correction);
 }
+*/
 
 // find all the combined number subspaces OR find all the combined number subspaces with special partical control.
 void NocSpace::find_combined_number_subspaces(const Int mode)

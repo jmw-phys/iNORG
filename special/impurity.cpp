@@ -6,6 +6,7 @@ Impurity::Impurity(const MyMpi &mm_i, const Prmtr &prmtr_i, const Bath &bth_i, c
     // if (!file.empty()) read(file);
     for_Int(i, 0, ni) imp_lvl[i] = p.eimp[i] - p.mu;
     set_factor();
+    impH = std::make_pair(h0, set_interaction());
 }
 
 Impurity::Impurity(const MyMpi &mm_i, const Prmtr &prmtr_i, const Bath &bth_i, const VecInt or_deg)
@@ -23,6 +24,8 @@ Impurity::Impurity(const MyMpi &mm_i, const Prmtr &prmtr_i, const Bath &bth_i, c
     }
     for_Int(i, 0, ni) imp_lvl[i] = deg_lvl[ordeg[i] - 1];
     set_factor();
+
+    impH = std::make_pair(h0, set_interaction());
 }
 
 using namespace std;
@@ -88,6 +91,7 @@ MatReal Impurity::find_hop_for_test() const
 
 void Impurity::update() {
     set_factor();
+    impH  = std::make_pair(h0,set_interaction());
 }
 
 // ! not finished.
@@ -138,4 +142,39 @@ void Impurity::set_factor() {
             h0[pos_imp[i]][pos_imp[j]] = h0loc[i][j];
         }
     }
+}
+
+// four-fermion operator terms for C^+_i C^+_j C_k C_l; 
+// C^+_i C^+_j C_k C_l h_inter from [i][l][j][k] to [alpha][eta][beta][gamma]
+Mat<MatReal> Impurity::set_interaction() {
+    Mat<MatReal> interaction(p.norbit, p.norbit, MatReal(p.norbit, p.norbit, 0.));
+    Mat<MatReal> imp_interact(p.norbs, p.norbs, MatReal(p.norbs, p.norbs, 0.));
+    for_Int(N_i, 0, p.norbs){
+        for_Int(N_j, 0, p.norbs) if(N_i != N_j){
+            if ((N_i % 2) == (N_j % 2)) { // same spin orientation
+                imp_interact[N_i][N_j][N_j][N_i] = p.Uprm - p.jz;
+            } else {
+                Int value = ABS(N_i/2 - N_j/2);
+                switch (value)  {
+                case 0:
+                    imp_interact[N_i][N_j][N_j][N_i] = p.U;
+                    break;
+                default:
+                    imp_interact[N_i][N_j][N_j][N_i] = p.Uprm;
+                    break;
+                }
+            }
+            /*
+            if(mm){
+                Str n_i = to_string(N_i/2)+Str(N_i%2 ? "↑" : "↓");
+                Str n_j = to_string(N_j/2)+Str(N_j%2 ? "↑" : "↓");
+                Real value = interaction[N_i][N_j][N_j][N_i];
+                WRN(NAV3(n_i,n_j,value));
+            }
+            */
+            interaction[SUM_0toX(p.nO2sets, N_i)][SUM_0toX(p.nO2sets, N_j)][SUM_0toX(p.nO2sets, N_j)][SUM_0toX(p.nO2sets, N_i)] = imp_interact[N_i][N_j][N_j][N_i];
+        }
+    }
+    // if (mm) WRN(NAV2(interaction.size(), interaction[0][0].size()));
+    return interaction;
 }

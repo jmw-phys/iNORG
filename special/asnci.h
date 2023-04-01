@@ -21,13 +21,14 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2023.03.03
 typedef std::pair<VEC<std::array<UInt,6>>,VEC<Real>> Nci;
 typedef Vec<VEC<Int>> Tab;
 
+// ! NOW this class need to modify since need rotation the whole impurity.
 class Asnci 
 {
 	const MyMpi& mm;				// parameters
 	const Prmtr& p;					// parameters
 	const NocSpace& nosp;			// parameters
     const Real& groundE;            // The final ground state energy
-    const MatReal hop_h;            // The hopping H(H_0)
+    const Impdata impH;             // The impurity structure
     const VecReal coefficient;      // coefficient for all the H's terms
 
     VEC<Int> mayhop;                // the position of orbital hop may happen
@@ -89,6 +90,7 @@ private:
 */
 
     bool judge(const VecBool& cfg, const Int& pos) {
+        MatReal hop_h = impH.first;
         Int crt(pos / hop_h.ncols()), ann(pos % hop_h.ncols());
         if((cfg[ann]) && (!cfg[crt]))return true;
         return false;
@@ -101,15 +103,7 @@ private:
         if(ex_pos < 0 && cig.cfg.cf[pos].isocc(0)) return true;
         return false;
     }
-/*
-    Str change_cfg_str(const Str& cfg_str, Int pos) {
-        Int crt(pos/hop_h.ncols()), ann(pos%hop_h.ncols());
-        Str temp_c = cfg_str;
-        temp_c[ann] = (temp_c[ann]=='1') ? '0' : 'x';
-        temp_c[crt] = (temp_c[crt]=='0') ? '1' : 'x';
-        return temp_c;
-    }
-*/
+
 
     VecBool change_cfg(const VecBool& cfg, Int pos);
 
@@ -139,7 +133,7 @@ Asnci(const NORG& norg, Idx trncat_size, Int ex_pos);
 NORG get_norg(Tab table, Int mode = 0);
 
 // out put the Table
-Tab find_h_idx();
+Tab find_fullH_idx();
 
 void asnci_gimp(Green& imp_i, Int pos);
 

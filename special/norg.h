@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
+coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2021 - 2023
 */
 
 #include "specs.h"
@@ -17,9 +17,11 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
 
 // impurity model
 
+typedef std::pair<MatReal, Mat<MatReal>> Impdata;
 class NORG {
 	// typedef VEC<VecInt> Tab;
 	//*****************iteration***************
+	// bool full_rotation;						// If true, the impurity will rotate and be treated the same as bath orbital.
 	Int iter_norg_cnt;						// count the NORG optimize iteration times.
 	Int norg_stable_count;					// count the NORG stability iteration times.
 	VecReal occnum_pre;						// occupation number record before one optimize iteration.
@@ -36,7 +38,7 @@ public:
 	const Prmtr &p;							// parameters
 	VEC<MatReal> uormat;					// unitary_orbital_rotation_matrix
 
-	MatReal h0;
+	Impdata impH;
 	Real	groune_lst;						// ground state energy record after one optimize iteration.
 	VecReal final_ground_state, occnum;
 	ImGreen impgreen;
@@ -49,6 +51,14 @@ public:
 	// const Tab& table_n1mone, table_n1pone;
 
 private:
+	/*// ! abandon
+	// It assume that we already have the hopint from the Impurity class, but still have not rotated it yet.
+	VecReal set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const MatReal& impH_i);
+	*/
+
+	// It assume that we already have the hopint and h_inter from the Impurity class, with four Fermi interaction.
+	VecReal set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& impH_i);
+
 	// only change for first norg_set of the first div.
 	VecInt nppso(const VecInt &a, Int positon)
 	{
@@ -65,9 +75,10 @@ private:
 	bool green_modify_converged(Real correctionerr_i) const;
 
 	void readmatrix(MatReal& m, const Str& file);
-
+/*
 	// using the correct vector to modify the shortcut space.
 	void upgrade_space(NocSpace& scsp_i, NocSpace& scsp_ipl, VecReal& state_pl, NocSpace& scsp_imi, VecReal& state_mi);
+*/
 
 	VEC<MatReal> uormat_initialize();
 
@@ -81,16 +92,19 @@ private:
 	void rotation_the_space(const VEC<MatReal>& uormat_i) const;
 */
 public:
-	NORG(const MyMpi& mm_i, const Prmtr& prmtr_i);
-	NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab& table);
+	NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, bool imp_rotation = false);
+	NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab& table, bool imp_rotation = false);
 	// NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, VecInt nparticals);
-	NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, Str tab_name);
+	NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, Str tab_name, bool imp_rotation = false);
 
 	// NORG(const MyMpi& mm_i, const Impurity& imp_i, const Prmtr& prmtr_i);
 
-	void up_date_h0_to_solve(const MatReal& h0_i, const VecReal sub_energy = Vec<Real>()); // for multi-number space.
-	void up_date_h0_to_solve(const MatReal& h0_i, const Int mode);
+	// for multi-number space.
+	void up_date_h0_to_solve(const Impdata& impH, const VecReal sub_energy = Vec<Real>()); 
+
+	void up_date_h0_to_solve(const Impdata& impH, const Int mode);
 	
+
 /*
 	// In this method we calculate the correction vector using the Krylov-space approach to modify the U.
 	void modify_by_krylov_correct_vec();
@@ -143,9 +157,6 @@ public:
 
 	void write_state_info(Int iter_cnt) const;
 	
-	// write the H0 info for all orbitals.
-	void write_H0info() const;
-
 	// (Deprecated)
 	MatReal save_transform_uormat();
 };

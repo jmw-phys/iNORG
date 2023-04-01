@@ -24,17 +24,19 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 	if (mm) hb_imp.write_zen("hb_imp", "Fit");
 	imp.update();											if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 
-	NORG norg(choose_cauculation_style("one_pcl_test", imp));
 
+	NORG norg(choose_cauculation_style("one_pcl_test", imp));
+/* 
 	if (mm)	{
 		norg.write_occupation_info();
 		std::cout << "\nnorg ground state energy: " << norg.groune_lst  << "  " << present() << std::endl;
 		std::cout << std::endl;							// blank line
 	}
-	
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);					if (mm)	g0imp.write_zen("g0imp");
 	ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));	if (mm) gfimp.write_zen("gfimp");
-/*
+*/
+
+ /*
 	{
 		ImGreen g_asnci(p.nband, p);
 		VecInt or_deg = or_deg_idx.truncate(0,nband);
@@ -54,11 +56,15 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	}
 */
 	// ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp);				if (mm) gfimp.write_zen("gfimp");
+/* 
+
 	// if(mm) gfimp.write_occupation_info();
 	// if(mm) WRN(NAV(gfimp.particle_number().diagonal()));
 	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();	
 	// if (mm) seimp.write_zen("before_fix_seimp");						seimp = fix_se(seimp);
 	if (mm) seimp.write_zen("seimp");
+*/
+
 }
 
 void APIzen::test_for_fitting(const Bath& bth, const ImGreen& hby_i, Int num)
@@ -221,12 +227,12 @@ void APIzen::read_ZEN(const Str& file)
 NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 	if(mode == "fast"){
 		Int band1(p.npartical[0]), band2(p.npartical[0]-2);
-		p.npartical = {band1, band1, band1, band1, band2, band2, band1, band1, band2, band2};
 		p.according_nppso(p.npartical);
-		NORG norg(mm, p);
+		if(mm) WRN(NAV(SUM(p.npartical)));
+		NORG norg(mm, p, true);
 		IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
 		if (ifs_a) for_Int(i, 0, norg.uormat.size()) biread(ifs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
-		norg.up_date_h0_to_solve(imp.h0);
+		norg.up_date_h0_to_solve(imp.impH, 1);
 		if (mm)	{
 			OFS ofs_a;
 			ofs_a.open("ru" + norg.scsp.nppso_str() + ".bi");
@@ -236,7 +242,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 	}
 	if(mode == "stable"){
 		Occler opcler(mm,p);
-		NORG norg(opcler.find_ground_state_partical(imp.h0, or_deg_idx.truncate(0,nband)));
+		NORG norg(opcler.find_ground_state_partical(imp.impH, or_deg_idx.truncate(0,nband)));
 		return norg;
 	}	
 	if(mode == "ful_pcl_sch"){
@@ -248,7 +254,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		controler[0] = {0, -1, p.control_divs[0][2], 0, p.control_divs[0][4], 1};
 		// if(mm) WRN(NAV(controler[0]));
 		{
-			NORG norg(opcler.find_ground_state_partical(imp.h0, or_deg_idx.truncate(0,nband)));
+			NORG norg(opcler.find_ground_state_partical(imp.impH, or_deg_idx.truncate(0,nband)));
 			uormat = norg.uormat;
 			occnum = norg.occnum.mat(p.norg_sets, p.nbath/p.norg_sets); occweight = occnum;
 			nppso = norg.scsp.nppso;
@@ -274,7 +280,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		NORG frezeorb(mm, p);
 		IFS ifs_a("ru" + frezeorb.scsp.nppso_str() + ".bi");
 		if (ifs_a) for_Int(i, 0, frezeorb.uormat.size()) biread(ifs_a, CharP(frezeorb.uormat[i].p()), frezeorb.uormat[i].szof());
-		frezeorb.up_date_h0_to_solve(imp.h0);
+		frezeorb.up_date_h0_to_solve(imp.impH, 1);
 		if (mm)	{
 			OFS ofs_a;
 			ofs_a.open("ru" + frezeorb.scsp.nppso_str() + ".bi");
@@ -292,12 +298,12 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		{
 			Int band1(p.npartical[0]), band2(p.npartical[0]);
 			if(nband == 5) p.npartical = {band1, band1, band1, band1, band2, band2, band1, band1, band2, band2};
-			if(nband == 3) {p.npartical = {band1, band1, band1, band1, band1, band1}; p.npartical += 1; }
+			if(nband == 3) {p.npartical = {band1, band1, band1, band1, band1, band1}; p.npartical += 1;}
 			p.according_nppso(p.npartical);
-			NORG norg(mm, p);
+			NORG norg(mm, p, p.if_norg_imp);
 			IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
 			if (ifs_a) for_Int(i, 0, norg.uormat.size()) biread(ifs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
-			norg.up_date_h0_to_solve(imp.h0);
+			norg.up_date_h0_to_solve(imp.impH, 1);
 
 			uormat = norg.uormat;
 			occnum = norg.occnum.mat(p.norg_sets, p.nbath/p.norg_sets); occweight = occnum;
@@ -322,10 +328,10 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		// 	for_Int(i, 0, controler.size()) m_controler[i] = controler[i];
 		// 	if(mm) WRN(NAV3(ordeg,m_controler, p.control_divs));
 		// }
-		NORG frezeorb(mm, p);
+		NORG frezeorb(mm, p, p.if_norg_imp);
 		IFS ifs_a("ru" + frezeorb.scsp.nppso_str() + ".bi");
 		if (ifs_a) for_Int(i, 0, frezeorb.uormat.size()) biread(ifs_a, CharP(frezeorb.uormat[i].p()), frezeorb.uormat[i].szof());
-		frezeorb.up_date_h0_to_solve(imp.h0);
+		frezeorb.up_date_h0_to_solve(imp.impH, 1);
 		if (mm)	{
 			OFS ofs_a;
 			ofs_a.open("ru" + frezeorb.scsp.nppso_str() + ".bi");

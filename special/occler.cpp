@@ -14,13 +14,13 @@ Occler::Occler(const MyMpi& mm_i, Prmtr& prmtr_i):
 
 
 
-NORG Occler::find_ground_state_partical(const MatReal& h0_i){
+NORG Occler::find_ground_state_partical(const Impdata &impH_i){
     Int counter(0);
     while(1){
         if(mm) std::cout << "The " << ++counter << "-th NORG begin" << std::endl;	// norg counter
         NORG a(mm, p);                          IFS ifs_a("ru"+nppso_str(a.scsp.nppso)+".bi"); 
         if(ifs_a) {for_Int(i, 0, a.uormat.size()) biread(ifs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());}
-        a.up_date_h0_to_solve(h0_i);            sub_energy[0] = a.groune_lst;
+        a.up_date_h0_to_solve(impH_i);            sub_energy[0] = a.groune_lst;
         if(mm){
             OFS ofs_a; ofs_a.open("ru"+nppso_str(a.scsp.nppso)+".bi"); 
             for_Int(i, 0, a.uormat.size()) biwrite(ofs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());}
@@ -30,7 +30,7 @@ NORG Occler::find_ground_state_partical(const MatReal& h0_i){
             if(mm) std::cout << "The " << ++counter << "-th NORG begin" << std::endl;	// norg counter
             NORG a_m(mm, p);                    IFS ifs_m("ru"+nppso_str(a_m.scsp.nppso)+".bi"); 
             if(ifs_m) {for_Int(i, 0, a_m.uormat.size()) biread(ifs_m, CharP(a_m.uormat[i].p()), a_m.uormat[i].szof());}
-            a_m.up_date_h0_to_solve(h0_i);      sub_energy[1] = a_m.groune_lst;
+            a_m.up_date_h0_to_solve(impH_i);      sub_energy[1] = a_m.groune_lst;
         if(mm){
             OFS ofs_m; ofs_m.open("ru"+nppso_str(a_m.scsp.nppso)+".bi"); 
             for_Int(i, 0, a_m.uormat.size()) biwrite(ofs_m, CharP(a_m.uormat[i].p()), a_m.uormat[i].szof());}
@@ -42,7 +42,7 @@ NORG Occler::find_ground_state_partical(const MatReal& h0_i){
             if(mm) std::cout << "The " << ++counter << "-th NORG begin" << std::endl;	// norg counter
             NORG a_p(mm, p);                    IFS ifs_p("ru"+nppso_str(a_p.scsp.nppso)+".bi"); 
             if(ifs_p) {for_Int(i, 0, a_p.uormat.size()) biread(ifs_p, CharP(a_p.uormat[i].p()), a_p.uormat[i].szof());}
-            a_p.up_date_h0_to_solve(h0_i);          sub_energy[2] = a_p.groune_lst;
+            a_p.up_date_h0_to_solve(impH_i);          sub_energy[2] = a_p.groune_lst;
         if(mm){
             OFS ofs_p; ofs_p.open("ru"+nppso_str(a_p.scsp.nppso)+".bi"); 
             for_Int(i, 0, a_p.uormat.size()) biwrite(ofs_p, CharP(a_p.uormat[i].p()), a_p.uormat[i].szof());}
@@ -63,7 +63,7 @@ NORG Occler::find_ground_state_partical(const MatReal& h0_i){
 }
 
 // ! tested.
-NORG Occler::find_ground_state_partical(const MatReal &h0_i, const VecInt& or_deg)
+NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_deg)
 {
     Int counter_norg(0);
     VEC<MatReal> u_temp;
@@ -84,7 +84,7 @@ NORG Occler::find_ground_state_partical(const MatReal &h0_i, const VecInt& or_de
             IFS ifs_a("ru" + nppso_str(a.scsp.nppso) + ".bi");
             if (ifs_a) for_Int(i, 0, a.uormat.size()) biread(ifs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());
             // else if(counter_norg > 1) a.uormat = u_temp;
-            a.up_date_h0_to_solve(h0_i, sub_energy.truncate(0, counter)); sub_energy[counter] = a.groune_lst;
+            a.up_date_h0_to_solve(impH_i, sub_energy.truncate(0, counter)); sub_energy[counter] = a.groune_lst;
             // if(counter%3 == 0) u_temp = a.uormat;
             if (mm) {
                 // OFS ofs_a;
@@ -101,7 +101,7 @@ NORG Occler::find_ground_state_partical(const MatReal &h0_i, const VecInt& or_de
             
             IFS ifs_a("ru" + nppso_str(a.scsp.nppso) + ".bi");
             if (ifs_a) for_Int(i, 0, a.uormat.size()) biread(ifs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());
-            a.up_date_h0_to_solve(h0_i);
+            a.up_date_h0_to_solve(impH_i);
 
             if(mm) {std::cout << "The ground state's NOOC: " << std::endl; /* a.scsp.print();*/}
             return a;}

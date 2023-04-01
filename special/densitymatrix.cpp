@@ -5,15 +5,15 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
 #include "densitymatrix.h"
 using namespace std;
 
-DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i) :Operator(mm_i, prmtr_i, scsp_i)
+DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, bool imp_rotation) :Operator(mm_i, prmtr_i, scsp_i)
 {
 }
 
-DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, Str tab_name) :Operator(mm_i, prmtr_i, scsp_i, tab_name)
+DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, Str tab_name, bool imp_rotation) :Operator(mm_i, prmtr_i, scsp_i, tab_name)
 {
 }
 
-DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, const Tab& tab) :Operator(mm_i, prmtr_i, tab, scsp_i.coefficient)
+DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, const Tab& tab, bool imp_rotation) :Operator(mm_i, prmtr_i, tab, scsp_i.coefficient)
 {
 }
 
@@ -322,31 +322,47 @@ Real DensityMat::sum_off_diagonal() const{
 
 VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 {
-	VEC<MatReal> bathdm;
-	for_Int(i, 0, p.norg_sets) {
-		bathdm.push_back(dm[i].truncate(1, 1, p.nI2B[i] + 1, p.nI2B[i] + 1));
-		// if(mm) WRN(NAV(dm[i][0][0]))
-		if(mm) std::cout << "The "<<i<<"-th impurity occupation number: "<<iofmt()<<dm[i][0][0]<< std::endl;
-	}
-	// if (mm) WRN(NAV3(dm[0], dm[1], dm[2]));
-
-	VEC<VecReal> evalue;
-	for_Int(i, 0, p.norg_sets) {
-		VecReal evalu_i(bathdm[i].nrows(), 0.);
-		// if(mm) WRN("New dm for bath" + NAV3(i, bathdm[i], bathdm.size()));
-		heevr(bathdm[i], evalu_i); bathdm[i] = bathdm[i].tr(); evalue.push_back(std::move(evalu_i));
-		// if(mm) WRN("New U for bath" + NAV2(bathdm[i], evalue[i]));
-		for_Int(j, 0, (p.nI2B[i] / 2.)) {
-			SWAP(bathdm[i][j], bathdm[i][p.nI2B[i] - j - 1]);
-			SWAP(evalue[i][j], evalue[i][p.nI2B[i] - j - 1]);
+	VEC<MatReal> rotaionU;
+	if(p.if_norg_imp){
+		rotaionU = dm;
+		VEC<VecReal> evalue;
+		for_Int(i, 0, p.norg_sets) {
+			VecReal evalu_i(rotaionU[i].nrows(), 0.);
+			heevr(rotaionU[i], evalu_i); rotaionU[i] = rotaionU[i].tr(); evalue.push_back(std::move(evalu_i));
+			for_Int(j, 0, (p.nO2sets[i] / 2.)) {
+				SWAP(rotaionU[i][j], rotaionU[i][p.nO2sets[i] - j - 1]);
+				SWAP(evalue[i][j], evalue[i][p.nO2sets[i] - j - 1]);
+			}
 		}
-		//DBG("New uorm111" + NAV3(i, bathdm[i], evalue[i]));
-	}
-	// if(mm) WRN(NAV3(evalue[0].mat(1,p.nI2B[0]), evalue[1].mat(1,p.nI2B[1]), evalue[2].mat(1,p.nI2B[2])));
-	for_Int(i, 0, bathdm.size()) bathdm[i] = bathdm[i - (i%2)]; //! using the spin inversion symmetry
+		for_Int(i, 0, rotaionU.size()) rotaionU[i] = rotaionU[i - (i%2)]; //! using the spin inversion symmetry
+		occupationnumber = evalue;
+	} else {
+		for_Int(i, 0, p.norg_sets) {
+			rotaionU.push_back(dm[i].truncate(1, 1, p.nI2B[i] + 1, p.nI2B[i] + 1));
+			// if(mm) WRN(NAV(dm[i][0][0]))
+			if(mm) std::cout << "The "<<i<<"-th impurity occupation number: "<<iofmt()<<dm[i][0][0]<< std::endl;
+		}
+		// if (mm) WRN(NAV3(dm[0], dm[1], dm[2]));
 
-	occupationnumber = evalue;
-	return bathdm;
+		VEC<VecReal> evalue;
+		for_Int(i, 0, p.norg_sets) {
+			VecReal evalu_i(rotaionU[i].nrows(), 0.);
+			// if(mm) WRN("New dm for bath" + NAV3(i, rotaionU[i], rotaionU.size()));
+			heevr(rotaionU[i], evalu_i); rotaionU[i] = rotaionU[i].tr(); evalue.push_back(std::move(evalu_i));
+			// if(mm) WRN("New U for bath" + NAV2(rotaionU[i], evalue[i]));
+			for_Int(j, 0, (p.nI2B[i] / 2.)) {
+				SWAP(rotaionU[i][j], rotaionU[i][p.nI2B[i] - j - 1]);
+				SWAP(evalue[i][j], evalue[i][p.nI2B[i] - j - 1]);
+			}
+			//DBG("New uorm111" + NAV3(i, rotaionU[i], evalue[i]));
+		}
+		// if(mm) WRN(NAV3(evalue[0].mat(1,p.nI2B[0]), evalue[1].mat(1,p.nI2B[1]), evalue[2].mat(1,p.nI2B[2])));
+		for_Int(i, 0, rotaionU.size()) rotaionU[i] = rotaionU[i - (i%2)]; //! using the spin inversion symmetry
+
+		occupationnumber = evalue;
+	}
+		return rotaionU;
+
 }
 
 VEC<VecReal> DensityMat::check_dm_get_occupation_number() const{

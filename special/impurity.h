@@ -15,25 +15,28 @@ date 2021-02-25
 // the lower 16 bits represent a spin-down configuration
 // the higher 16 bits represent a spin-up configuration
 
+
+typedef std::pair<MatReal, Mat<MatReal>> Impdata;
 class Impurity {
 private:
-public:
-	const MyMpi& mm;		// parameters
-	const Prmtr& p;			// parameters
+	const MyMpi& mm;			// parameters
+	const Prmtr& p;				// parameters
 	const Bath& bth;
-    // const Model &mdl;
 
     const Int ni;				//number of impurity
 	const Int ns;				// number of sites,ns=ni+nb
 	const Int nb;				// number of bath sites
-
 	MatReal h0;					// hopping factors
 	VecReal pos_imp;   			// position of imp site
 	VecReal imp_lvl;			// impurity energy level
+public:
+	Impdata impH;				// The impurity H construction data
 
 private:
 	//hopping  factors;when bath parameters is unusual,we just need to modify bath.hop() 
 	void set_factor();
+	//interaction  factors
+	Mat<MatReal> set_interaction();
 public:
 	Impurity(const MyMpi& mm_i, const Prmtr& prmtr_i, const Bath& bth_i, const Str& file = empty_str);
 	Impurity(const MyMpi& mm_i, const Prmtr& prmtr_i, const Bath& bth_i, const VecInt or_deg);

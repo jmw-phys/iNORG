@@ -13,6 +13,11 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
 // impurity model
 typedef Vec<VEC<Int>> Tab;
 
+// ! not finished.（may not need）
+// class TAB { }; 
+
+
+
 class Operator {
 public:
 	const MyMpi& mm;				// parameters
@@ -35,6 +40,7 @@ public:
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i,const Tab &per_table);
 	Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i, Str tab_name);
 	
+	//! abandon
 	// [i][0]row Idx; [i][1]colum Idx;[i][2] for the position for the hopint.
 	Tab find_h_idx();
 

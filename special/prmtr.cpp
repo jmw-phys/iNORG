@@ -49,11 +49,13 @@ void Prmtr::set_values() {
     fit_rsd = 2; // default value: 2.
 
     // NORG parameter.
+    if_norg_imp = true;
     templet_restrain = {0, -1, -1,  0,  1,  1};
     templet_control =  {1,  3,  0,  1,  0,  3};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
-    nI2B = SUM(templet_control);                        // default value:
+    nI2B = SUM(templet_control)-1;                      // default value:
+    nO2sets = SUM(templet_control);                            // default value:
     iter_max_norg = 99;                                 // default
     // nooc_mode = STR("nooc");
     // nooc_mode = STR("cpnooc");
@@ -68,11 +70,12 @@ void Prmtr::set_values() {
 // we set first divison as impurity. The maximum number of cavity("-"); mean electron("+").
 void Prmtr::after_modify_prmtr() const
 {
-    nI2B.reset(norg_sets, 0);
+    nI2B.reset(norg_sets, 0); nO2sets.reset(norg_sets, 0);
     control_divs.reset(norg_sets + 1, ndiv, 0);
     control_divs[0] = templet_restrain;
     for_Int(i, 0, norg_sets) control_divs[i + 1] = templet_control;
     for_Int(i, 0, norg_sets) nI2B[i] = SUM(control_divs[i + 1]) - control_divs[i + 1][0];
+    for_Int(i, 0, norg_sets) nO2sets[i] = SUM(control_divs[i + 1]);
     nbath = SUM(nI2B);
     norbit = SUM(control_divs.tr()[0]) + nbath;
     // npartical.reset(norg_sets, 0);

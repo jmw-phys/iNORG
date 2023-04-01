@@ -35,10 +35,9 @@ public:
 	// const VecOnb cfgup;										// Here only for better reading reason.
 	// const VecOnb cfgdw;										// Here only for better reading reason.
 
-	// for the statistics of the state.
-	// VEC<Int> filled_up;				// a set of been filled site number.
-	// VEC<Int> filled_dw;				// a set of been filled site number.
+	// for the electronic statistics of the state.
 	Vec< VEC<Int> > filled_spinless;
+
 	// VEC<VecInt> off_diagonal_term;	// a set of valuable term with the annihilation, creation orbit's positon, and Colum idx(H_i).
 private:
 	ComDivs cfgdetail();

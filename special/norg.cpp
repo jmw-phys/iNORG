@@ -1,51 +1,51 @@
 /*
-coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
+coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2021 - 2023
 */
 
 #include "norg.h"
 #define condition iter_norg_cnt < p.iter_max_norg  && !converged()
 
-NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i) :
+NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, bool imp_rotation) :
 	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()),
-	occupation_err(1.), energy_err(1.), correctionerr(1.), h0(prmtr_i.norbit, prmtr_i.norbit, 0.), occnum_pre(SUM(prmtr_i.nI2B), 0.),
+	occupation_err(1.), energy_err(1.), correctionerr(1.), occnum_pre(SUM(prmtr_i.nI2B), 0.),
 	iter_norg_cnt(0), groune_pre(1.e99), groune_lst(0.), occnum_lst(SUM(prmtr_i.nI2B), 0.),
-	scsp(mm_i, prmtr_i, h0, prmtr_i.npartical), oneedm(mm, prmtr_i, scsp),norg_stable_count(0)
+	scsp(mm_i, prmtr_i, prmtr_i.npartical), oneedm(mm, prmtr_i, scsp, imp_rotation),norg_stable_count(0)
 {
 	show_the_nozero_number_of_tabel();
 }
 
-// NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, VecInt nparticals) :
+// NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, VecInt nparticals, bool imp_rotation) :
 // 	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()),
-// 	occupation_err(1.), energy_err(1.), correctionerr(1.), h0(prmtr_i.norbit, prmtr_i.norbit, 0.), occnum_pre(SUM(prmtr_i.nI2B), 0.),
+// 	occupation_err(1.), energy_err(1.), correctionerr(1.), occnum_pre(SUM(prmtr_i.nI2B), 0.),
 // 	iter_norg_cnt(0), groune_pre(1.e99), groune_lst(0.), occnum_lst(SUM(prmtr_i.nI2B), 0.),
-// 	scsp(mm_i, prmtr_i, h0, nparticals), oneedm(mm, prmtr_i, scsp),norg_stable_count(0)
+// 	scsp(mm_i, prmtr_i, nparticals), oneedm(mm, prmtr_i, scsp),norg_stable_count(0)
 // {
 // 	show_the_nozero_number_of_tabel();
 // }
 
-NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab& table) :	
+NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab& table, bool imp_rotation) :	
 	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()),
-	occupation_err(1.), energy_err(1.), correctionerr(1.), h0(prmtr_i.norbit, prmtr_i.norbit, 0.), occnum_pre(SUM(prmtr_i.nI2B), 0.),
+	occupation_err(1.), energy_err(1.), correctionerr(1.), occnum_pre(SUM(prmtr_i.nI2B), 0.),
 	iter_norg_cnt(0), groune_pre(1.e99), groune_lst(0.), occnum_lst(SUM(prmtr_i.nI2B), 0.),
-	scsp(mm_i, prmtr_i, h0, prmtr_i.npartical, table), oneedm(mm, prmtr_i, scsp, table),norg_stable_count(0)
+	scsp(mm_i, prmtr_i, prmtr_i.npartical, table), oneedm(mm, prmtr_i, scsp, table, imp_rotation),norg_stable_count(0)
 {
 
 }
 
-NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, Str tab_name) :
+NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, Str tab_name, bool imp_rotation) :
 	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()),
-	occupation_err(1.), energy_err(1.), correctionerr(1.), h0(prmtr_i.norbit, prmtr_i.norbit, 0.), occnum_pre(SUM(prmtr_i.nI2B), 0.),
+	occupation_err(1.), energy_err(1.), correctionerr(1.), occnum_pre(SUM(prmtr_i.nI2B), 0.),
 	iter_norg_cnt(0), groune_pre(1.e99), groune_lst(0.), occnum_lst(SUM(prmtr_i.nI2B), 0.),
-	scsp(mm_i, prmtr_i, h0, prmtr_i.npartical, tab_name), oneedm(mm, prmtr_i, scsp, tab_name),norg_stable_count(0)
+	scsp(mm_i, prmtr_i, prmtr_i.npartical, tab_name), oneedm(mm, prmtr_i, scsp, tab_name, imp_rotation),norg_stable_count(0)
 {
 	show_the_nozero_number_of_tabel();
 }
 
-void NORG::up_date_h0_to_solve(const MatReal& h0_i, const VecReal sub_energy) {
+void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) {
 	if(mm) std::cout << std::endl;						// blank line
-	h0 = h0_i;
+	impH = impH_i;
 	// if (mm) PIO(NAV2(h0,scsp.dim));
-	scsp.coefficient = scsp.set_row_primeter_by_gived_mat(uormat, h0_i);
+	scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);
 	oneedm.update(); final_ground_state = oneedm.ground_state;
 	// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 	groune_lst = oneedm.groundstate_energy;
@@ -54,7 +54,7 @@ void NORG::up_date_h0_to_solve(const MatReal& h0_i, const VecReal sub_energy) {
 		// write_norg_info(iter_norg_cnt);
 		// write_state_info(iter_norg_cnt);
 	}
-	
+
 	if(sub_energy.size() != 0 && MIN(sub_energy) < groune_lst * (1 + 2e-3) )  {
 		if(mm) std::cout <<iofmt("def")<< "The energy level is so hight, "<< NAV(groune_lst) << ".\nWhich reach to " \
 		<<100*MIN(sub_energy)/groune_lst<<"%, so, the Ground state mustn't in this sub-space, and calc. will be stoped." <<"\n"<< std::endl;
@@ -66,7 +66,7 @@ void NORG::up_date_h0_to_solve(const MatReal& h0_i, const VecReal sub_energy) {
 		VEC<MatReal> uormat_new(oneedm.find_unitary_orbital_rotation_matrix());
 		for_Int(i, 0, uormat.size()) uormat[i] = uormat_new[i] * uormat[i];
 		// if(mm) WRN(NAV(uormat[0]));
-		scsp.coefficient = scsp.set_row_primeter_by_gived_mat(uormat, h0_i);	//if (mm) scsp.print();
+		scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);	//if (mm) scsp.print();
 		// if (mm)PIO("ground_state size" + NAV(oneedm.ground_state.size()));
 		groune_pre = groune_lst;	occnum_pre = occnum_lst;
 		oneedm.update(); final_ground_state = oneedm.ground_state;
@@ -99,11 +99,19 @@ void NORG::up_date_h0_to_solve(const MatReal& h0_i, const VecReal sub_energy) {
 	// oneedm.save_the_Tab(oneedm.table, "mainspace");
 }
 
-void NORG::up_date_h0_to_solve(const MatReal& h0_i, const Int mode) {
+// mode 0: for not rotation; mode 1: for rotation the orbitals; 
+void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	if(mm) std::cout << std::endl;						// blank line
-	h0 = h0_i;
-	// if (mm) PIO(NAV2(h0,scsp.dim));
-	scsp.coefficient = scsp.set_row_primeter_by_gived_mat(uormat, h0_i);
+	// if (mm) WRN(NAV2(impH_i.first,scsp.dim));
+	impH = impH_i;
+	
+	// {// test
+	// 	if(mm) WRN(NAV2(scsp.coefficient.size(), present()));
+	// 	VecReal a(set_row_primeter_byimpH(uormat, impH_i));
+	// 	if(mm) WRN(NAV2( a.size(), present()));
+	// }
+
+	scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);
 	oneedm.update(); final_ground_state = oneedm.ground_state;
 	// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 	groune_lst = oneedm.groundstate_energy;
@@ -120,7 +128,7 @@ void NORG::up_date_h0_to_solve(const MatReal& h0_i, const Int mode) {
 			VEC<MatReal> uormat_new(oneedm.find_unitary_orbital_rotation_matrix());
 			for_Int(i, 0, uormat.size()) uormat[i] = uormat_new[i] * uormat[i];}
 		// if(mm) WRN(NAV(uormat[0]));
-		scsp.coefficient = scsp.set_row_primeter_by_gived_mat(uormat, h0_i);	//if (mm) scsp.print();
+		scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);	//if (mm) scsp.print();
 		// if (mm)PIO("ground_state size" + NAV(oneedm.ground_state.size()));
 		groune_pre = groune_lst;	occnum_pre = occnum_lst;
 		oneedm.update(); final_ground_state = oneedm.ground_state;
@@ -148,22 +156,21 @@ void NORG::up_date_h0_to_solve(const MatReal& h0_i, const Int mode) {
 	for_Int(i, 0, p.norg_sets) for_Int(j, 0, p.ndiv) if(occnum[i][j] > 0.5) occweight[i][j] = 1 - occnum[i][j];
 	Str nppso = scsp.nppso_str();
 	if(mm) PIO(NAV3(nppso, occnum, occweight));
-
 	// Finish the NORGiteration.
 	// oneedm.save_the_Tab(oneedm.table, "mainspace");
 }
 
 void NORG::get_g_by_KCV(Green& imp_i)
 {
-	NocSpace scsp_1pone(mm, p, h0, nppso(p.npartical, 1));
-	NocSpace scsp_1mone(mm, p, h0, nppso(p.npartical, -1));
+	NocSpace scsp_1pone(mm, p, nppso(p.npartical, 1));
+	NocSpace scsp_1mone(mm, p, nppso(p.npartical, -1));
 	Operator n1pone(mm, p, scsp_1pone);
 	Operator n1mone(mm, p, scsp_1mone);
 	for_Int(i, 0, imp_i.g[0].nrows()) {
 	// for_Int(i, 0, 3){
 		// {Int i(0);
-			scsp_1pone.coefficient = scsp_1pone.set_row_primeter_by_gived_mat(uormat, h0);
-			scsp_1mone.coefficient = scsp_1mone.set_row_primeter_by_gived_mat(uormat, h0);
+			scsp_1pone.coefficient = set_row_primeter_byimpH(uormat, impH);
+			scsp_1mone.coefficient = set_row_primeter_byimpH(uormat, impH);
 
 			Crrvec greaer(scsp, n1pone, 0, i, final_ground_state, groune_lst);
 			Crrvec lesser(scsp, n1mone, 0, i, final_ground_state, groune_lst);
@@ -192,15 +199,15 @@ void NORG::get_g_by_KCV_spup(Green& imp_i)
 	StdVecInt difference = {1, -1};
 	for(const auto ii: difference)
 	{
-		NocSpace scsp_1(mm, p, h0, nppso(p.npartical, ii));
+		NocSpace scsp_1(mm, p, nppso(p.npartical, ii));
 		Operator opr_sub(mm, p, scsp_1);
-		scsp_1.coefficient = scsp_1.set_row_primeter_by_gived_mat(uormat, h0);
+		scsp_1.coefficient = set_row_primeter_byimpH(uormat, impH);
 		Crrvec greaer(scsp, opr_sub, final_ground_state, groune_lst, imp_i);
 	}
 	// {
-	// 	NocSpace scsp_1mone(mm, p, h0, nppso(p.npartical, -1));
+	// 	NocSpace scsp_1mone(mm, p, nppso(p.npartical, -1));
 	// 	Operator n1mone(mm, p, scsp_1mone);
-	// 	scsp_1mone.coefficient = scsp_1mone.set_row_primeter_by_gived_mat(uormat, h0);
+	// 	scsp_1mone.coefficient = set_row_primeter_byimpH(uormat, impH);
 	// 	Crrvec lesser(scsp, n1mone, final_ground_state, groune_lst, imp_i);
 	// }
 
@@ -213,9 +220,9 @@ void NORG::get_gimp(Green& imp_i)
 		StdVecInt difference = {(i+1), -(i+1)};
 		for(const auto ii: difference)
 		{
-			NocSpace scsp_sub(mm, p, h0, nppso(p.npartical, ii));
+			NocSpace scsp_sub(mm, p, nppso(p.npartical, ii));
 			Operator opr_sub(mm, p, scsp_sub);
-			scsp_sub.coefficient = scsp_sub.set_row_primeter_by_gived_mat(uormat, h0);
+			scsp_sub.coefficient = set_row_primeter_byimpH(uormat, impH);
 			CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub.table, final_ground_state, i * 2);
 			if(imp_i.type_info() == STR("ImGreen")) {
 				ImGreen green_function(1, p);
@@ -243,9 +250,9 @@ void NORG::get_gimp(Green& imp_i, VecInt or_deg)
 		StdVecInt difference = {(i+1), -(i+1)};
 		for(const auto ii: difference)
 		{
-			NocSpace scsp_sub(mm, p, h0, nppso(p.npartical, ii));
+			NocSpace scsp_sub(mm, p, nppso(p.npartical, ii));
 			Operator opr_sub(mm, p, scsp_sub);
-			scsp_sub.coefficient = scsp_sub.set_row_primeter_by_gived_mat(uormat, h0);
+			scsp_sub.coefficient = set_row_primeter_byimpH(uormat, impH);
 			CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub.table, final_ground_state, i * 2);
 			if(imp_i.type_info() == STR("ImGreen")) {
 				ImGreen green_function(1, p);
@@ -276,9 +283,9 @@ void NORG::find_g0(Green& imp_i)
 		StdVecInt difference = {(i+1), -(i+1)};
 		for(const auto ii: difference)
 		{
-			NocSpace scsp_sub(mm, p, h0, nppso(p.npartical, ii));
+			NocSpace scsp_sub(mm, p, nppso(p.npartical, ii));
 			Operator opr_sub(mm, p, scsp_sub);
-			scsp_sub.coefficient = scsp_sub.set_row_primeter_by_gived_mat(uormat, h0);
+			scsp_sub.coefficient = set_row_primeter_byimpH(uormat, impH);
 			CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub.table, nointeraction_state, i * 2);
 			ImGreen green_function(1, p);
 			if(ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
@@ -306,14 +313,14 @@ void NORG::readmatrix(MatReal& m, const Str& file)
 
 void NORG::get_g_by_CF(Green& imp_i)
 {
-	NocSpace scsp_1pone(mm, p, h0, nppso(p.npartical, 1));
-	NocSpace scsp_1mone(mm, p, h0, nppso(p.npartical, -1));
+	NocSpace scsp_1pone(mm, p, nppso(p.npartical, 1));
+	NocSpace scsp_1mone(mm, p, nppso(p.npartical, -1));
 	Operator n1pone(mm, p, scsp_1pone);
 	Operator n1mone(mm, p, scsp_1mone);
 
 	{//n=0 using the lanczos continue fraction.
-		scsp_1pone.coefficient = scsp_1pone.set_row_primeter_by_gived_mat(uormat, h0);
-		scsp_1mone.coefficient = scsp_1mone.set_row_primeter_by_gived_mat(uormat, h0);
+		scsp_1pone.coefficient = set_row_primeter_byimpH(uormat, impH);
+		scsp_1mone.coefficient = set_row_primeter_byimpH(uormat, impH);
 
 		for_Int(i, 0, imp_i.g[0].nrows()){
 			CrrltFun greaer(mm, p, scsp, scsp_1pone, n1pone.table, final_ground_state, 0 * 2, i);
@@ -336,9 +343,16 @@ void NORG::get_g_by_CF(Green& imp_i)
 VEC<MatReal> NORG::uormat_initialize()
 {
 	VEC<MatReal> uormat_i;
-	for_Int(i, 0, p.nI2B.size()) {
-		MatReal temp(dmat(p.nI2B[i], 1.));
-		uormat_i.push_back(std::move(temp));
+	if(p.if_norg_imp) {
+			for_Int(i, 0, p.nO2sets.size()) {
+			MatReal temp(dmat(p.nO2sets[i], 1.));
+			uormat_i.push_back(std::move(temp));
+		}
+	} else {	
+		for_Int(i, 0, p.nI2B.size()) {
+			MatReal temp(dmat(p.nI2B[i], 1.));
+			uormat_i.push_back(std::move(temp));
+		}
 	}
 	return std::move(uormat_i);
 }
@@ -406,15 +420,6 @@ Real NORG::sz_imp_sz_bath(const Int imp_postition, const VecReal& vgs_i)
 }
 
 //------------------------------------------------------------------ io ------------------------------------------------------------------
-void NORG::write_H0info() const {
-	OFS ofs;ofs.open("h0.txt");
-	using namespace std;
-	for_Int(i, 0, p.norbs)	{
-		Int begin(i * (p.nI2B[i] + 1)), end((i + 1) * (p.nI2B[i] + 1));
-		ofs << iofmt("sci") << h0.truncate(begin, begin, end, end) << endl;
-	}
-}
-
 
 void NORG::write_norg_info(Int iter_cnt) const {
 	using namespace std;
@@ -539,4 +544,85 @@ MatReal NORG::save_transform_uormat(){
 		}
 	}
 	return transform_uormat;
+}
+
+/* // ! abandon
+VecReal NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const MatReal& impH)
+{
+	MatReal hopint = impH, transform_uormat(dmat(p.norbit, 1.));
+	Int counter(0);
+	if (!uormat_i.empty()) {
+		for (const auto& uormat_ii : uormat_i)
+		{
+			counter++;
+			for_Int(i, 0, uormat_ii.nrows()) {
+				for_Int(j, 0, uormat_ii.ncols()) {
+					transform_uormat[i + counter][j + counter] = uormat_ii[i][j];
+				}
+			}
+			counter += uormat_ii.nrows();
+		}
+	}
+	hopint = transform_uormat * hopint * transform_uormat.ct();
+	VecReal coefficient_i(hopint.vec());
+	VecReal check_point(1, 0.); coefficient_i.reset(concat(check_point, coefficient_i));
+	// // VecReal orbital_correction({ u_hbd, (u_hbd - (2 * j_ob)), (u_hbd - (3 * j_ob)), (u_hbd - (3 * j_ob)) });
+	// // VecReal orbital_correction({ u_hbd, p.U12, p.U12, p.U12 });
+	// {U, U':u d, U':u u, U':d d}
+	VecReal orbital_correction({ p.U, p.Uprm, p.Uprm - p.jz, p.Uprm - p.jz });
+	// VecReal orbital_correction({ p.U * 0.25, p.Uprm * 0.25, (p.Uprm - p.jz) * 0.25, (p.Uprm - p.jz) * 0.25 });
+	// VecReal orbital_correction({ 0.25 * p.U, 0. * p.U, 0. * p.U, 0. * p.U });
+	return concat(coefficient_i, orbital_correction);
+}
+*/
+
+
+// C^+_i C^+_j C_k C_l h_inter from [i][l][j][k] to [alpha][eta][beta][gamma]
+VecReal NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& impH)
+{
+	MatReal hopint(impH.first), transform_uormat(dmat(p.norbit, 1.));
+	Int counter(0);
+	/*
+	if (!uormat_i.empty()) {
+		for (const auto& uormat_ii : uormat_i)
+		{
+			counter++;
+			for_Int(i, 0, uormat_ii.nrows()) {
+				for_Int(j, 0, uormat_ii.ncols()) {
+					transform_uormat[i + counter][j + counter] = uormat_ii[i][j];
+				}
+			}
+			counter += uormat_ii.nrows();
+		}
+	}
+	*/
+	// if (mm) WRN(NAV2(hopint, transform_uormat));
+	hopint = transform_uormat * hopint * transform_uormat.ct();
+	// Mat<MatReal> h_correcation = impH.second;
+	// if(mm) WRN(present());
+	VEC<Real> orbital_correction;
+	if(p.if_norg_imp){
+		for_Int(alpha, 0, p.norbit) {
+			for_Int(eta, 0, p.norbit) {
+				MatReal h_inter_bta_gmm(p.norbit, p.norbit, 0.);
+				//? MatReal row_i(transform_uormat[alpha].mat(1, p.norbit)), col_l(transform_uormat[eta].mat(p.norbit, 1));
+				//? MatReal temp_U_i_l = col_l * row_i;
+				for_Int(i, 0, p.norbit) {
+					for_Int(l, 0, p.norbit) {
+						//// ADD(h_inter_bta_gmm, h_inter_bta_gmm,transform_uormat[alpha][i] * transform_uormat.ct()[l][eta] * (transform_uormat * impH.second[i][l] * transform_uormat.ct()));
+						h_inter_bta_gmm += transform_uormat[alpha][i] * transform_uormat.ct()[l][eta] * (transform_uormat * impH.second[i][l] * transform_uormat.ct());
+						//? h_inter_bta_gmm += temp_U_i_l[i][l] * (transform_uormat * impH.second[i][l] * transform_uormat.ct());
+					}
+				} 
+				// h_correcation[alpha][eta] = h_inter_bta_gmm;
+				for_Int(i_l, 0, p.norbit * p.norbit) orbital_correction.push_back(std::move(h_inter_bta_gmm.vec()[i_l]));
+			}
+		}
+	}
+	// if(mm) WRN(present()+NAV3(orbital_correction[6311], orbital_correction[6312], orbital_correction[6313]));
+
+	VecReal coefficient_i(hopint.vec());
+	VecReal check_point(1, 0.); coefficient_i.reset(concat(check_point, coefficient_i));
+
+	return concat(coefficient_i, Vec(orbital_correction));
 }
