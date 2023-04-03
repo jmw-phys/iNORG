@@ -65,7 +65,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 		iter_norg_cnt++;
 		if(mm) PIO("The iteration counting: " + NAV(iter_norg_cnt));
 		VEC<MatReal> uormat_new(oneedm.find_unitary_orbital_rotation_matrix());
-		if(mm) WRN(NAV(see_uormat(uormat_new)));
+		// if(mm) WRN(NAV(see_uormat(uormat_new)));
 		for_Int(i, 0, uormat.size()) uormat[i] = uormat_new[i] * uormat[i];
 		// if(mm) WRN(NAV(uormat[0]));
 		// scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);
@@ -135,6 +135,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 		if(mm) PIO("The iteration counting: " + NAV(iter_norg_cnt));
 		if(mode) {
 			VEC<MatReal> uormat_new(oneedm.find_unitary_orbital_rotation_matrix());
+			// if(mm) WRN(NAV(see_uormat(uormat_new)));
 			for_Int(i, 0, uormat.size()) uormat[i] = uormat_new[i] * uormat[i];}
 		// if(mm) WRN(NAV(uormat[0]));
 		// scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);	//if (mm) scsp.print();
@@ -143,7 +144,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 		groune_pre = groune_lst;	occnum_pre = occnum_lst;
 		oneedm.update(); final_ground_state = oneedm.ground_state;
 		// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
-		occnum_lst = VECVectoVec(oneedm.occupationnumber);
+		occnum_lst = VECVectoVec(oneedm.occupationnumber);				PIO_occweight(occnum_lst);
 		groune_lst = oneedm.groundstate_energy;
 		// if(mm) WRN(NAV(oneedm.dm[0]));
 		if (mm) {
@@ -162,14 +163,9 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	}
 	iter_norg_cnt = 0;		occupation_err = 1.;		energy_err = 1.;
 	final_ground_state = oneedm.ground_state;	norg_stable_count = 0.; occnum = occnum_lst;
-	//--------------------------------print put--------------------------------
-	MatReal occnum, occweight;
-	if(p.if_norg_imp) occnum = occnum_lst.mat(p.norg_sets, p.n_rot_orb/p.norg_sets);
-	else occnum = occnum_lst.mat(p.norg_sets, p.n_rot_orb/p.norg_sets);
-	occweight = occnum;
-	for_Int(i, 0, p.norg_sets) for_Int(j, 0, occnum.ncols()) occweight[i][j] = MIN(occweight[i][j],1 - occnum[i][j]) < 1e-14 ? 0 : MIN(occweight[i][j],1 - occnum[i][j]);
-	Str nppso = scsp.nppso_str();
-	if (mm) WRN(NAV4(p.if_norg_imp, nppso, occnum, occweight));
+	//----------------------print put--------------------------------
+	if(mm) std::cout << "---------- THE NORG CONVERGED ----------" << std::endl;;
+	PIO_occweight(occnum);
 	// Finish the NORGiteration.
 	// oneedm.save_the_Tab(oneedm.table, "mainspace");
 }
@@ -351,7 +347,7 @@ bool NORG::converged()
 		const Real gseerr = ABS(energy_err);
 		if (gseerr > 1.E-3) { return false; }
 		else if (gseerr < 1.E-10) { return true; }
-		else if (energy_err < 1.E-5) { 
+		else if (energy_err < 1.E-7) { 
 			norg_stable_count++;
 			if (norg_stable_count > 10) return true;
 			}
@@ -641,25 +637,31 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 		if (key <= hopint.size()) oper_i[key] = hopint.vec()[key - 1];
 		else if (key > hopint.size() && key <= std::pow(p.norbit, 4) + hopint.size()) {
 			Int alpha, eta, beta, gamma, n(p.n_rot_orb), left(key - hopint.size() - 1);
-			alpha = left / (n * n * n);
-			eta = (left - alpha * n * n * n) / (n * n);
-			beta = (left - alpha * n * n * n - eta * n * n) / n;
-			gamma = left - alpha * n * n * n - eta * n * n - beta * n;
-			Real v_aebg(0.);
-			for_Int(i, 0, n) {
-			for_Int(l, 0, n) {
-			for_Int(j, 0, n) {
-			for_Int(k, 0, n) {
-				v_aebg += transform_uormat[alpha][i] * transform_uormat[eta][l] * \
-				(transform_uormat[beta][j] * impH_i.second[i][l][k][j] * transform_uormat[gamma][k]);
+
+			alpha 	= (left / (n * n)) / n;
+			eta 	= (left / (n * n)) % n;
+			beta 	= (left % (n * n)) / n;
+			gamma 	= (left % (n * n)) % n;
+
+			if(p.if_norg_imp) {
+				Real v_aebg(0.);
+				for_Int(i, 0, n) {
+				for_Int(l, 0, n) {
+				for_Int(j, 0, n) {
+				for_Int(k, 0, n) {
+					v_aebg += transform_uormat[alpha][i] * transform_uormat[eta][l] * \
+					(transform_uormat[beta][j] * impH_i.second[i][l][k][j] * transform_uormat[gamma][k]);
+				}
+				}
+				}
+				}
+				oper_i[key] = v_aebg;
+			} else 
+			{
+				oper_i[key] = impH_i.second[alpha][eta][beta][gamma];
 			}
-			}
-			}
-			}
-			oper_i[key] = v_aebg;
 		}
 		else ERR("the key is out of range!!");
-
 		// if (mm) WRN(NAV2(key, value));
 	}
 }

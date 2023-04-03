@@ -332,7 +332,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		// 	for_Int(i, 0, controler.size()) m_controler[i] = controler[i];
 		// 	if(mm) WRN(NAV3(ordeg,m_controler, p.control_divs));
 		// }
-		NORG frezeorb(mm, p);
+		NORG frezeorb(mm, p); frezeorb.uormat = uormat;
 		IFS ifs_a("ru" + frezeorb.scsp.nppso_str() + ".bi");
 		if (ifs_a) for_Int(i, 0, frezeorb.uormat.size()) biread(ifs_a, CharP(frezeorb.uormat[i].p()), frezeorb.uormat[i].szof());
 		frezeorb.up_date_h0_to_solve(imp.impH, 1);

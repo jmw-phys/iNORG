@@ -80,4 +80,9 @@ Version: v1.0.15 @ 2023.04.01
 Version: v1.0.16 @ 2023.04.02
     finished: Fixed the set_row_primeter_byimpH() function; Add the oper_value Member variable.
     next do : 1.Cross-validation in three band. 2.add in the Green calc function.
-    tinking : krylov_space_size so huge what's the problem?
+    tinking : krylov_space_size so huge what's the problem?  <!--! A:The H matirx may illed -->
+
+Version: v1.0.16 @ 2023.04.02
+    finished: Find the bug to fix problem, the krylov_space_size so huge. Now the energy_err can decrease constantly.
+    next do : 1.add in the Green calc function.
+    tinking : How to realize teh Green calc function?

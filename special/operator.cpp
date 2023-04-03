@@ -271,7 +271,7 @@ Tab Operator::find_fullH_idx()
 				// [0]~[3] i-j-k-l orbit's position(C^+_i C^+_j C_k C_l); [4]:Colum idx(i);[5]:sign(fermion anticommutativity)
 				VEC<array<int, 6>> off_dt_next(a.find_off_diagonal_term_fourFermi(a.divs_change_fourFermi(a.div_idx, idx_sets), idx_sets));
 				for (const auto &i : off_dt_next){
-					h_idx = {sparse_idx, i[4], i[5] * int(mat_hop_pos.size()) + 1 + tensor_u[i[0]][i[3]][i[1]][i[2]]};
+					h_idx = {sparse_idx, i[4], i[5] * int(mat_hop_pos.size() + 1 + tensor_u[i[0]][i[3]][i[1]][i[2]])};
 					for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 				}
 			}
