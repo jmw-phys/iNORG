@@ -8,22 +8,24 @@ using namespace std;
 
 
 Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i):
-	mm(mm_i), p(prmtr_i), scsp(s_i), table(find_fullH_idx()), dim(s_i.dim), coefficient(scsp.coefficient)
+	mm(mm_i), p(prmtr_i), scsp(s_i), table(find_fullH_idx()), dim(s_i.dim)
 {
+	for (const auto &i : table[2]) oper_value.insert(std::make_pair(ABS(i), 0.));
+	if (mm) WRN(NAV2(table[2].size(), oper_value.size()));
 }
 
 Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i,const Tab &tab, const VecReal& coefficient_i):
-	mm(mm_i), p(prmtr_i), scsp(NocSpace(mm_i, prmtr_i)), table(tab), dim(tab[0].size()), coefficient(coefficient_i)
+	mm(mm_i), p(prmtr_i), scsp(NocSpace(mm_i, prmtr_i)), table(tab), dim(tab[0].size())
 {
 }
 
 Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i,const Tab &per_table):
-	mm(mm_i), p(prmtr_i), scsp(s_i), table(per_table), dim(s_i.dim), coefficient(scsp.coefficient)
+	mm(mm_i), p(prmtr_i), scsp(s_i), table(per_table), dim(s_i.dim)
 {
 }
 
 Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i, Str tab_name):
-	mm(mm_i), p(prmtr_i), scsp(s_i), table(read_the_Tab(tab_name)), dim(s_i.dim), coefficient(scsp.coefficient)
+	mm(mm_i), p(prmtr_i), scsp(s_i), table(read_the_Tab(tab_name)), dim(s_i.dim)
 {
 }
 
@@ -289,11 +291,11 @@ SparseMatReal Operator::find_hmlt(const Tab h_idx) const
 	Real diagonal(0.);	Bool flag(false);
 	for_Idx(pos, 0, h_idx[2].size())
 	{
-		Int coefficient_comm = h_idx[2][pos] >= 0 ? 1 : -1;
-		if (h_idx[1][pos] == h_idx[0][pos] + row_H.bgn()) {diagonal += coefficient_comm * coefficient[abs(h_idx[2][pos])];flag=true;}
+		Int coeff_comm = h_idx[2][pos] >= 0 ? 1 : -1;
+		if (h_idx[1][pos] == h_idx[0][pos] + row_H.bgn()) {diagonal += coeff_comm * oper_value.at(abs(h_idx[2][pos]));flag=true;}
 		else {
 			if (flag) {hmlt_splited.addelement(diagonal, h_idx[1][pos-1], h_idx[0][pos-1]); diagonal = 0.;flag=false;}
-			hmlt_splited.addelement(coefficient_comm * coefficient[abs(h_idx[2][pos])], h_idx[1][pos], h_idx[0][pos]);
+			hmlt_splited.addelement(coeff_comm * oper_value.at(abs(h_idx[2][pos])), h_idx[1][pos], h_idx[0][pos]);
 		}
 	}
 	// TIME_END("find_hmlt" + NAV(mm.id()), t_find_hmlt);

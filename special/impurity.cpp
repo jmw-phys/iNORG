@@ -168,13 +168,13 @@ Mat<MatReal> Impurity::set_interaction() {
             if(mm){
                 Str n_i = to_string(N_i/2)+Str(N_i%2 ? "↑" : "↓");
                 Str n_j = to_string(N_j/2)+Str(N_j%2 ? "↑" : "↓");
-                Real value = interaction[N_i][N_j][N_j][N_i];
+                Real value = imp_interact[N_i][N_j][N_j][N_i];
                 WRN(NAV3(n_i,n_j,value));
             }
             */
             interaction[SUM_0toX(p.nO2sets, N_i)][SUM_0toX(p.nO2sets, N_j)][SUM_0toX(p.nO2sets, N_j)][SUM_0toX(p.nO2sets, N_i)] = imp_interact[N_i][N_j][N_j][N_i];
         }
     }
-    // if (mm) WRN(NAV2(interaction.size(), interaction[0][0].size()));
+    // if (mm) WRN(NAV5(p.U, p.Uprm ,p.nO2sets, interaction.size(), SUM(interaction[0][0])));
     return interaction;
 }

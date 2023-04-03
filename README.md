@@ -71,8 +71,13 @@ Version: v1.0.14 @ 2023.03.30
     next do : let prgramm test find_fullH_idx() in three band.
     tinking : Thinking about the possibility of the any mistake.
 
-Version: v1.0.15 @ 2023.03.31
+Version: v1.0.15 @ 2023.04.01
     finished: Fix the code to suit the new impurity data structure(Impdata). And the code can running fine with no bug.
     next do : 1.Cross-validation in three band. 2.add in the Green calc class new 
               (project_uplwer_parical_space(const VecReal &initial_vector, const Int crtann, const Int norg_set, const Int orbit_pos_in_div))
     tinking : <!--! Should rethink about the Asnci class since we choose rotate the whole H. -->
+
+Version: v1.0.16 @ 2023.04.02
+    finished: Fixed the set_row_primeter_byimpH() function; Add the oper_value Member variable.
+    next do : 1.Cross-validation in three band. 2.add in the Green calc function.
+    tinking : krylov_space_size so huge what's the problem?

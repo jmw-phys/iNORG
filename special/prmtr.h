@@ -60,6 +60,7 @@ public:
 	mutable VecInt npartical;		// number of particals.
 	mutable Int nbath;				// number of bath sites, must be an integer multiple of 4 
 	mutable Int norbit;				// number of NORG orbital(imp + bath).
+	mutable Int n_rot_orb;			// rotation orbital number.
 
 	mutable MatInt control_divs;	// to set the number of division and the shortcut restratin.
 	mutable VecInt templet_restrain;// to set the restrain templet one for all distribute;

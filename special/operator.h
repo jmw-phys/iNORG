@@ -24,13 +24,14 @@ public:
 	const Prmtr& p;					// parameters
 	const NocSpace& scsp;			// NocSpace
 	const Idx dim;
-    const VecReal& coefficient;      // coefficient for all the H's terms
+    // const VecReal& coefficient;      // coefficient for all the H's terms
 
-	Tab table;						// The movement by two femi operator contain.
+	Tab table;						// The movement by femi operator contain.
 	Real groundstate_energy;		// The ground state energy on this shortcut restratin.
 
 	
 	VecReal ground_state;			// if degeneracy happened, we only get one of them.
+	std::map<Int, Real> oper_value;	// The Hamiltonian operator in the shortcut space.
 private:
 
 public:

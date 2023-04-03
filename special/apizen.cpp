@@ -25,6 +25,10 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	imp.update();											if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 
 
+	// NocSpace scsp(mm_i, prmtr_i, prmtr_i.npartical);
+	// DensityMat oneedm(mm, prmtr_i, scsp;
+	// NORG norg(mm, prmtr_i);
+	// norg.up_date_h0_to_solve(imp.impH, 1);
 	NORG norg(choose_cauculation_style("one_pcl_test", imp));
 /* 
 	if (mm)	{
@@ -229,7 +233,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		Int band1(p.npartical[0]), band2(p.npartical[0]-2);
 		p.according_nppso(p.npartical);
 		if(mm) WRN(NAV(SUM(p.npartical)));
-		NORG norg(mm, p, true);
+		NORG norg(mm, p);
 		IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
 		if (ifs_a) for_Int(i, 0, norg.uormat.size()) biread(ifs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
 		norg.up_date_h0_to_solve(imp.impH, 1);
@@ -300,7 +304,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 			if(nband == 5) p.npartical = {band1, band1, band1, band1, band2, band2, band1, band1, band2, band2};
 			if(nband == 3) {p.npartical = {band1, band1, band1, band1, band1, band1}; p.npartical += 1;}
 			p.according_nppso(p.npartical);
-			NORG norg(mm, p, p.if_norg_imp);
+			NORG norg(mm, p);
 			IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
 			if (ifs_a) for_Int(i, 0, norg.uormat.size()) biread(ifs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
 			norg.up_date_h0_to_solve(imp.impH, 1);
@@ -328,7 +332,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		// 	for_Int(i, 0, controler.size()) m_controler[i] = controler[i];
 		// 	if(mm) WRN(NAV3(ordeg,m_controler, p.control_divs));
 		// }
-		NORG frezeorb(mm, p, p.if_norg_imp);
+		NORG frezeorb(mm, p);
 		IFS ifs_a("ru" + frezeorb.scsp.nppso_str() + ".bi");
 		if (ifs_a) for_Int(i, 0, frezeorb.uormat.size()) biread(ifs_a, CharP(frezeorb.uormat[i].p()), frezeorb.uormat[i].szof());
 		frezeorb.up_date_h0_to_solve(imp.impH, 1);

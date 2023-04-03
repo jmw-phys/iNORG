@@ -21,7 +21,6 @@ typedef std::pair<MatReal, Mat<MatReal>> Impdata;
 class NORG {
 	// typedef VEC<VecInt> Tab;
 	//*****************iteration***************
-	// bool full_rotation;						// If true, the impurity will rotate and be treated the same as bath orbital.
 	Int iter_norg_cnt;						// count the NORG optimize iteration times.
 	Int norg_stable_count;					// count the NORG stability iteration times.
 	VecReal occnum_pre;						// occupation number record before one optimize iteration.
@@ -56,8 +55,13 @@ private:
 	VecReal set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const MatReal& impH_i);
 	*/
 
+	// C^+_i C^+_j C_k C_l h_inter from [i][l][j][k] to [alpha][eta][beta][gamma]
 	// It assume that we already have the hopint and h_inter from the Impurity class, with four Fermi interaction.
 	VecReal set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& impH_i);
+
+	// Already have the hopint and h_inter from the Impurity class, with four Fermi interaction.
+	// Speed up by Operator calss. C^+_i C^+_j C_k C_l h_inter from [i][l][j][k] to [alpha][eta][beta][gamma]
+	void set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& impH_i, std::map<Int, Real>& oper_i);
 
 	// only change for first norg_set of the first div.
 	VecInt nppso(const VecInt &a, Int positon)
@@ -92,10 +96,10 @@ private:
 	void rotation_the_space(const VEC<MatReal>& uormat_i) const;
 */
 public:
-	NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, bool imp_rotation = false);
-	NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab& table, bool imp_rotation = false);
+	NORG(const MyMpi& mm_i, const Prmtr& prmtr_i);
+	NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab& table);
 	// NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, VecInt nparticals);
-	NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, Str tab_name, bool imp_rotation = false);
+	NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, Str tab_name);
 
 	// NORG(const MyMpi& mm_i, const Impurity& imp_i, const Prmtr& prmtr_i);
 
@@ -156,6 +160,21 @@ public:
 	void write_occupation_info() const;
 
 	void write_state_info(Int iter_cnt) const;
+
+	MatReal see_uormat(const VEC<MatReal>& uormat_i) const {
+		MatReal transform_uormat(dmat(p.norbit, 1.));
+		Int counter(0);
+		for (const auto& uormat_ii : uormat_i) {
+			if (!p.if_norg_imp) counter = p.nO2sets[0] - p.nI2B[0];
+			for_Int(i, 0, uormat_ii.nrows()) {
+				for_Int(j, 0, uormat_ii.ncols()) {
+					transform_uormat[i + counter][j + counter] = uormat_ii[i][j];
+				}
+			}
+			counter += uormat_ii.nrows();
+		}
+		return transform_uormat;
+	}
 	
 	// (Deprecated)
 	MatReal save_transform_uormat();

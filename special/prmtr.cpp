@@ -55,7 +55,7 @@ void Prmtr::set_values() {
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
     nI2B = SUM(templet_control)-1;                      // default value:
-    nO2sets = SUM(templet_control);                            // default value:
+    nO2sets = SUM(templet_control);                     // default value:
     iter_max_norg = 99;                                 // default
     // nooc_mode = STR("nooc");
     // nooc_mode = STR("cpnooc");
@@ -81,6 +81,7 @@ void Prmtr::after_modify_prmtr() const
     // npartical.reset(norg_sets, 0);
     // for_Int(i, 0, norg_sets) npartical[i] = SUM(control_divs[i + 1])/2;
     Uprm = U - 2 * jz;
+    n_rot_orb = if_norg_imp ? norbit : nbath;
     derive_ImGreen();
 }
 
