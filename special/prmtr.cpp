@@ -1,5 +1,5 @@
 /*
-coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022-2023
+coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 */
 
 #include "prmtr.h"

@@ -1,6 +1,6 @@
 /*
 code	by	Rong-Qiang He (rqhe@ruc.edu.cn, RUC, China) date 2013 - 2017
-modify	by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 -2023
+modify	by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 */
 #include "hyberr.h"
 
