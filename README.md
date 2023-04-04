@@ -82,7 +82,12 @@ Version: v1.0.16 @ 2023.04.02
     next do : 1.Cross-validation in three band. 2.add in the Green calc function.
     tinking : krylov_space_size so huge what's the problem?  <!--! A:The H matirx may illed -->
 
-Version: v1.0.16 @ 2023.04.02
-    finished: Find the bug to fix problem, the krylov_space_size so huge. Now the energy_err can decrease constantly.
+Version: v1.0.17 @ 2023.04.03
+    finished: Find the bug to fix problem, "the krylov_space_size so huge". Now the energy_err can decrease constantly.
     next do : 1.add in the Green calc function.
-    tinking : How to realize teh Green calc function?
+    tinking : How to realize teh Green calc function? <!--! A:Using the for formula straight-->
+
+Version: v1.0.18 @ 2023.04.04
+    finished: fix the H matrix n_sC^+_iC_j term.
+    next do : 1.add in the Green calc function.
+    tinking : Only consider the n_s in one-set, is right?

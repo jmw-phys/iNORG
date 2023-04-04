@@ -1,5 +1,5 @@
 /*
-coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
+coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 */
 
 #include "operator.h"
@@ -231,8 +231,8 @@ Tab Operator::find_fullH_idx()
 		Int sparse_idx(h_i - row_H.bgn());
 		//WRN("wherein_NocSpace" + NAV(h_i - scsp.idx_div[scsp.wherein_NocSpace(h_i)]));
 
-		//! Diagonal term.
 		StateStatistics a(h_i, scsp.wherein_NocSpace(h_i), scsp);
+		//! Diagonal term. n_i, n_i n_j
 		for (const auto &x : a.filled_spinless) {
 			for (const auto &i : x) {
 				h_idx = { sparse_idx, h_i, mat_hop_pos[i][i] + 1 };
@@ -252,8 +252,28 @@ Tab Operator::find_fullH_idx()
 					}
 			}
 		}
+		//! Diagonal+off-Diagonal term. n_sC_e^+C_f
+		for_Int(idx_sets, 0, p.norg_sets) {
+			VEC<VecInt> off_dt_next(a.find_each_spiless_group_off_diagonal_term(a.divocchop_ingroup(a.div_idx, idx_sets), idx_sets));
+			for (const auto& i : off_dt_next) {
+				for (const auto& x : a.filled_spinless) {
+					for (const auto& N_s : x) if(clamp(N_s, int(idx_sets * scsp.ndivs), int((idx_sets + 1) * scsp.ndivs - 1)) == N_s) {
+						h_idx = { sparse_idx, i[2], i[3] * int(mat_hop_pos.size() + 1 + tensor_u[i[1]][N_s][N_s][i[0]]) };
+						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+						h_idx = { sparse_idx, i[2], -1 * i[3] * int(mat_hop_pos.size() + 1 + tensor_u[i[1]][N_s][i[0]][N_s]) };
+						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+						h_idx = { sparse_idx, i[2], -1 * i[3] * int(mat_hop_pos.size() + 1 + tensor_u[N_s][i[1]][N_s][i[0]]) };
+						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+						h_idx = { sparse_idx, i[2], i[3] * int(mat_hop_pos.size() + 1 + tensor_u[N_s][i[1]][i[0]][N_s]) };
+						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+					}
+				}
+			}
+		}
 
-		//! off-Diagonal term.
+
+
+		//! off-Diagonal term. C\power-index{i|†}C\index{j}, C\power-index{i|†}C\power-index{j|†}C\power-index{k}C\index{l}
 		for_Int(idx_sets, 0, p.norg_sets)
 		{
 			{
