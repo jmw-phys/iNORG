@@ -90,4 +90,9 @@ Version: v1.0.17 @ 2023.04.03
 Version: v1.0.18 @ 2023.04.04
     finished: fix the H matrix n_sC^+_iC_j term.
     next do : 1.add in the Green calc function.
-    tinking : Only consider the n_s in one-set, is right?
+    tinking : Only consider the n_s in one-set, is right? <!--! A:Yes, since the rotation wouldn't happened in different sets-->
+
+Version: v1.0.19 @ 2023.04.04
+    finished: Finished the Green calc function; Update the code from v4.1.20; Add the Green calc function(not tested).
+    next do : 1.Cross-validation in three band(with interaction and no interaction).
+    tinking : How should I add the correction vector for fixing the G calc?

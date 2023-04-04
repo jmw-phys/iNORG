@@ -102,6 +102,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 	Str nppso = scsp.nppso_str();
 	if (mm) WRN(NAV4(p.if_norg_imp, nppso, occnum, occweight));
 
+	p.rotationU = uormat;
 	// Finish the NORGiteration.
 	// oneedm.save_the_Tab(oneedm.table, "mainspace");
 }
@@ -166,6 +167,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	//----------------------print put--------------------------------
 	if(mm) std::cout << "---------- THE NORG CONVERGED ----------" << std::endl;;
 	PIO_occweight(occnum);
+	p.rotationU = uormat;
 	// Finish the NORGiteration.
 	// oneedm.save_the_Tab(oneedm.table, "mainspace");
 }

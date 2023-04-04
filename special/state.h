@@ -70,7 +70,7 @@ public:
 	hopdata divocchop_ingroup(const Int& ComDiv, Idx sets_n);
 	
 	// [0]~[3] i-j-k-l orbit's position; (*this).second: The new divs.
-	furfrm divs_change_fourFermi(const Int& ComDiv, Idx sets_n);
+	furfrm divs_change_fourFermi(const Int& ComDiv, Idx sets_i, Idx sets_j);
 
 	// The out put<0>[i]: the annihilation divsion position; <1>[i]: the creation dision positon; <2>[i]: The new divs.
 	VEC<MatInt> interation_soc_hop(const Int& ComDiv);
@@ -86,7 +86,7 @@ public:
 
 	// Output all off-diagonal H0 matrix and all H_{ijkl} term with one spinless orbit.
 	//  [0]~[3] i-j-k-l orbit's position; [4]:Colum idx(i);[5]:sign(fermion anticommutativity)
-	VEC<std::array<int, 6>> find_off_diagonal_term_fourFermi(const furfrm &furfrm, const Int sets_n);
+	VEC<std::array<int, 6>> find_off_diagonal_term_fourFermi(const furfrm &furfrm, const Int sets_i, const Int sets_j);
 	
 	// Output all off-diagonal SOC spinless orb term.
 	VEC<VecInt> off_diagonal_soc_term(const VEC<MatInt> &hop_soc);

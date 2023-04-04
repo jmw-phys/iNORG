@@ -45,6 +45,9 @@ private:
 	// mapping the state by using the project operator.
 	VecReal project_uplwer_parical_space(const VecReal &initial_vector, const Int crtann, const Int norg_set, const Int orbit_pos_in_div = 0) const;
 
+	// return the ex_state_part_in_rotation
+	void add_ex_state_part_in_rotation(const VecReal &initial_vector, VecReal& ex_state_part, const Int& set_n, const Int orb_in_sets, const Int& h_i) const;
+
 	bool if_in_this_orbital(const VecOnb &exd_cf, const Int crtann, const Int norg_set, const Int orbit_pos_in_div) const;
 
 public:

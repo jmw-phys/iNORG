@@ -332,15 +332,42 @@ void CrrltFun::find_trdgnl_one_step(const VecReal& initial_vector, VecReal& v0, 
     a = DOT(v1, v0);
 }
 
-VecReal CrrltFun::project_uplwer_parical_space(const VecReal &initial_vector, const Int crtann, const Int norg_set, const Int orbit_pos_in_div) const
+void CrrltFun::add_ex_state_part_in_rotation(const VecReal &initial_vector, VecReal& ex_state_part, const Int& set_n, const Int orb_before_rot, const Int& h_i) const {
+    const Int subnosp(old_nosp.wherein_NocSpace(h_i));
+    VecReal rotation_coefficients = p.rotationU[set_n].tr()[orb_before_rot];
+    for_Int(pos, 0, rotation_coefficients.size()) {
+        MatInt new_nospdiv = old_nosp.div[subnosp];
+        Int div_idx_in_one_set;for_Int(i, 0, p.ndiv)if (SUM_0toX(new_nospdiv[set_n], i) > pos) div_idx_in_one_set = i - 1;
+        if (crtorann == -1) --new_nospdiv[set_n][pos];
+        if (crtorann == +1) ++new_nospdiv[set_n][pos];
+        if (new_nosp.ifin_NocSpace(new_nospdiv, new_nosp.nppso)) {
+            const ComDivs group(h_i - old_nosp.idx_div[subnosp], (old_nosp.div[subnosp]), (old_nosp.sit_mat), true);
+            VecOnb exd_cf = group.cf;
+            Int orbit_pos_in_div = pos - SUM_0toX(new_nospdiv[set_n], div_idx_in_one_set);
+            if (if_in_this_orbital(exd_cf, crtorann, set_n, orbit_pos_in_div)) {
+                if (crtorann == -1) exd_cf[set_n * new_nosp.ndivs] = exd_cf[set_n * new_nosp.ndivs].ann(orbit_pos_in_div);
+                if (crtorann == +1) exd_cf[set_n * new_nosp.ndivs] = exd_cf[set_n * new_nosp.ndivs].crt(orbit_pos_in_div);
+                const ComDivs b(exd_cf, new_nospdiv, old_nosp.sit_mat);
+                Int begin_idx(-1);
+                begin_idx = new_nosp.divs_to_idx.at(new_nospdiv.vec().string());
+                if (begin_idx == -1) ERR("wrong with ex_state" + NAV2(group.ne, new_nospdiv));
+                ex_state_part[begin_idx + b.idx] = rotation_coefficients[pos] * exd_cf[set_n * new_nosp.ndivs].sgn(orbit_pos_in_div) * initial_vector[h_i];
+            }
+        }
+    }
+}
+
+VecReal CrrltFun::project_uplwer_parical_space(const VecReal& initial_vector, const Int crtann, const Int norg_set, const Int orbit_pos_in_div) const
 // By using the C^+ or C on a spinless orbital(for the spinless reason ONE normal orbital has two spinless orbits).
 // the norg_set only suppose for the even number.
 {
     // clock_t t_find_Newstate; TIME_BGN("find_Newstate" + NAV(mm.id()), t_find_Newstate);
     VecReal ex_state_part(new_nosp.dim, 0.);
     VecPartition row_H(mm.np(), mm.id(), old_nosp.dim);
-    for_Int(h_i, row_H.bgn(), row_H.end())
-    {
+    if (p.if_norg_imp) for_Int(h_i, row_H.bgn(), row_H.end()) {
+        add_ex_state_part_in_rotation(initial_vector, ex_state_part, norg_set, orbit_pos_in_div, h_i);
+    }
+    else for_Int(h_i, row_H.bgn(), row_H.end()) {
         const Int subnosp(old_nosp.wherein_NocSpace(h_i));
         MatInt new_nospdiv = old_nosp.div[subnosp];
         if (crtann == -1) --new_nospdiv[norg_set][0];
@@ -349,7 +376,7 @@ VecReal CrrltFun::project_uplwer_parical_space(const VecReal &initial_vector, co
         if (new_nosp.ifin_NocSpace(new_nospdiv, new_nosp.nppso)) {
             const ComDivs group(h_i - old_nosp.idx_div[subnosp], (old_nosp.div[subnosp]), (old_nosp.sit_mat), true);
             VecOnb exd_cf = group.cf;
-            if(if_in_this_orbital(exd_cf, crtann, norg_set, orbit_pos_in_div)) {
+            if (if_in_this_orbital(exd_cf, crtann, norg_set, orbit_pos_in_div)) {
                 if (crtann == -1) exd_cf[norg_set * new_nosp.ndivs] = exd_cf[norg_set * new_nosp.ndivs].ann(orbit_pos_in_div);
                 if (crtann == +1) exd_cf[norg_set * new_nosp.ndivs] = exd_cf[norg_set * new_nosp.ndivs].crt(orbit_pos_in_div);
                 const ComDivs b(exd_cf, new_nospdiv, old_nosp.sit_mat);

@@ -52,6 +52,9 @@ private:
 	// Using the tridiagonal Krylov space matirx to find each excition state.
 	void find_excted_state_by_ab(const VecReal& initial_vector, VecReal& v0, VecReal& v1, VecReal& vec_a, VecReal& vec_b, Int& k, const SparseMatReal& sep_h);
 
+	// return the ex_state_part_in_rotation
+	void add_ex_state_part_in_rotation(const VecReal &initial_vector, VecReal& ex_state_part, const Int& set_n, const Int orb_in_sets, const Int& h_i) const;
+
 	bool if_in_this_orbital(const VecOnb &exd_cf, const Int crtann, const Int norg_set, const Int orbit_pos_in_div) const;
 
 public:

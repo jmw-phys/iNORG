@@ -318,10 +318,9 @@ Real ImGreen::error(const ImGreen& b, Real omg_rsd) const
 Real ImGreen::sum(const VecCmplx& gf) const
 {
 	Real electron_density = real(SUM(gf));
-	
     VecReal w = imag(z_omg.truncate(nomgs - 4, nomgs));
     VecReal g = real(gf.truncate(nomgs - 4, nomgs));
-    if (ABS(real(gf[0])) < 1.E-5) 	return 0.;					//if gf is 0, insensitive with omg, return 0
+    if (MAX(ABS(real(gf))) < 1.E-6) 	return 0.;					//if gf is 0, insensitive with omg, return 0
     MatReal A(4, 4);
     MatReal B(4, 1);
     for_Int(i, 0, 4) {
@@ -339,24 +338,21 @@ Real ImGreen::sum(const VecCmplx& gf) const
     Real y = B[1][0];
     Real m = B[2][0];
     Real n = B[3][0];
-    // if (m < 0 || n < 0 || m * m < 4 * n) {
-    //     WRN("formula wrong: " + NAV5(end ,row, col, m, n))
-    // }
-    Real a1 = 0.5 * (m + SQRT(m * m - 4 * n));
-    Real a2 = 0.5 * (m - SQRT(m * m - 4 * n));
-    Real b1 = (x * a1 - y) / (a1 - a2);
-    Real b2 = (y - x * a2) / (a1 - a2);
-	if(ABS(b1) < 1.E-15)		a1 = abs(a1);
-	if(ABS(b2) < 1.E-15)		a2 = abs(a2);
-    if ((a1 < 0 && ABS(b1) > 1.E-12) || (a2 < 0 && ABS(b2) > 1.E-12))		{ WRN(NAV4(a1, a2, b1, b2)) }
-    electron_density += b1 * pi_Real * tanh(SQRT(a1) * pi_Real / (2. * unit_omg)) / (4 * unit_omg * SQRT(a1));
-    electron_density += b2 * pi_Real * tanh(SQRT(a2) * pi_Real / (2. * unit_omg)) / (4 * unit_omg * SQRT(a2));
+	VecReal a(2,0.);
+	VecReal b(2,0.);
+    a[0] = 0.5 * (m + SQRT(m * m - 4 * n));
+    a[1] = 0.5 * (m - SQRT(m * m - 4 * n));
+    b[0] = (x * a[0] - y) / (a[0] - a[1]);
+    b[1] = (y - x * a[1]) / (a[0] - a[1]);
+	for_Int(i,0,2){
+		if(a[i]<0)	{electron_density += b[i] * pi_Real * tan(SQRT(-a[i]) * pi_Real / (2. * unit_omg)) / (4 * unit_omg * SQRT(-a[i]));}
+		else		{electron_density += b[i] * pi_Real * tanh(SQRT(a[i]) * pi_Real / (2. * unit_omg)) / (4 * unit_omg * SQRT(a[i]));}
+	}
     for_Int(n, 0, nomgs) {
-        electron_density -= b1 / (SQR(omg(n)) + a1);
-        electron_density -= b2 / (SQR(omg(n)) + a2);
+		for_Int(i,0,2){
+        	electron_density -= b[i] / (SQR(omg(n)) + a[i]);
+		}
     }
-	// WRN(NAV6(a1,a2,b1,b2,w,g))	
-
     const Real temp = unit_omg / pi_Real;
 	return 2 * temp * electron_density;
 }

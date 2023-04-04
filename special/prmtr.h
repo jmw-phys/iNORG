@@ -68,6 +68,7 @@ public:
 	mutable VecInt stage2_restrain;	// to set the stage2 restrain one for all distribute;
 	mutable VecInt stage2_control;	// to set the stage2 control one for all distribute;
 	mutable Int ndiv;				// the the divsion's nubmer.
+	mutable VEC<MatReal> rotationU;	// save the rotation matrix for convience.
 
 	
 	mutable Str nooc_mode;

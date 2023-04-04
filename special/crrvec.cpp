@@ -64,7 +64,11 @@ Crrvec::Crrvec(const NocSpace &old_nosp_i, Operator& main_opr, const VecReal &vg
     ground_state_energy(gs)
 {
     main_opr.clear();
-    mat_green.g += krylov_space_for_green_matrix(mat_green);
+    if(crtorann == +1) mat_green.g += krylov_space_for_green_matrix(mat_green);
+    else if(crtorann == -1) {
+        Vec<MatCmplx> temp_mat = krylov_space_for_green_matrix(mat_green);
+        for_Int(i, 0, mat_green.g.size()) mat_green.g[i] += temp_mat[i].tr(); //?
+    }
 }
 
 ImGreen Crrvec::find_gf() {
@@ -316,37 +320,61 @@ Vec<MatCmplx> Crrvec::krylov_space_for_green_matrix(const Green& mat_green){
 }
 //---------------------------------------------Private function---------------------------------------------
 
-VecReal Crrvec::project_uplwer_parical_space(const VecReal &initial_vector, const Int crtann, const Int norg_set, const Int orbit_pos_in_div) const
+void Crrvec::add_ex_state_part_in_rotation(const VecReal &initial_vector, VecReal& ex_state_part, const Int& set_n, const Int orb_before_rot, const Int& h_i) const {
+    const Int subnosp(old_nosp.wherein_NocSpace(h_i));
+    VecReal rotation_coefficients = p.rotationU[set_n].tr()[orb_before_rot];
+    for_Int(pos, 0, rotation_coefficients.size()) {
+        MatInt new_nospdiv = old_nosp.div[subnosp];
+        Int div_idx_in_one_set;for_Int(i, 0, p.ndiv)if (SUM_0toX(new_nospdiv[set_n], i) > pos) div_idx_in_one_set = i - 1;
+        if (crtorann == -1) --new_nospdiv[set_n][pos];
+        if (crtorann == +1) ++new_nospdiv[set_n][pos];
+        if (new_nosp.ifin_NocSpace(new_nospdiv, new_nosp.nppso)) {
+            const ComDivs group(h_i - old_nosp.idx_div[subnosp], (old_nosp.div[subnosp]), (old_nosp.sit_mat), true);
+            VecOnb exd_cf = group.cf;
+            Int orbit_pos_in_div = pos - SUM_0toX(new_nospdiv[set_n], div_idx_in_one_set);
+            if (if_in_this_orbital(exd_cf, crtorann, set_n, orbit_pos_in_div)) {
+                if (crtorann == -1) exd_cf[set_n * new_nosp.ndivs] = exd_cf[set_n * new_nosp.ndivs].ann(orbit_pos_in_div);
+                if (crtorann == +1) exd_cf[set_n * new_nosp.ndivs] = exd_cf[set_n * new_nosp.ndivs].crt(orbit_pos_in_div);
+                const ComDivs b(exd_cf, new_nospdiv, old_nosp.sit_mat);
+                Int begin_idx(-1);
+                begin_idx = new_nosp.divs_to_idx.at(new_nospdiv.vec().string());
+                if (begin_idx == -1) ERR("wrong with ex_state" + NAV2(group.ne, new_nospdiv));
+                ex_state_part[begin_idx + b.idx] = rotation_coefficients[pos] * exd_cf[set_n * new_nosp.ndivs].sgn(orbit_pos_in_div) * initial_vector[h_i];
+            }
+        }
+    }
+}
+
+VecReal Crrvec::project_uplwer_parical_space(const VecReal& initial_vector, const Int crtann, const Int norg_set, const Int orbit_pos_in_div) const
 // By using the C^+ or C on a spinless orbital(for the spinless reason ONE normal orbital has two spinless orbits).
 // the norg_set only suppose for the even number.
 {
     // clock_t t_find_Newstate; TIME_BGN("find_Newstate" + NAV(mm.id()), t_find_Newstate);
     VecReal ex_state_part(new_nosp.dim, 0.);
     VecPartition row_H(mm.np(), mm.id(), old_nosp.dim);
-    {
-        for_Int(h_i, row_H.bgn(), row_H.end())
-        {
-            const Int subnosp(old_nosp.wherein_NocSpace(h_i));
-            MatInt new_nospdiv = old_nosp.div[subnosp];
-            if (crtann == -1) --new_nospdiv[norg_set][0];
-            if (crtann == +1) ++new_nospdiv[norg_set][0];
-            // if (new_nosp.ifin_NocSpace(new_nospdiv)) {
-            if (new_nosp.ifin_NocSpace(new_nospdiv, new_nosp.nppso)) {
-                const ComDivs group(h_i - old_nosp.idx_div[subnosp], (old_nosp.div[subnosp]), (old_nosp.sit_mat), true);
-                VecOnb exd_cf = group.cf;
-                if(if_in_this_orbital(exd_cf, crtann, norg_set, orbit_pos_in_div)) {
-                    if (crtann == -1) exd_cf[norg_set * new_nosp.ndivs] = exd_cf[norg_set * new_nosp.ndivs].ann(orbit_pos_in_div);
-                    if (crtann == +1) exd_cf[norg_set * new_nosp.ndivs] = exd_cf[norg_set * new_nosp.ndivs].crt(orbit_pos_in_div);
-                    const ComDivs b(exd_cf, new_nospdiv, old_nosp.sit_mat);
-                    Int begin_idx(-1);
-                    begin_idx = new_nosp.divs_to_idx.at(new_nospdiv.vec().string());
-                    if (begin_idx == -1) ERR("wrong with ex_state" + NAV2(group.ne, new_nospdiv));
-                    ex_state_part[begin_idx + b.idx] = exd_cf[norg_set * new_nosp.ndivs].sgn(orbit_pos_in_div) * initial_vector[h_i];
-                }
+    if (p.if_norg_imp) for_Int(h_i, row_H.bgn(), row_H.end()) {
+        add_ex_state_part_in_rotation(initial_vector, ex_state_part, norg_set, orbit_pos_in_div, h_i);
+    }
+    else for_Int(h_i, row_H.bgn(), row_H.end()) {
+        const Int subnosp(old_nosp.wherein_NocSpace(h_i));
+        MatInt new_nospdiv = old_nosp.div[subnosp];
+        if (crtann == -1) --new_nospdiv[norg_set][0];
+        if (crtann == +1) ++new_nospdiv[norg_set][0];
+        // if (new_nosp.ifin_NocSpace(new_nospdiv)) {
+        if (new_nosp.ifin_NocSpace(new_nospdiv, new_nosp.nppso)) {
+            const ComDivs group(h_i - old_nosp.idx_div[subnosp], (old_nosp.div[subnosp]), (old_nosp.sit_mat), true);
+            VecOnb exd_cf = group.cf;
+            if (if_in_this_orbital(exd_cf, crtann, norg_set, orbit_pos_in_div)) {
+                if (crtann == -1) exd_cf[norg_set * new_nosp.ndivs] = exd_cf[norg_set * new_nosp.ndivs].ann(orbit_pos_in_div);
+                if (crtann == +1) exd_cf[norg_set * new_nosp.ndivs] = exd_cf[norg_set * new_nosp.ndivs].crt(orbit_pos_in_div);
+                const ComDivs b(exd_cf, new_nospdiv, old_nosp.sit_mat);
+                Int begin_idx(-1);
+                begin_idx = new_nosp.divs_to_idx.at(new_nospdiv.vec().string());
+                if (begin_idx == -1) ERR("wrong with ex_state" + NAV2(group.ne, new_nospdiv));
+                ex_state_part[begin_idx + b.idx] = exd_cf[norg_set * new_nosp.ndivs].sgn(orbit_pos_in_div) * initial_vector[h_i];
             }
         }
     }
-    
     VecReal ex_state(mm.Allreduce(ex_state_part));
     // TIME_END("find_Newstate" + NAV(mm.id()), t_find_Newstate);
     return ex_state;

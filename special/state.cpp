@@ -52,7 +52,7 @@ vector<VecInt> StateStatistics::find_each_spiless_group_off_diagonal_term(const 
 	return off_diagonal_term;
 }
 
-VEC<array<int, 6>> StateStatistics::find_off_diagonal_term_fourFermi(const furfrm &furfrm, const Int sets_n)
+VEC<array<int, 6>> StateStatistics::find_off_diagonal_term_fourFermi(const furfrm &furfrm, const Int sets_i, const Int sets_j)
 {
 	VEC<array<int, 6>> off_diagonal_term;
 	{
@@ -62,18 +62,18 @@ VEC<array<int, 6>> StateStatistics::find_off_diagonal_term_fourFermi(const furfr
 		
 		for_Int(i, 0, furfrm.size()) {
 			Idx idx_div_i(find_newdiv_idx(furfrm[i].second));
-			Int div_pst_crt_i(furfrm[i].first[0] + sets_n * space.ndivs), div_pst_crt_j(furfrm[i].first[1] + sets_n * space.ndivs), 
-				div_pst_ann_k(furfrm[i].first[2] + sets_n * space.ndivs), div_pst_ann_l(furfrm[i].first[3] + sets_n * space.ndivs);
+			Int div_pst_crt_i(furfrm[i].first[0] + sets_i * space.ndivs), div_pst_crt_j(furfrm[i].first[1] + sets_j * space.ndivs), 
+				div_pst_ann_k(furfrm[i].first[2] + sets_j * space.ndivs), div_pst_ann_l(furfrm[i].first[3] + sets_i * space.ndivs);
 
 			for_Int(cp_i, 0, cfg.div_orb_c[div_pst_crt_i].size()) {
 			for_Int(cp_j, 0, cfg.div_orb_c[div_pst_crt_j].size()) {
 			for_Int(c__k, 0, cfg.div_orb_e[div_pst_ann_k].size()) {
 			for_Int(c__l, 0, cfg.div_orb_e[div_pst_ann_l].size()) {
 
-				ODT_i[0] = (SUM_0toX(space.sit_mat, sets_n, furfrm[i].first[0]) + cfg.div_orb_c[div_pst_crt_i][cp_i]);
-				ODT_i[1] = (SUM_0toX(space.sit_mat, sets_n, furfrm[i].first[1]) + cfg.div_orb_c[div_pst_crt_j][cp_j]);
-				ODT_i[2] = (SUM_0toX(space.sit_mat, sets_n, furfrm[i].first[2]) + cfg.div_orb_e[div_pst_ann_k][c__k]);
-				ODT_i[3] = (SUM_0toX(space.sit_mat, sets_n, furfrm[i].first[3]) + cfg.div_orb_e[div_pst_ann_l][c__l]);
+				ODT_i[0] = (SUM_0toX(space.sit_mat, sets_i, furfrm[i].first[0]) + cfg.div_orb_c[div_pst_crt_i][cp_i]);
+				ODT_i[1] = (SUM_0toX(space.sit_mat, sets_j, furfrm[i].first[1]) + cfg.div_orb_c[div_pst_crt_j][cp_j]);
+				ODT_i[2] = (SUM_0toX(space.sit_mat, sets_j, furfrm[i].first[2]) + cfg.div_orb_e[div_pst_ann_k][c__k]);
+				ODT_i[3] = (SUM_0toX(space.sit_mat, sets_i, furfrm[i].first[3]) + cfg.div_orb_e[div_pst_ann_l][c__l]);
 				if(ODT_i[0] != ODT_i[1] && ODT_i[2] != ODT_i[3]) {
 					VecOnb newcf(cfg.cf);
 					#ifdef _ASSERTION_
@@ -88,14 +88,14 @@ VEC<array<int, 6>> StateStatistics::find_off_diagonal_term_fourFermi(const furfr
 					ComDivs b(newcf, furfrm[i].second, space.sit_mat);
 					ODT_i[4] = idx_div_i + b.idx;
 					if (ODT_i[4] > space.dim) ERR(STR("Hmlt Off-Diag Elements IHTL > IHM ") + NAV2(ODT_i[2], space.dim));
-					ODT_i[5] = cfg.sgn(ODT_i[1], ODT_i[3]);
-					ODT_i[5] *= cfg.sgn(ODT_i[0], ODT_i[2]);
+					ODT_i[5] = cfg.sgn(ODT_i[0], ODT_i[3]);	// sign for C^+_i C_l
+					ODT_i[5] *= cfg.sgn(ODT_i[1], ODT_i[2]);// sign for C^+_j C_k
 					ODT_i[5] *= -1;
 					// if (auto [min, max] = minmax(ODT_i[0], ODT_i[2]); ODT_i[1] > min && ODT_i[1] < max) ODT_i[5] *= -1;
 					// if (auto [min, max] = minmax(ODT_i[0], ODT_i[2]); ODT_i[3] > min && ODT_i[3] < max) ODT_i[5] *= -1;
-					auto [min, max] = minmax(ODT_i[0], ODT_i[2]);
+					auto [min, max] = minmax(ODT_i[0], ODT_i[3]);
 					if (ODT_i[1] == clamp(ODT_i[1], min, max)) ODT_i[5] *= -1;
-					if (ODT_i[3] == clamp(ODT_i[3], min, max)) ODT_i[5] *= -1;
+					if (ODT_i[2] == clamp(ODT_i[3], min, max)) ODT_i[5] *= -1;
 					#ifdef _ASSERTION_
 						if (ODT_i[0] == ODT_i[1]) ERR("A impossible thing happened:ODT_i[0] == ODT_i[1]" + NAV(ODT_i[0]));
 					#endif
@@ -247,7 +247,7 @@ StateStatistics::hopdata StateStatistics::divocchop_ingroup(const Int& ComDiv, I
 	return hop;
 }
 
-StateStatistics::furfrm StateStatistics::divs_change_fourFermi(const Int& ComDiv, Idx sets_n)
+StateStatistics::furfrm StateStatistics::divs_change_fourFermi(const Int& ComDiv, Idx sets_i, Idx sets_j)
 {
 	furfrm hop;
 	// "c": means annihilation, and "cp" mean creation. Which is act on all div.
@@ -257,8 +257,8 @@ StateStatistics::furfrm StateStatistics::divs_change_fourFermi(const Int& ComDiv
 		for_Int(c_k, 0, space.ndivs) {
 		for_Int(c_l, 0, space.ndivs) {
 			MatInt occupy(space.div[ComDiv]);
-			++occupy[sets_n][cp_i]; ++occupy[sets_n][cp_j]; 
-			--occupy[sets_n][c_k]; --occupy[sets_n][c_l]; 
+			++occupy[sets_i][cp_i]; ++occupy[sets_j][cp_j]; 
+			--occupy[sets_j][c_k]; --occupy[sets_i][c_l]; 
 			if (space.ifin_NocSpace(occupy, space.nppso)) {
 				pair<array<int, 4>, MatInt> tup1(make_pair(array<int, 4>{cp_i, cp_j, c_k, c_l}, occupy));
 				hop.push_back(tup1);
