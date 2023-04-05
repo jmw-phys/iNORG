@@ -16,8 +16,6 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2021 - 2023
 // #include "asnci.h"
 
 // impurity model
-
-typedef std::pair<MatReal, Mat<MatReal>> Impdata;
 class NORG {
 	// typedef VEC<VecInt> Tab;
 	//*****************iteration***************
@@ -53,15 +51,16 @@ private:
 	/*// ! abandon
 	// It assume that we already have the hopint from the Impurity class, but still have not rotated it yet.
 	VecReal set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const MatReal& impH_i);
-	*/
 
 	// C^+_i C^+_j C_k C_l h_inter from [i][l][j][k] to [alpha][eta][beta][gamma]
 	// It assume that we already have the hopint and h_inter from the Impurity class, with four Fermi interaction.
 	VecReal set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& impH_i);
+	*/
 
 	// Already have the hopint and h_inter from the Impurity class, with four Fermi interaction.
 	// Speed up by Operator calss. C^+_i C^+_j C_k C_l h_inter from [i][l][j][k] to [alpha][eta][beta][gamma]
-	void set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& impH_i, std::map<Int, Real>& oper_i);
+	// void set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& impH_i, std::map<Int, Real>& oper_i);
+	void set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& impH_i, VecReal& oper_i);
 
 	// only change for first norg_set of the first div.
 	VecInt nppso(const VecInt &a, Int positon)
@@ -161,7 +160,7 @@ public:
 
 	void write_state_info(Int iter_cnt) const;
 
-	MatReal see_uormat(const VEC<MatReal>& uormat_i) const {
+	MatReal see_MatReal(const VEC<MatReal>& uormat_i) const {
 		MatReal transform_uormat(dmat(p.norbit, 1.));
 		Int counter(0);
 		for (const auto& uormat_ii : uormat_i) {
@@ -175,7 +174,9 @@ public:
 		}
 		return transform_uormat;
 	}
-	
+
+	void write_impurtiy_occupation() const;
+
 	void PIO_occweight(VecReal occnum_lst) const {
 		MatReal occnum, occweight;
 		if(p.if_norg_imp) occnum = occnum_lst.mat(p.norg_sets, p.n_rot_orb/p.norg_sets);

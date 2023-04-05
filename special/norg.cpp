@@ -65,7 +65,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 		iter_norg_cnt++;
 		if(mm) PIO("The iteration counting: " + NAV(iter_norg_cnt));
 		VEC<MatReal> uormat_new(oneedm.find_unitary_orbital_rotation_matrix());
-		// if(mm) WRN(NAV(see_uormat(uormat_new)));
+		// if(mm) WRN(NAV(see_MatReal(uormat_new)));
 		for_Int(i, 0, uormat.size()) uormat[i] = uormat_new[i] * uormat[i];
 		// if(mm) WRN(NAV(uormat[0]));
 		// scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);
@@ -136,7 +136,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 		if(mm) PIO("The iteration counting: " + NAV(iter_norg_cnt));
 		if(mode) {
 			VEC<MatReal> uormat_new(oneedm.find_unitary_orbital_rotation_matrix());
-			// if(mm) WRN(NAV(see_uormat(uormat_new)));
+			// if(mm) WRN(NAV(see_MatReal(uormat_new)));
 			for_Int(i, 0, uormat.size()) uormat[i] = uormat_new[i] * uormat[i];}
 		// if(mm) WRN(NAV(uormat[0]));
 		// scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);	//if (mm) scsp.print();
@@ -168,6 +168,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	if(mm) std::cout << "---------- THE NORG CONVERGED ----------" << std::endl;;
 	PIO_occweight(occnum);
 	p.rotationU = uormat;
+	write_impurtiy_occupation();
 	// Finish the NORGiteration.
 	// oneedm.save_the_Tab(oneedm.table, "mainspace");
 }
@@ -406,102 +407,6 @@ Real NORG::sz_imp_sz_bath(const Int imp_postition, const VecReal& vgs_i)
 	return sz_imp_sz_bath;
 }
 
-//------------------------------------------------------------------ io ------------------------------------------------------------------
-
-void NORG::write_norg_info(Int iter_cnt) const {
-	using namespace std;
-	Real sc = 0;
-	for_Int(i, 0, final_ground_state.size()) sc -= SQR(final_ground_state[i]) * log(SQR(final_ground_state[i]));
-	OFS ofs_app_scorrelation(tox + "slater_correlation.txt", std::ios::app);
-	ofs_app_scorrelation << iofmt("sci");
-	ofs_app_scorrelation << setw(4) << iter_cnt;
-	ofs_app_scorrelation << "\t" << setw(w_Real) << sc;
-	ofs_app_scorrelation << endl; ofs_app_scorrelation.close();
-
-	OFS ofs_app_energy(tox + "ground_energy.txt", std::ios::app);
-	ofs_app_energy << iofmt("sci");
-	ofs_app_energy << setw(4) << iter_cnt;
-	ofs_app_energy << "\t" << setw(w_Real) << groune_lst;
-	ofs_app_energy << endl; ofs_app_energy.close();
-
-	// Only show for the upper spin.
-	if(iter_cnt != 0)for_Int(i, 0, p.nband) {
-		OFS ofs_app_occupation(tox +"imp"+ STR(i*2) + "_bath_occupation_number.txt", std::ios::app);
-		ofs_app_occupation << iofmt("sci");
-		ofs_app_occupation << setw(4) << iter_cnt;
-		for_Int(j, 0, p.nI2B[i*2]) { ofs_app_occupation << "  " << setw(w_Real) << occnum_lst[SUM_0toX(p.nI2B, i*2) + j]; }
-		ofs_app_occupation << endl;
-		ofs_app_occupation.close();
-	}
-	
-	// Only show for the upper spin.
-	if(iter_cnt != 0)for_Int(i, 0, p.nband) {
-		VEC<VecReal> dmeigen = oneedm.check_dm_get_occupation_number();
-		OFS ofs_app_occupation_all(tox +"imp"+ STR(i*2) + "_occupation_number.txt", std::ios::app);
-		ofs_app_occupation_all << iofmt("sci");
-		ofs_app_occupation_all << setw(4) << iter_cnt;
-		for_Int(j, 0, dmeigen[i].size()) { ofs_app_occupation_all << "  " << setw(w_Real) << dmeigen[i][j]; }
-		ofs_app_occupation_all << endl;
-		ofs_app_occupation_all.close();
-	}
-
-}
-
-void NORG::write_occupation_info() const {
-	using namespace std;
-	OFS ofs; ofs.open("nmat.txt");
-	VEC<MatReal> dmtemp(oneedm.dm);
-	VecReal counter(3);
-	ofs << "#   < n_i >   data:"<< endl;
-	for_Int(orb_i, 0, p.norbs)	{
-		ofs << iofmt();
-		std::string temp = (orb_i % 2) == 0 ? STR(Int(orb_i / 2) + 1) + "up" : STR(Int(orb_i / 2) + 1) + "dn";
-		ofs << setw(6) << temp << setw(p_Real) << dmtemp[orb_i][0][0] << endl;
-		(orb_i % 2) == 0 ? counter[0] += dmtemp[orb_i][0][0] : counter[1] += dmtemp[orb_i][0][0];
-	}
-	counter[2] = counter[0] + counter[1];
-	ofs << setw(6) << "sup" << setw(p_Real) << counter[0] << endl;
-	ofs << setw(6) << "sdn" << setw(p_Real) << counter[1] << endl;
-	ofs << setw(6) << "sum" << setw(p_Real) << counter[2];
-	ofs.close();
-}
-
-void NORG::write_state_info(Int iter_cnt) const {
-	using namespace std;
-	// OFS ofs_app_state(STR(iter_cnt) + "write_state_info.txt", ios::app);
-	OFS ofs_app_state; ofs_app_state.open(STR(iter_cnt) + "write_state_info.txt");
-	ofs_app_state << setw(4) << "iter_cnt";
-	ofs_app_state << "\t" << setw(w_Real) << "state";
-	ofs_app_state << "\t" << setw(w_Real) << "state_norm";
-	ofs_app_state << "\t" << setw(w_Real) << "norm__sort";
-	ofs_app_state << endl; 
-	VecReal temp_norm_state = SQR(final_ground_state);
-	VecReal temp_norm__sort = temp_norm_state; sort(temp_norm__sort);
-	if(mm) WRN(NAV3(final_ground_state.norm(),temp_norm_state.norm(),temp_norm__sort.norm()));
-	for_Int(i, 0, final_ground_state.size()) 
-	{
-		ofs_app_state << iofmt("sci");
-		ofs_app_state << setw(4) << iter_cnt;
-		ofs_app_state << "\t" << setw(w_Real) << final_ground_state[i];
-		ofs_app_state << "\t" << setw(w_Real) << temp_norm_state[i];
-		ofs_app_state << "\t" << setw(w_Real) << temp_norm__sort[final_ground_state.size()-1-i];
-		ofs_app_state << endl; 
-	}
-	ofs_app_state.close();
-}
-
-
-Real NORG::return_nointeractions_ground_state_energy(const MatReal& h0_i) const {
-	MatReal htemp = h0_i;
-	VecReal vtemp(htemp.ncols(),0.);
-	Real energy = 0.;
-	heevr(htemp, vtemp);
-	for_Int(i, 0, vtemp.size()) {
-		if(vtemp[i]<0) energy += vtemp[i];
-	}
-	return energy;
-}
-
 //------------------------------------------------------------------- private -------------------------------------------------------------------
 
 void NORG::show_the_nozero_number_of_tabel() 
@@ -533,37 +438,7 @@ MatReal NORG::save_transform_uormat(){
 	return transform_uormat;
 }
 
-/* // ! abandon
-VecReal NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const MatReal& impH)
-{
-	MatReal hopint = impH, transform_uormat(dmat(p.norbit, 1.));
-	Int counter(0);
-	if (!uormat_i.empty()) {
-		for (const auto& uormat_ii : uormat_i)
-		{
-			counter++;
-			for_Int(i, 0, uormat_ii.nrows()) {
-				for_Int(j, 0, uormat_ii.ncols()) {
-					transform_uormat[i + counter][j + counter] = uormat_ii[i][j];
-				}
-			}
-			counter += uormat_ii.nrows();
-		}
-	}
-	hopint = transform_uormat * hopint * transform_uormat.ct();
-	VecReal coefficient_i(hopint.vec());
-	VecReal check_point(1, 0.); coefficient_i.reset(concat(check_point, coefficient_i));
-	// // VecReal orbital_correction({ u_hbd, (u_hbd - (2 * j_ob)), (u_hbd - (3 * j_ob)), (u_hbd - (3 * j_ob)) });
-	// // VecReal orbital_correction({ u_hbd, p.U12, p.U12, p.U12 });
-	// {U, U':u d, U':u u, U':d d}
-	VecReal orbital_correction({ p.U, p.Uprm, p.Uprm - p.jz, p.Uprm - p.jz });
-	// VecReal orbital_correction({ p.U * 0.25, p.Uprm * 0.25, (p.Uprm - p.jz) * 0.25, (p.Uprm - p.jz) * 0.25 });
-	// VecReal orbital_correction({ 0.25 * p.U, 0. * p.U, 0. * p.U, 0. * p.U });
-	return concat(coefficient_i, orbital_correction);
-}
-*/
-
-
+/*
 VecReal NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& impH_i)
 {
 	MatReal hopint(impH_i.first), transform_uormat(dmat(p.norbit, 1.));
@@ -666,4 +541,164 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 		else ERR("the key is out of range!!");
 		// if (mm) WRN(NAV2(key, value));
 	}
+}
+*/
+
+void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& impH_i, VecReal& oper_i)
+{
+	using namespace std;
+	MatReal hopint(impH_i.first), transform_uormat(dmat(p.norbit, 1.));
+	Int counter(0), n(p.n_rot_orb);
+	if (uormat_i.empty() || oper_i.size() == 0) ERR("the uormat_i or oper_value is empty!!");
+	
+	if (!uormat_i.empty()) {
+		for (const auto& uormat_ii : uormat_i) {
+			if(!p.if_norg_imp) counter = p.nO2sets[0] - p.nI2B[0];
+			for_Int(i, 0, uormat_ii.nrows()) {
+				for_Int(j, 0, uormat_ii.ncols()) {
+					transform_uormat[i + counter][j + counter] = uormat_ii[i][j];
+				}
+			}
+			counter += uormat_ii.nrows();
+		}
+	}
+	// if(mm) WRN(NAV(transform_uormat));
+	hopint = transform_uormat * hopint * transform_uormat.ct();
+
+	// alpha:a, eta=e, beta=b, gamma=g
+	VecReal iljg = (impH_i.second.mat(n * n * n, n) * transform_uormat.ct()).vec();
+	VecReal aljg = (transform_uormat * iljg.mat(n, n * n * n)).vec();
+	VecReal	jgal = aljg.mat(n*n, n*n).tr().vec();
+	VecReal bgal = (transform_uormat * jgal.mat(n, n * n * n)).vec();
+	VecReal bgag = (bgal.mat(n * n * n, n)* transform_uormat.ct()).vec();
+	VecReal aebg = (bgag.mat(n*n, n*n).tr()).vec();
+	oper_i = concat(concat(VecReal{ 0. }, hopint.vec()), aebg);
+}
+
+
+//------------------------------------------------------------------ io ------------------------------------------------------------------
+
+void NORG::write_norg_info(Int iter_cnt) const {
+	using namespace std;
+	Real sc = 0;
+	for_Int(i, 0, final_ground_state.size()) sc -= SQR(final_ground_state[i]) * log(SQR(final_ground_state[i]));
+	OFS ofs_app_scorrelation(tox + "slater_correlation.txt", std::ios::app);
+	ofs_app_scorrelation << iofmt("sci");
+	ofs_app_scorrelation << setw(4) << iter_cnt;
+	ofs_app_scorrelation << "\t" << setw(w_Real) << sc;
+	ofs_app_scorrelation << endl; ofs_app_scorrelation.close();
+
+	OFS ofs_app_energy(tox + "ground_energy.txt", std::ios::app);
+	ofs_app_energy << iofmt("sci");
+	ofs_app_energy << setw(4) << iter_cnt;
+	ofs_app_energy << "\t" << setw(w_Real) << groune_lst;
+	ofs_app_energy << endl; ofs_app_energy.close();
+
+	// Only show for the upper spin.
+	if(iter_cnt != 0)for_Int(i, 0, p.nband) {
+		OFS ofs_app_occupation(tox +"imp"+ STR(i*2) + "_bath_occupation_number.txt", std::ios::app);
+		ofs_app_occupation << iofmt("sci");
+		ofs_app_occupation << setw(4) << iter_cnt;
+		for_Int(j, 0, p.nI2B[i*2]) { ofs_app_occupation << "  " << setw(w_Real) << occnum_lst[SUM_0toX(p.nI2B, i*2) + j]; }
+		ofs_app_occupation << endl;
+		ofs_app_occupation.close();
+	}
+	
+	// Only show for the upper spin.
+	if(iter_cnt != 0)for_Int(i, 0, p.nband) {
+		VEC<VecReal> dmeigen = oneedm.check_dm_get_occupation_number();
+		OFS ofs_app_occupation_all(tox +"imp"+ STR(i*2) + "_occupation_number.txt", std::ios::app);
+		ofs_app_occupation_all << iofmt("sci");
+		ofs_app_occupation_all << setw(4) << iter_cnt;
+		for_Int(j, 0, dmeigen[i].size()) { ofs_app_occupation_all << "  " << setw(w_Real) << dmeigen[i][j]; }
+		ofs_app_occupation_all << endl;
+		ofs_app_occupation_all.close();
+	}
+
+}
+
+void NORG::write_occupation_info() const {
+	using namespace std;
+	OFS ofs; ofs.open("nmat.txt");
+	VEC<MatReal> dmtemp(oneedm.dm);
+	VecReal counter(3);
+	ofs << "#   < n_i >   data:"<< endl;
+	for_Int(orb_i, 0, p.norbs)	{
+		ofs << iofmt();
+		std::string temp = (orb_i % 2) == 0 ? STR(Int(orb_i / 2) + 1) + "up" : STR(Int(orb_i / 2) + 1) + "dn";
+		ofs << setw(6) << temp << setw(p_Real) << dmtemp[orb_i][0][0] << endl;
+		(orb_i % 2) == 0 ? counter[0] += dmtemp[orb_i][0][0] : counter[1] += dmtemp[orb_i][0][0];
+	}
+	counter[2] = counter[0] + counter[1];
+	ofs << setw(6) << "sup" << setw(p_Real) << counter[0] << endl;
+	ofs << setw(6) << "sdn" << setw(p_Real) << counter[1] << endl;
+	ofs << setw(6) << "sum" << setw(p_Real) << counter[2];
+	ofs.close();
+}
+
+void NORG::write_state_info(Int iter_cnt) const {
+	using namespace std;
+	// OFS ofs_app_state(STR(iter_cnt) + "write_state_info.txt", ios::app);
+	OFS ofs_app_state; ofs_app_state.open(STR(iter_cnt) + "write_state_info.txt");
+	ofs_app_state << setw(4) << "iter_cnt";
+	ofs_app_state << "\t" << setw(w_Real) << "state";
+	ofs_app_state << "\t" << setw(w_Real) << "state_norm";
+	ofs_app_state << "\t" << setw(w_Real) << "norm__sort";
+	ofs_app_state << endl; 
+	VecReal temp_norm_state = SQR(final_ground_state);
+	VecReal temp_norm__sort = temp_norm_state; sort(temp_norm__sort);
+	if(mm) WRN(NAV3(final_ground_state.norm(),temp_norm_state.norm(),temp_norm__sort.norm()));
+	for_Int(i, 0, final_ground_state.size()) 
+	{
+		ofs_app_state << iofmt("sci");
+		ofs_app_state << setw(4) << iter_cnt;
+		ofs_app_state << "\t" << setw(w_Real) << final_ground_state[i];
+		ofs_app_state << "\t" << setw(w_Real) << temp_norm_state[i];
+		ofs_app_state << "\t" << setw(w_Real) << temp_norm__sort[final_ground_state.size()-1-i];
+		ofs_app_state << endl; 
+	}
+	ofs_app_state.close();
+}
+
+void NORG::write_impurtiy_occupation() const {
+	using namespace std;
+	if (mm) {
+		OFS ofs;
+		ofs.open("nmat.txt");
+		VecReal counter(3);
+		MatReal dm_origional = see_MatReal(uormat).ct() * see_MatReal(oneedm.dm) * see_MatReal(uormat);
+		// WRN(NAV(dm_origional));
+		VecReal particals(dm_origional.diagonal().mat(p.norg_sets, p.nO2sets[0]).tr()[0]);
+
+		ofs << "#   < n_i >   data:" << endl;
+		for_Int(orb_i, 0, p.norbs) {
+			ofs << iofmt();
+			std::string temp = (orb_i % 2) == 0 ? STR(Int(orb_i / 2) + 1) + "up" : STR(Int(orb_i / 2) + 1) + "dn";
+			ofs << setw(6) << temp << setw(p_Real) << particals[orb_i] << endl;
+		}
+		counter[0] = SUM(particals.mat(p.nband, 2).tr()[0]);
+		counter[1] = SUM(particals.mat(p.nband, 2).tr()[1]);
+
+		counter[2] = counter[0] + counter[1];
+		ofs << setw(6) << "sup" << setw(p_Real) << counter[0] << endl;
+		ofs << setw(6) << "sdn" << setw(p_Real) << counter[1] << endl;
+		ofs << setw(6) << "sum" << setw(p_Real) << counter[2];
+		ofs.close();
+
+		std::cout << "\nnorg ground state energy: " << groune_lst << "  " << present() << std::endl;
+		std::cout << std::endl;							// blank line
+	}
+}
+
+
+
+Real NORG::return_nointeractions_ground_state_energy(const MatReal& h0_i) const {
+	MatReal htemp = h0_i;
+	VecReal vtemp(htemp.ncols(),0.);
+	Real energy = 0.;
+	heevr(htemp, vtemp);
+	for_Int(i, 0, vtemp.size()) {
+		if(vtemp[i]<0) energy += vtemp[i];
+	}
+	return energy;
 }

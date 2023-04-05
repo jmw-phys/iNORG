@@ -54,7 +54,7 @@ void Prmtr::set_values() {
     templet_control =  {1,  3,  0,  1,  0,  3};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
-    nI2B = SUM(templet_control)-1;                      // default value:
+    nI2B = SUM(templet_control) - 1;                    // default value:
     nO2sets = SUM(templet_control);                     // default value:
     iter_max_norg = 99;                                 // default
     // nooc_mode = STR("nooc");

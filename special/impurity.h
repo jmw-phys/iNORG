@@ -15,8 +15,8 @@ date 2021-02-25
 // the lower 16 bits represent a spin-down configuration
 // the higher 16 bits represent a spin-up configuration
 
-
-typedef std::pair<MatReal, Mat<MatReal>> Impdata;
+// tensor V_{iljk} = i * n^3 + l * n^2 + j * n + k
+typedef std::pair<MatReal, VecReal> Impdata;
 class Impurity {
 private:
 	const MyMpi& mm;			// parameters
@@ -36,7 +36,7 @@ private:
 	//hopping  factors;when bath parameters is unusual,we just need to modify bath.hop() 
 	void set_factor();
 	//interaction  factors
-	Mat<MatReal> set_interaction();
+	VecReal set_interaction();
 public:
 	Impurity(const MyMpi& mm_i, const Prmtr& prmtr_i, const Bath& bth_i, const Str& file = empty_str);
 	Impurity(const MyMpi& mm_i, const Prmtr& prmtr_i, const Bath& bth_i, const VecInt or_deg);

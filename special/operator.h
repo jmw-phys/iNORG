@@ -31,7 +31,8 @@ public:
 
 	
 	VecReal ground_state;			// if degeneracy happened, we only get one of them.
-	std::map<Int, Real> oper_value;	// The Hamiltonian operator in the shortcut space.
+	// std::map<Int, Real> oper_value;	// The Hamiltonian operator in the shortcut space.
+	VecReal oper_value;				// The Hamiltonian operator in the shortcut space.
 private:
 
 public:

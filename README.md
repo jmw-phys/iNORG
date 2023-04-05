@@ -96,3 +96,8 @@ Version: v1.0.19 @ 2023.04.04
     finished: Finished the Green calc function; Update the code from v4.1.20; Add the Green calc function(not tested).
     next do : 1.Cross-validation in three band(with interaction and no interaction).
     tinking : How should I add the correction vector for fixing the G calc?
+
+Version: v1.0.20 @ 2023.04.05
+    finished: Fix the set_interaction() in impurity class; Change the Impdata data structure; speed up the set_row_primeter_byimpH() function;
+    next do : Test the convergence of ground state calc.
+    tinking : The Green calc need to fixed for some structure can't find in the sub-space.

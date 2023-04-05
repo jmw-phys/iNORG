@@ -22,7 +22,8 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 
 	Impurity imp(mm, p, bth, or_deg_idx.truncate(0,nband));
 	ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 	if (mm) hb_imp.write_zen("hb_imp", "Fit");
-	imp.update();											if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
+	// imp.update();
+	if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 
 
 	// NocSpace scsp(mm_i, prmtr_i, prmtr_i.npartical);
@@ -30,14 +31,14 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	// NORG norg(mm, prmtr_i);
 	// norg.up_date_h0_to_solve(imp.impH, 1);
 	NORG norg(choose_cauculation_style("one_pcl_test", imp));
-	if (mm)	{
-		norg.write_occupation_info();
-		std::cout << "\nnorg ground state energy: " << norg.groune_lst  << "  " << present() << std::endl;
-		std::cout << std::endl;							// blank line
-	}
+	// if (mm)	{
+	// 	norg.write_occupation_info();
+	// 	std::cout << "\nnorg ground state energy: " << norg.groune_lst  << "  " << present() << std::endl;
+	// 	std::cout << std::endl;							// blank line
+	// }
+/* 
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);					if (mm)	g0imp.write_zen("g0imp");
 	ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));	if (mm) gfimp.write_zen("gfimp");
-/* 
 */
 
  /*

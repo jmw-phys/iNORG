@@ -11,7 +11,7 @@ Bath::Bath(const MyMpi& mm_i, const Prmtr& prmtr_i) :
 
 void Bath::bath_fit(const ImGreen& hb_i, Int iter)
 {
-	read_ose_hop(); IFS ifs("ose_hop.txt");
+	read_ose_hop(); IFS ifs("ose_hop");
 	for_Int(band_i, 0, p.nband){
 		if(p.nband != hb_i[0].nrows()) ERR("some thing wrong with the hybrid function.")
 		for_Int(i, 0, hb_i.nomgs) hb[i] = hb_i[i][band_i][band_i];
@@ -46,7 +46,7 @@ void Bath::bath_fit(const ImGreen& hb_i, Int iter)
 
 void Bath::bath_fit(const ImGreen& hb_i, VecInt or_deg)
 {
-	read_ose_hop();IFS ifs("ose_hop.txt");
+	read_ose_hop();IFS ifs("ose_hop");
 	for_Int(degi, 0, MAX(or_deg)) {
 		Int count(0), orb_rep(-1);
 		VecCmplx hb_fit(hb.nomgs); 
@@ -212,7 +212,7 @@ void Bath::write_ose_hop(Int iter_cnt) const {
 	using namespace std;
 	// OFS ofs_app_ose(p.ofx + ".ose.txt", std::ios::app);
 	// OFS ofs_ose;ofs_ose.open("ose.txt");
-	OFS ofs;ofs.open("ose_hop.txt");
+	OFS ofs;ofs.open("ose_hop");
 	for_Int(band_i, 0, p.nband)	{
 		ofs << iofmt("sci");
 		ofs << setw(4) << iter_cnt << setw(4) << band_i;
@@ -231,7 +231,7 @@ void Bath::write_ose_hop(Int iter_cnt) const {
 void Bath::read_ose_hop(Int iter_cnt) {
 	using namespace std;
 	// IFS ifs_ose;ifs_ose.open("ose.txt");
-	IFS ifs("ose_hop.txt");
+	IFS ifs("ose_hop");
 	Str strr;
 	if(ifs)for_Int(band_i, 0, p.nband)	{
 		ifs >> strr; ifs >> strr;
