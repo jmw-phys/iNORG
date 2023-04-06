@@ -52,15 +52,10 @@ private:
 	// find the div's idx according to the "newdiv".
 	Int find_newdiv_idx(MatInt newdiv);
 
-	// inline UInt vectorBoolToInt(const VecBool &vec) {
-	// 	UInt result = 0;
-	// 	// Int_for(i, 0, vec.size()) result |= (vec[i] << i);
-	// 	Int_for(i, 0, vec.size()) {
-	// 		result <<= 1;
-    //         if (vec[i]) result |= 1;
-	// 	}
-	// 	return result;
-	// }
+	template<typename T>
+	constexpr const T& myclamp(const T& v, const T& lo, const T& hi) {
+		return (v < lo) ? lo : ((hi < v) ? hi : v);
+	}
 
 public:
 	//state(Int idxD, VecInt bases_i) :idx(idxD), bases(bases_i) {};

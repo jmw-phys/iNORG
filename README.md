@@ -101,3 +101,8 @@ Version: v1.0.20 @ 2023.04.05
     finished: Fix the set_interaction() in impurity class; Change the Impdata data structure; speed up the set_row_primeter_byimpH() function;
     next do : Test the convergence of ground state calc.
     tinking : The Green calc need to fixed for some structure can't find in the sub-space.
+
+Version: v1.0.21 @ 2023.04.06
+    finished: Debug for the state class; change for the abge in norg.cpp.
+    next do : (same as prev)
+    tinking : (same as prev)

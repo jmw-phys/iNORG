@@ -94,8 +94,8 @@ VEC<array<int, 6>> StateStatistics::find_off_diagonal_term_fourFermi(const furfr
 					// if (auto [min, max] = minmax(ODT_i[0], ODT_i[2]); ODT_i[1] > min && ODT_i[1] < max) ODT_i[5] *= -1;
 					// if (auto [min, max] = minmax(ODT_i[0], ODT_i[2]); ODT_i[3] > min && ODT_i[3] < max) ODT_i[5] *= -1;
 					auto [min, max] = minmax(ODT_i[0], ODT_i[3]);
-					if (ODT_i[1] == clamp(ODT_i[1], min, max)) ODT_i[5] *= -1;
-					if (ODT_i[2] == clamp(ODT_i[3], min, max)) ODT_i[5] *= -1;
+					if (ODT_i[1] == myclamp(ODT_i[1], min, max)) ODT_i[5] *= -1;
+					if (ODT_i[2] == myclamp(ODT_i[2], min, max)) ODT_i[5] *= -1;
 					#ifdef _ASSERTION_
 						if (ODT_i[0] == ODT_i[1]) ERR("A impossible thing happened:ODT_i[0] == ODT_i[1]" + NAV(ODT_i[0]));
 					#endif

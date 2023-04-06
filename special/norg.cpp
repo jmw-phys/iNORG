@@ -565,14 +565,20 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 	// if(mm) WRN(NAV(transform_uormat));
 	hopint = transform_uormat * hopint * transform_uormat.ct();
 
-	// alpha:a, eta=e, beta=b, gamma=g
-	VecReal iljg = (impH_i.second.mat(n * n * n, n) * transform_uormat.ct()).vec();
-	VecReal aljg = (transform_uormat * iljg.mat(n, n * n * n)).vec();
-	VecReal	jgal = aljg.mat(n*n, n*n).tr().vec();
-	VecReal bgal = (transform_uormat * jgal.mat(n, n * n * n)).vec();
-	VecReal bgag = (bgal.mat(n * n * n, n)* transform_uormat.ct()).vec();
-	VecReal aebg = (bgag.mat(n*n, n*n).tr()).vec();
-	oper_i = concat(concat(VecReal{ 0. }, hopint.vec()), aebg);
+	// alpha:a, beta=b, gamma=g, eta=e
+	// VecReal iljg = (impH_i.second.mat(n * n * n, n) * transform_uormat.ct()).vec();
+	// VecReal aljg = (transform_uormat * iljg.mat(n, n * n * n)).vec();
+	// VecReal	jgal = aljg.mat(n*n, n*n).tr().vec();
+	// VecReal bgal = (transform_uormat * jgal.mat(n, n * n * n)).vec();
+	// VecReal bgag = (bgal.mat(n * n * n, n)* transform_uormat.ct()).vec();
+	// VecReal aebg = (bgag.mat(n*n, n*n).tr()).vec();
+	VecReal ijke = (impH_i.second.mat(n * n * n, n) * transform_uormat.ct()).vec();
+	VecReal ajke = (transform_uormat * ijke.mat(n, n * n * n)).vec();
+	VecReal	keaj = ajke.mat(n * n, n * n).tr().vec();
+	VecReal geaj = (transform_uormat.ct().tr() * keaj.mat(n, n * n * n)).vec();
+	VecReal geab = (geaj.mat(n * n * n, n) * transform_uormat.tr()).vec();
+	VecReal abge = (geab.mat(n * n, n * n).tr()).vec();
+	oper_i = concat(concat(VecReal{ 0. }, hopint.vec()), abge);
 }
 
 

@@ -13,7 +13,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2021 - 2023
 #include "crrvec.h"
 #include "krylov.h"
 #include "impurity.h"
-// #include "asnci.h"
+
 
 // impurity model
 class NORG {
@@ -150,8 +150,6 @@ public:
 	void get_gimp(Green& imp_i);
 	void get_gimp(Green& imp_i, VecInt or_deg);
 
-	// void asnci_gimp(Green& imp_i);
-	
 	void find_g0(Green& imp_i);
 //--------------------------------------- for the io---------------------------------
 	void write_norg_info(Int iter_cnt) const;

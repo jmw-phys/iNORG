@@ -222,8 +222,8 @@ Tab Operator::find_fullH_idx()
 	MatInt mat_hop_pos(scsp.hopint.nrows(),scsp.hopint.ncols());
 	for_Int(i, 0, mat_hop_pos.nrows()) for_Int(j, 0, mat_hop_pos.ncols()) mat_hop_pos[i][j] = i * mat_hop_pos.ncols() + j;
 	Mat<MatInt> tensor_u(scsp.hopint.nrows(), scsp.hopint.ncols(), mat_hop_pos);
-	for_Int(i, 0, tensor_u.nrows()) for_Int(l, 0, tensor_u.ncols()) for_Int(j, 0, mat_hop_pos.nrows()) for_Int(k, 0, mat_hop_pos.ncols())
-		tensor_u[i][l][j][k] = (i * tensor_u.ncols() + l) * mat_hop_pos.size() + j * mat_hop_pos.ncols() + k;
+	for_Int(i, 0, tensor_u.nrows()) for_Int(j, 0, tensor_u.ncols()) for_Int(k, 0, mat_hop_pos.nrows()) for_Int(l, 0, mat_hop_pos.ncols())
+		tensor_u[i][j][k][l] = (i * tensor_u.ncols() + j) * mat_hop_pos.size() + k * mat_hop_pos.ncols() + l;
 
 	for_Int(h_i, row_H.bgn(), row_H.end()) {
 		// To save as sparse matrix, [0]: row number;[1]: colum number;[2]: idx.
@@ -259,15 +259,11 @@ Tab Operator::find_fullH_idx()
 			VEC<VecInt> off_dt_next(a.find_each_spiless_group_off_diagonal_term(a.divocchop_ingroup(a.div_idx, idx_sets), idx_sets));
 			for (const auto& i : off_dt_next) {
 				for (const auto& x : a.filled_spinless) {
-					for (const auto& N_s : x) if(clamp(N_s, SUM_0toX(p.nO2sets, idx_sets), (SUM_0toX(p.nO2sets, idx_sets)- 1)) == N_s) {
-						h_idx = { sparse_idx, i[2], i[3] * int(mat_hop_pos.size() + 1 + tensor_u[i[1]][N_s][N_s][i[0]]) };
-						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-						h_idx = { sparse_idx, i[2], -1 * i[3] * int(mat_hop_pos.size() + 1 + tensor_u[i[1]][N_s][i[0]][N_s]) };
-						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-						h_idx = { sparse_idx, i[2], -1 * i[3] * int(mat_hop_pos.size() + 1 + tensor_u[N_s][i[1]][N_s][i[0]]) };
-						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-						h_idx = { sparse_idx, i[2], i[3] * int(mat_hop_pos.size() + 1 + tensor_u[N_s][i[1]][i[0]][N_s]) };
-						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+					for (const auto& N_s : x) if (myclamp(N_s, SUM_0toX(p.nO2sets, idx_sets), (SUM_0toX(p.nO2sets, idx_sets) - 1)) == N_s) {
+						h_idx = { sparse_idx, i[2], i[3] * int(mat_hop_pos.size() + 1 + tensor_u[i[1]][N_s][N_s][i[0]]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+						h_idx = { sparse_idx, i[2],-i[3] * int(mat_hop_pos.size() + 1 + tensor_u[i[1]][N_s][i[0]][N_s]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+						h_idx = { sparse_idx, i[2],-i[3] * int(mat_hop_pos.size() + 1 + tensor_u[N_s][i[1]][N_s][i[0]]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+						h_idx = { sparse_idx, i[2], i[3] * int(mat_hop_pos.size() + 1 + tensor_u[N_s][i[1]][i[0]][N_s]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 					}
 				}
 			}
@@ -293,7 +289,7 @@ Tab Operator::find_fullH_idx()
 				// [0]~[3] i-j-k-l orbit's position(C^+_i C^+_j C_k C_l); [4]:Colum idx(i);[5]:sign(fermion anticommutativity)
 				VEC<array<int, 6>> off_dt_next(a.find_off_diagonal_term_fourFermi(a.divs_change_fourFermi(a.div_idx, idx_sets_i, idx_sets_j), idx_sets_i, idx_sets_j));
 				for (const auto &i : off_dt_next){
-					h_idx = {sparse_idx, i[4], i[5] * int(mat_hop_pos.size() + 1 + tensor_u[i[0]][i[3]][i[1]][i[2]])};
+					h_idx = {sparse_idx, i[4], i[5] * int(mat_hop_pos.size() + 1 + tensor_u[i[0]][i[1]][i[2]][i[3]])};
 					for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 				}
 			}

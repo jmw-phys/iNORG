@@ -8,7 +8,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 #include "prmtr.h"
 #include "nocspace.h"
 #include "state.h"
-// #include "asnci.h"
+
 
 // impurity model
 typedef Vec<VEC<Int>> Tab;
@@ -34,6 +34,11 @@ public:
 	// std::map<Int, Real> oper_value;	// The Hamiltonian operator in the shortcut space.
 	VecReal oper_value;				// The Hamiltonian operator in the shortcut space.
 private:
+
+	template<typename T>
+	constexpr const T& myclamp(const T& v, const T& lo, const T& hi) {
+		return (v < lo) ? lo : ((hi < v) ? hi : v);
+	}
 
 public:
 	// Expand the Shortcut space under Number of particles(NumberSpa).
