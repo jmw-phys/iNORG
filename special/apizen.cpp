@@ -28,9 +28,9 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 
 	// NocSpace scsp(mm_i, prmtr_i, prmtr_i.npartical);
 	// DensityMat oneedm(mm, prmtr_i, scsp;
-	// NORG norg(mm, prmtr_i);
-	// norg.up_date_h0_to_solve(imp.impH, 1);
-	NORG norg(choose_cauculation_style("one_pcl_test", imp));
+	NORG norg(mm, prmtr_i);
+	norg.up_date_h0_to_solve(imp.impH, 1);
+	// NORG norg(choose_cauculation_style("one_pcl_test", imp));
 	// if (mm)	{
 	// 	norg.write_occupation_info();
 	// 	std::cout << "\nnorg ground state energy: " << norg.groune_lst  << "  " << present() << std::endl;
@@ -303,7 +303,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		{
 			Int band1(p.npartical[0]), band2(p.npartical[0]);
 			if(nband == 5) p.npartical = {band1, band1, band1, band1, band2, band2, band1, band1, band2, band2};
-			if(nband == 3) {p.npartical = {band1, band1, band1, band1, band1, band1}; p.npartical += 1;}
+			if(nband == 3) {p.npartical = {band1, band1, band1, band1, band1, band1}; /*p.npartical += 1;*/}
 			p.according_nppso(p.npartical);
 			NORG norg(mm, p);
 			IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");

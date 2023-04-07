@@ -282,7 +282,7 @@ VEC<MatInt> StateStatistics::interation_soc_hop(const Int& ComDiv)
 		if(cnt == 0) {
 			for_Int(j, 0, space.p.nband) if(i != j) {
 				Int cnt_j(occupy[j*2][0] + occupy[j*2+1][0]);
-				if(cnt == 2) {
+				if(cnt_j == 2) {
 					occupy[i*2][0] = occupy[i*2+1][0] = 1;
 					occupy[j*2][0] = occupy[j*2+1][0] = 0;
 					if (space.ifin_NocSpace(occupy, space.nppso)) hop_soc.push_back(occupy);
@@ -294,7 +294,7 @@ VEC<MatInt> StateStatistics::interation_soc_hop(const Int& ComDiv)
 		if(cnt == 2) {
 			for_Int(j, 0, space.p.nband) if(i != j) {
 				Int cnt_j(occupy[j*2][0] + occupy[j*2+1][0]);
-				if(cnt == 0) {
+				if(cnt_j == 0) {
 					occupy[i*2][0] = occupy[i*2+1][0] = 0;
 					occupy[j*2][0] = occupy[j*2+1][0] = 1;
 					if (space.ifin_NocSpace(occupy, space.nppso)) hop_soc.push_back(occupy);

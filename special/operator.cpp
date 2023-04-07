@@ -29,8 +29,7 @@ Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i,
 {
 }
 
-//! Abandon, 
-// this function can fully represent by the "find_fullH_idx()" function.
+// ! (Abandon), this function can fully represent by the "find_fullH_idx()" function.
 Tab Operator::find_h_idx(){
 	clock_t t_find_hmlt_table;
 	t_find_hmlt_table = clock(); // TIME_BGN("find_hmlt_table" + NAV(mm.id()), t_find_hmlt_table);
@@ -223,7 +222,8 @@ Tab Operator::find_fullH_idx()
 	for_Int(i, 0, mat_hop_pos.nrows()) for_Int(j, 0, mat_hop_pos.ncols()) mat_hop_pos[i][j] = i * mat_hop_pos.ncols() + j;
 	Mat<MatInt> tensor_u(scsp.hopint.nrows(), scsp.hopint.ncols(), mat_hop_pos);
 	for_Int(i, 0, tensor_u.nrows()) for_Int(j, 0, tensor_u.ncols()) for_Int(k, 0, mat_hop_pos.nrows()) for_Int(l, 0, mat_hop_pos.ncols())
-		tensor_u[i][j][k][l] = (i * tensor_u.ncols() + j) * mat_hop_pos.size() + k * mat_hop_pos.ncols() + l;
+		tensor_u[i][j][k][l] = i * std::pow(p.norbit, 3) + j * std::pow(p.norbit, 2) + k * std::pow(p.norbit, 1) + l;
+		// tensor_u[i][j][k][l] = (i * tensor_u.ncols() + j) * mat_hop_pos.size() + k * mat_hop_pos.ncols() + l;
 
 	for_Int(h_i, row_H.bgn(), row_H.end()) {
 		// To save as sparse matrix, [0]: row number;[1]: colum number;[2]: idx.
@@ -241,35 +241,17 @@ Tab Operator::find_fullH_idx()
 			}
 		}
 
-		for_Int(set_i, 0, p.norbs) {
-			for_Int(set_j, 0, p.norbs) {
+		for_Int(set_i, 0, p.norg_sets) {
+			for_Int(set_j, 0, p.norg_sets) {
 				VEC<Int> N_veci(a.filled_spinless[set_i]), N_vecj(a.filled_spinless[set_j]);
 				for (const auto& N_i : N_veci) for (const auto& N_j : N_vecj) 
-					if ((set_i == set_j && N_i != N_j) || (set_i != set_j)) {
-						if (N_i == N_j) ERR("N_i == N_j");
+					if (N_i != N_j) {
 						Int interact_pos = mat_hop_pos.size() + 1 + tensor_u[N_i][N_j][N_j][N_i];
 						h_idx = { sparse_idx, h_i, interact_pos };
 						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 					}
 			}
 		}
-
-		//! Diagonal+off-Diagonal term. n_sC_e^+C_f
-		for_Int(idx_sets, 0, p.norg_sets) {
-			VEC<VecInt> off_dt_next(a.find_each_spiless_group_off_diagonal_term(a.divocchop_ingroup(a.div_idx, idx_sets), idx_sets));
-			for (const auto& i : off_dt_next) {
-				for (const auto& x : a.filled_spinless) {
-					for (const auto& N_s : x) if (myclamp(N_s, SUM_0toX(p.nO2sets, idx_sets), (SUM_0toX(p.nO2sets, idx_sets) - 1)) == N_s) {
-						h_idx = { sparse_idx, i[2], i[3] * int(mat_hop_pos.size() + 1 + tensor_u[i[1]][N_s][N_s][i[0]]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-						h_idx = { sparse_idx, i[2],-i[3] * int(mat_hop_pos.size() + 1 + tensor_u[i[1]][N_s][i[0]][N_s]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-						h_idx = { sparse_idx, i[2],-i[3] * int(mat_hop_pos.size() + 1 + tensor_u[N_s][i[1]][N_s][i[0]]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-						h_idx = { sparse_idx, i[2], i[3] * int(mat_hop_pos.size() + 1 + tensor_u[N_s][i[1]][i[0]][N_s]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-					}
-				}
-			}
-		}
-
-
 
 		//! off-Diagonal term. C\power-index{i|†}C\index{j}, C\power-index{i|†}C\power-index{j|†}C\power-index{k}C\index{l}
 		for_Int(idx_sets_i, 0, p.norg_sets)
@@ -281,10 +263,21 @@ Tab Operator::find_fullH_idx()
 				for (const auto &i : off_dt_next){
 					h_idx = {sparse_idx, i[2], i[3] * (mat_hop_pos[i[1]][i[0]] + 1)};
 					for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+					
+					//! Diagonal+off-Diagonal term. n_sC_e^+C_f
+					if (p.if_norg_imp) for (const auto& x : a.filled_spinless) {
+						for (const auto& N_s : x) if (myclamp(N_s, SUM_0toX(p.nO2sets, idx_sets_i), (SUM_0toX(p.nO2sets, idx_sets_i) - 1)) == N_s && N_s != i[0] && N_s != i[1]) {
+							//																		[i   ][j  ][k  ][l   ]
+							h_idx = { sparse_idx, i[2], i[3] * int(mat_hop_pos.size() + 1 + tensor_u[i[1]][N_s][N_s][i[0]]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+							h_idx = { sparse_idx, i[2],-i[3] * int(mat_hop_pos.size() + 1 + tensor_u[i[1]][N_s][i[0]][N_s]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+							h_idx = { sparse_idx, i[2],-i[3] * int(mat_hop_pos.size() + 1 + tensor_u[N_s][i[1]][N_s][i[0]]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+							h_idx = { sparse_idx, i[2], i[3] * int(mat_hop_pos.size() + 1 + tensor_u[N_s][i[1]][i[0]][N_s]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+						}
+					}
 				}
 			}
 
-			for_Int(idx_sets_j, 0, p.norg_sets) if(p.if_norg_imp){
+			if (p.if_norg_imp) for_Int(idx_sets_j, 0, p.norg_sets) {
 				// off_diagonal_term Four-Fermi
 				// [0]~[3] i-j-k-l orbit's position(C^+_i C^+_j C_k C_l); [4]:Colum idx(i);[5]:sign(fermion anticommutativity)
 				VEC<array<int, 6>> off_dt_next(a.find_off_diagonal_term_fourFermi(a.divs_change_fourFermi(a.div_idx, idx_sets_i, idx_sets_j), idx_sets_i, idx_sets_j));

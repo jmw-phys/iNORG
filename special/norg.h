@@ -177,8 +177,7 @@ public:
 
 	void PIO_occweight(VecReal occnum_lst) const {
 		MatReal occnum, occweight;
-		if(p.if_norg_imp) occnum = occnum_lst.mat(p.norg_sets, p.n_rot_orb/p.norg_sets);
-		else occnum = occnum_lst.mat(p.norg_sets, p.n_rot_orb/p.norg_sets);
+		occnum = occnum_lst.mat(p.norg_sets, p.n_rot_orb/p.norg_sets);
 		occweight = occnum;
 		for_Int(i, 0, p.norg_sets) for_Int(j, 0, occnum.ncols()) occweight[i][j] = MIN(occweight[i][j],1 - occnum[i][j]) < 1e-14 ? 0 : MIN(occweight[i][j],1 - occnum[i][j]);
 		Str nppso = scsp.nppso_str();

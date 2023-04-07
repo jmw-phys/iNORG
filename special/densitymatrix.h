@@ -19,13 +19,16 @@ public:
 	VEC<VecReal> occupationnumber;
 
 private:
-	//(Deactivate) To build the one-electron density matrix at the Multi-states.
+	/*
+	//! (Deactivate) To build the one-electron density matrix at the Multi-states.
 	MatReal one_electron_density_matrix(Int wish_nev = 1);
 
+	//! (Deactivate)
 	// for all the orbital in one matrix.(Deactivate)
 	// find the one-electron density matrix at ground state in shortcut space.
 	// and the one-electron density matrix is splited storage in different prosses.
 	MatReal find_one_electron_density_matrix(const MatReal& state);
+	*/
 
 	// find the one-electron density matrix by table.
 	VEC<MatReal> find_one_electron_density_matrix(const MatReal& state, const Tab& table);

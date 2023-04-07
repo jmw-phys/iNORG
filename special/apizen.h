@@ -11,7 +11,7 @@ date 2022 - 2023
 #include "green.h"
 #include "impurity.h"
 #include "norg.h"
-#include "asnci.h"
+// #include "asnci.h"
 #include "occler.h"
 
 

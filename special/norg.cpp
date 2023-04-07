@@ -73,6 +73,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 		// if (mm)PIO("ground_state size" + NAV(oneedm.ground_state.size()));
 		groune_pre = groune_lst;	occnum_pre = occnum_lst;
 		oneedm.update(); final_ground_state = oneedm.ground_state;
+		// if(mm) PIO(NAV(see_MatReal(oneedm.dm)));
 		// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 		occnum_lst = VECVectoVec(oneedm.occupationnumber);
 		groune_lst = oneedm.groundstate_energy;
@@ -95,8 +96,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 	final_ground_state = oneedm.ground_state;	norg_stable_count = 0.; occnum = occnum_lst;
 	/*--------------------------------print put--------------------------------*/
 	MatReal occnum, occweight;
-	if(p.if_norg_imp) occnum = occnum_lst.mat(p.norg_sets, p.n_rot_orb/p.norg_sets);
-	else occnum = occnum_lst.mat(p.norg_sets, p.n_rot_orb/p.norg_sets);
+	occnum = occnum_lst.mat(p.norg_sets, p.n_rot_orb/p.norg_sets);
 	occweight = occnum;
 	for_Int(i, 0, p.norg_sets) for_Int(j, 0, occnum.ncols()) occweight[i][j] = MIN(occweight[i][j],1 - occnum[i][j]) < 1e-14 ? 0 : MIN(occweight[i][j],1 - occnum[i][j]);
 	Str nppso = scsp.nppso_str();
@@ -144,6 +144,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 		// if (mm)PIO("ground_state size" + NAV(oneedm.ground_state.size()));
 		groune_pre = groune_lst;	occnum_pre = occnum_lst;
 		oneedm.update(); final_ground_state = oneedm.ground_state;
+		// if (mm) PIO(NAV(see_MatReal(oneedm.dm)));
 		// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 		occnum_lst = VECVectoVec(oneedm.occupationnumber);				PIO_occweight(occnum_lst);
 		groune_lst = oneedm.groundstate_energy;
@@ -553,7 +554,7 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 	
 	if (!uormat_i.empty()) {
 		for (const auto& uormat_ii : uormat_i) {
-			if(!p.if_norg_imp) counter = p.nO2sets[0] - p.nI2B[0];
+			if(p.if_norg_imp == false) counter += p.nO2sets[0] - p.nI2B[0];
 			for_Int(i, 0, uormat_ii.nrows()) {
 				for_Int(j, 0, uormat_ii.ncols()) {
 					transform_uormat[i + counter][j + counter] = uormat_ii[i][j];
@@ -566,12 +567,7 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 	hopint = transform_uormat * hopint * transform_uormat.ct();
 
 	// alpha:a, beta=b, gamma=g, eta=e
-	// VecReal iljg = (impH_i.second.mat(n * n * n, n) * transform_uormat.ct()).vec();
-	// VecReal aljg = (transform_uormat * iljg.mat(n, n * n * n)).vec();
-	// VecReal	jgal = aljg.mat(n*n, n*n).tr().vec();
-	// VecReal bgal = (transform_uormat * jgal.mat(n, n * n * n)).vec();
-	// VecReal bgag = (bgal.mat(n * n * n, n)* transform_uormat.ct()).vec();
-	// VecReal aebg = (bgag.mat(n*n, n*n).tr()).vec();
+	if (p.if_norg_imp) {
 	VecReal ijke = (impH_i.second.mat(n * n * n, n) * transform_uormat.ct()).vec();
 	VecReal ajke = (transform_uormat * ijke.mat(n, n * n * n)).vec();
 	VecReal	keaj = ajke.mat(n * n, n * n).tr().vec();
@@ -579,6 +575,10 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 	VecReal geab = (geaj.mat(n * n * n, n) * transform_uormat.tr()).vec();
 	VecReal abge = (geab.mat(n * n, n * n).tr()).vec();
 	oper_i = concat(concat(VecReal{ 0. }, hopint.vec()), abge);
+	} else { 
+		oper_i = concat(concat(VecReal{ 0. }, hopint.vec()), impH_i.second);
+	}
+	// if(mm) WRN(NAV(transform_uormat));
 }
 
 

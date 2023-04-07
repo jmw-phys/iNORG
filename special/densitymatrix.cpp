@@ -16,7 +16,7 @@ DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i
 DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, const Tab& tab, bool imp_rotation) :Operator(mm_i, prmtr_i, tab, scsp_i.coefficient)
 {
 }
-
+/*
 MatReal DensityMat::one_electron_density_matrix(Int wish_nev)
 {
 	MatReal multi_oedm(p.norbit, p.norbit, 0.);		// one - electron density matrix at the Multi - states.
@@ -25,6 +25,7 @@ MatReal DensityMat::one_electron_density_matrix(Int wish_nev)
 	multi_oedm = find_one_electron_density_matrix(lowest_eigpairs(scsp.dim, true,  wish_nev));
 	return multi_oedm;
 }
+*/
 
 VEC<MatReal> DensityMat::find_one_electron_density_matrix(const MatReal& state, const Tab& table_i) 
 {
@@ -361,8 +362,8 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 
 		occupationnumber = evalue;
 	}
-		return rotaionU;
-
+	// if(mm) WRN(NAV2(p.if_norg_imp, Vec(rotaionU)));
+	return rotaionU;
 }
 
 VEC<VecReal> DensityMat::check_dm_get_occupation_number() const{
@@ -377,7 +378,8 @@ VEC<VecReal> DensityMat::check_dm_get_occupation_number() const{
 	return occupation_nubmer;
 }
 
-// (Deactivate) In Here the state a row is a state, and the number of row means degeneracy
+/*
+//! (Deactivate) In Here the state a row is a state, and the number of row means degeneracy
 MatReal DensityMat::find_one_electron_density_matrix(const MatReal& state)
 {
 //#ifdef _CHECK_DIMENSION_MATCH_
@@ -420,6 +422,7 @@ MatReal DensityMat::find_one_electron_density_matrix(const MatReal& state)
 // #endif
 	return D;
 }
+*/
 
 // (Deactivate) for the OrthonormalityRecover.
 MatReal DensityMat::OrthonormalityRecover(const MatReal& mat_i)

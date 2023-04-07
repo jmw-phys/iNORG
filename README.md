@@ -106,3 +106,8 @@ Version: v1.0.21 @ 2023.04.06
     finished: Debug for the state class; change for the abge in norg.cpp.
     next do : (same as prev)
     tinking : (same as prev)
+
+Version: v1.0.22 @ 2023.04.06
+    finished: fix the if_norg_imp mode, Now debug in this mode.
+    next do : try to find the reason energy different with v1.0.07.
+    tinking : The number of elerment is same as v1.0.07?
