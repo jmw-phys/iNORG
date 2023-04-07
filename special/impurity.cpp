@@ -149,13 +149,15 @@ void Impurity::set_factor() {
 VecReal Impurity::set_interaction() {
     Int n = p.norbit;
     VecReal interaction(std::pow(n, 4), 0.);
-    Mat<MatReal> imp_interact(p.norbs, p.norbs, MatReal(p.norbs, p.norbs, 0.));
+    // Mat<MatReal> imp_interact(p.norbs, p.norbs, MatReal(p.norbs, p.norbs, 0.));
+    MatReal imp_dd_interact(p.norbs, p.norbs,  0.);
+/*
     for_Int(N_i, 0, p.norbs){
         for_Int(N_j, N_i, p.norbs) if(N_i != N_j){
             if ((N_i % 2) == (N_j % 2)) { // same spin orientation
                 imp_interact[N_i][N_j][N_j][N_i] = p.Uprm - p.jz;
             } else {
-                if (N_i / 2 == N_j / 2) imp_interact[N_i][N_j][N_j][N_i] = p.U;
+                if (N_i / 2 == N_j / 2)  imp_interact[N_i][N_j][N_j][N_i] = p.U;
                 else imp_interact[N_i][N_j][N_j][N_i] = p.Uprm;
             }
 
@@ -167,6 +169,26 @@ VecReal Impurity::set_interaction() {
             }
             interaction[SUM_0toX(p.nO2sets, N_i) * std::pow(n, 3) + SUM_0toX(p.nO2sets, N_j) * std::pow(n, 2) + SUM_0toX(p.nO2sets, N_j) * std::pow(n, 1) + SUM_0toX(p.nO2sets, N_i)] = imp_interact[N_i][N_j][N_j][N_i];
         }
+    }
+*/
+    for_Int(b1, 0, p.nband){
+        imp_dd_interact[2 * b1][2 * b1 + 1] = p.U;
+        for_Int(b2, 0, p.nband) if(b1 != b2){
+            { // same spin orientation
+                imp_dd_interact[2 * b1][2 * b2] = p.Uprm - p.jz;
+                imp_dd_interact[2 * b1 + 1][2 * b2 + 1] = p.Uprm - p.jz;
+            } 
+            {
+                imp_dd_interact[2 * b1][2 * b2 + 1] = p.Uprm;
+                // imp_dd_interact[2 * b1 + 1][2 * b2] = p.Uprm;
+            }
+        }
+    }
+    if(mm) WRN(NAV(imp_dd_interact));
+    for_Int(N_i, 0, p.norbs)for_Int(N_j, 0, p.norbs) {
+        if (imp_dd_interact[N_i][N_j] != 0)
+            interaction[SUM_0toX(p.nO2sets, N_i) * std::pow(n, 3) + SUM_0toX(p.nO2sets, N_j) * std::pow(n, 2) + SUM_0toX(p.nO2sets, N_j) * std::pow(n, 1) + SUM_0toX(p.nO2sets, N_i)] = imp_dd_interact[N_i][N_j];
+
     }
     // if (mm) WRN(NAV5(p.U, p.Uprm ,p.nO2sets, interaction.size(), SUM(interaction[0][0])));
     return interaction;

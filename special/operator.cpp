@@ -233,23 +233,38 @@ Tab Operator::find_fullH_idx()
 
 		StateStatistics a(h_i, scsp.wherein_NocSpace(h_i), scsp);
 		
-		//! Diagonal term. n_i, n_i n_j
+		//! Diagonal term. n_i
 		for (const auto &x : a.filled_spinless) {
 			for (const auto &i : x) {
 				h_idx = { sparse_idx, h_i, mat_hop_pos[i][i] + 1 };
 				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 			}
 		}
-
-		for_Int(set_i, 0, p.norg_sets) {
-			for_Int(set_j, 0, p.norg_sets) {
-				VEC<Int> N_veci(a.filled_spinless[set_i]), N_vecj(a.filled_spinless[set_j]);
-				for (const auto& N_i : N_veci) for (const auto& N_j : N_vecj) 
-					if (N_i != N_j) {
-						Int interact_pos = mat_hop_pos.size() + 1 + tensor_u[N_i][N_j][N_j][N_i];
+		//! Diagonal term. n_i n_j
+		for_Int(b1, 0, p.nband) {
+			if( a.cfg.cf[(b1 * 2) * ndiv].isocc(0) && a.cfg.cf[(b1 * 2 + 1) * ndiv].isocc(0)){
+				Int interact_pos = mat_hop_pos.size() + 1 + tensor_u[SUM_0toX(p.nO2sets, (b1 * 2))][SUM_0toX(p.nO2sets, (b1 * 2) + 1)][SUM_0toX(p.nO2sets, (b1 * 2) + 1)][SUM_0toX(p.nO2sets, (b1 * 2))];
+				h_idx = { sparse_idx, h_i, interact_pos };
+				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+			}
+			for_Int(b2, 0, p.nband) {
+				if (b1 != b2) {
+					if ((a.cfg.cf[(b1 * 2) * ndiv].isocc(0) && a.cfg.cf[(b2 * 2 + 1) * ndiv].isocc(0))) {
+						Int interact_pos = mat_hop_pos.size() + 1 + tensor_u[SUM_0toX(p.nO2sets, (b1 * 2))][SUM_0toX(p.nO2sets, (b2 * 2) + 1)][SUM_0toX(p.nO2sets, (b2 * 2) + 1)][SUM_0toX(p.nO2sets, (b1 * 2))];
 						h_idx = { sparse_idx, h_i, interact_pos };
 						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 					}
+					if ((a.cfg.cf[(b1 * 2) * ndiv].isocc(0) && a.cfg.cf[(b2 * 2) * ndiv].isocc(0))) {
+						Int interact_pos = mat_hop_pos.size() + 1 + tensor_u[SUM_0toX(p.nO2sets, (b1 * 2))][SUM_0toX(p.nO2sets, (b2 * 2))][SUM_0toX(p.nO2sets, (b2 * 2))][SUM_0toX(p.nO2sets, (b1 * 2))];
+						h_idx = { sparse_idx, h_i, interact_pos };
+						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+					}
+					if ((a.cfg.cf[(b1 * 2 + 1) * ndiv].isocc(0) && a.cfg.cf[(b2 * 2 + 1) * ndiv].isocc(0))) {
+						Int interact_pos = mat_hop_pos.size() + 1 + tensor_u[SUM_0toX(p.nO2sets, (b1 * 2 + 1))][SUM_0toX(p.nO2sets, (b2 * 2) + 1)][SUM_0toX(p.nO2sets, (b2 * 2) + 1)][SUM_0toX(p.nO2sets, (b1 * 2 + 1))];
+						h_idx = { sparse_idx, h_i, interact_pos };
+						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+					}
+				}
 			}
 		}
 

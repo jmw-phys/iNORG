@@ -111,3 +111,8 @@ Version: v1.0.22 @ 2023.04.06
     finished: fix the if_norg_imp mode, Now debug in this mode.
     next do : try to find the reason energy different with v1.0.07.
     tinking : The number of elerment is same as v1.0.07?
+
+Version: v1.0.23 @ 2023.04.07
+    finished: Now the v1.0.23 energy is same as v1.0.07.
+    next do : try to fix with rotation imp.
+    tinking : is it safe merge n_i↑n_j↓ and n_j↑n_i↓ in one term?
