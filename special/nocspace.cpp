@@ -688,16 +688,20 @@ void NocSpace::print(std::ostream& os) const
 	using namespace std;
 	Str NOOC = p.nooc_mode;
 	Str nppsos = nppso_str(nppso);
+	Int norbits = SUM(nppso)*2;
+	Str rotation_imp = p.if_norg_imp ? "Yes" : "NO";
 
 
 	os << "// NORG setting" << endl;
 
 	// nocspace_print(ndivs, "The amount of divisons's number. ");
+	nocspace_print(rotation_imp, "if rotation impurity orbital is used. ");
+	nocspace_print(dim, "the dimension of the Shortcut space.");
 	nocspace_print(nppsos, "The number of partical per spin orbital. ");
 	nocspace_print(nspa, "The amount of partical's number.");
-	nocspace_print(dim, "the dimension of the Shortcut space.");
-	// nocspace_print(ndivs, "The amount of divisons's number. ");
+	nocspace_print(norbits, "The amount of orbital(imp+bath) number.");
 	nocspace_print(NOOC, "Correlation nature orbital occupation constraint.");
+	// nocspace_print(ndivs, "The amount of divisons's number. ");
 	nocspace_print(control_divs, "to set the number of division and the shortcut restratin.");
 	// nocspace_print(h0, "transformed hopping integral");
 	// nocspace_print(mu, "-mu");

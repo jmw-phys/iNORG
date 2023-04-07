@@ -563,7 +563,10 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 			counter += uormat_ii.nrows();
 		}
 	}
-	// if(mm) WRN(NAV(transform_uormat));
+	{// test the transform_uormat and density matrix.
+		MatReal up0_dm(see_MatReal(oneedm.dm).truncate(0, 0, p.nO2sets[0], p.nO2sets[0])), up0_U(transform_uormat.truncate(0, 0, p.nO2sets[0], p.nO2sets[0]));
+		if (mm) WRN(NAV2(up0_dm, up0_U));
+	}
 	hopint = transform_uormat * hopint * transform_uormat.ct();
 
 	// alpha:a, beta=b, gamma=g, eta=e
@@ -571,8 +574,10 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 	VecReal ijke = (impH_i.second.mat(n * n * n, n) * transform_uormat.ct()).vec();
 	VecReal ajke = (transform_uormat * ijke.mat(n, n * n * n)).vec();
 	VecReal	keaj = ajke.mat(n * n, n * n).tr().vec();
-	VecReal geaj = (transform_uormat.ct().tr() * keaj.mat(n, n * n * n)).vec();
-	VecReal geab = (geaj.mat(n * n * n, n) * transform_uormat.tr()).vec();
+	// VecReal geaj = (transform_uormat.ct().tr() * keaj.mat(n, n * n * n)).vec();
+	// VecReal geab = (geaj.mat(n * n * n, n) * transform_uormat.tr()).vec();
+	VecReal geaj = (transform_uormat * keaj.mat(n, n * n * n)).vec();
+	VecReal geab = (geaj.mat(n * n * n, n) * transform_uormat.ct()).vec();
 	VecReal abge = (geab.mat(n * n, n * n).tr()).vec();
 	oper_i = concat(concat(VecReal{ 0. }, hopint.vec()), abge);
 	} else { 

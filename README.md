@@ -115,4 +115,9 @@ Version: v1.0.22 @ 2023.04.06
 Version: v1.0.23 @ 2023.04.07
     finished: Now the v1.0.23 energy is same as v1.0.07.
     next do : try to fix with rotation imp.
-    tinking : is it safe merge n_i↑n_j↓ and n_j↑n_i↓ in one term?
+    tinking : is it safe merge n_i↑n_j↓ and n_j↑n_i↓ in one term?<!--! A:Now all the dd-interaction term will divide by 2, since double counting term need to removed.-->
+
+Version: v1.0.24 @ 2023.04.07
+    finished: Now the v1.0.24 energy is same as v1.0.07-fixed.
+    next do : (same as prev)
+    tinking : if there some off-diagonal 4 Fermi term in the H matrix, was not considered? Or overlap?

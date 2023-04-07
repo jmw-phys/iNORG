@@ -240,6 +240,7 @@ Tab Operator::find_fullH_idx()
 				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 			}
 		}
+/*
 		//! Diagonal term. n_i n_j
 		for_Int(b1, 0, p.nband) {
 			if( a.cfg.cf[(b1 * 2) * ndiv].isocc(0) && a.cfg.cf[(b1 * 2 + 1) * ndiv].isocc(0)){
@@ -267,8 +268,20 @@ Tab Operator::find_fullH_idx()
 				}
 			}
 		}
-
-		//! off-Diagonal term. C\power-index{i|†}C\index{j}, C\power-index{i|†}C\power-index{j|†}C\power-index{k}C\index{l}
+*/
+		//! Diagonal term. n_i n_j
+		for_Int(set_i, 0, p.norg_sets) {
+			for_Int(set_j, 0, p.norg_sets) {
+				VEC<Int> N_veci(a.filled_spinless[set_i]), N_vecj(a.filled_spinless[set_j]);
+				for (const auto& N_i : N_veci) for (const auto& N_j : N_vecj) 
+					if (N_i != N_j) {
+						Int interact_pos = mat_hop_pos.size() + 1 + tensor_u[N_i][N_j][N_j][N_i];
+						h_idx = { sparse_idx, h_i, interact_pos };
+						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+					}
+			}
+		}
+		//! off-Diagonal term. C\power-index{i|†}C\index{j}|| C\power-index{i|†}C\power-index{j|†}C\power-index{k}C\index{l}
 		for_Int(idx_sets_i, 0, p.norg_sets)
 		{
 			{
@@ -281,12 +294,13 @@ Tab Operator::find_fullH_idx()
 					
 					//! Diagonal+off-Diagonal term. n_sC_e^+C_f
 					if (p.if_norg_imp) for (const auto& x : a.filled_spinless) {
-						for (const auto& N_s : x) if (myclamp(N_s, SUM_0toX(p.nO2sets, idx_sets_i), (SUM_0toX(p.nO2sets, idx_sets_i) - 1)) == N_s && N_s != i[0] && N_s != i[1]) {
+						// for (const auto& N_s : x) if (myclamp(N_s, SUM_0toX(p.nO2sets, idx_sets_i), (SUM_0toX(p.nO2sets, idx_sets_i) - 1)) == N_s && N_s != i[0] && N_s != i[1]) {
+						for (const auto& N_s : x) if (N_s != i[0] && N_s != i[1]) {
 							//																		[i   ][j  ][k  ][l   ]
-							h_idx = { sparse_idx, i[2], i[3] * int(mat_hop_pos.size() + 1 + tensor_u[i[1]][N_s][N_s][i[0]]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-							h_idx = { sparse_idx, i[2],-i[3] * int(mat_hop_pos.size() + 1 + tensor_u[i[1]][N_s][i[0]][N_s]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 							h_idx = { sparse_idx, i[2],-i[3] * int(mat_hop_pos.size() + 1 + tensor_u[N_s][i[1]][N_s][i[0]]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 							h_idx = { sparse_idx, i[2], i[3] * int(mat_hop_pos.size() + 1 + tensor_u[N_s][i[1]][i[0]][N_s]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+							h_idx = { sparse_idx, i[2], i[3] * int(mat_hop_pos.size() + 1 + tensor_u[i[1]][N_s][N_s][i[0]]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+							h_idx = { sparse_idx, i[2],-i[3] * int(mat_hop_pos.size() + 1 + tensor_u[i[1]][N_s][i[0]][N_s]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 						}
 					}
 				}

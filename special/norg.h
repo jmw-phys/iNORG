@@ -162,7 +162,7 @@ public:
 		MatReal transform_uormat(dmat(p.norbit, 1.));
 		Int counter(0);
 		for (const auto& uormat_ii : uormat_i) {
-			if (!p.if_norg_imp) counter = p.nO2sets[0] - p.nI2B[0];
+			if (p.if_norg_imp == false) counter += p.nO2sets[0] - p.nI2B[0];
 			for_Int(i, 0, uormat_ii.nrows()) {
 				for_Int(j, 0, uormat_ii.ncols()) {
 					transform_uormat[i + counter][j + counter] = uormat_ii[i][j];

@@ -362,7 +362,6 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 
 		occupationnumber = evalue;
 	}
-	// if(mm) WRN(NAV2(p.if_norg_imp, Vec(rotaionU)));
 	return rotaionU;
 }
 
