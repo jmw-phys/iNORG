@@ -171,7 +171,8 @@ VecReal Impurity::set_interaction() {
         }
     }
 */
-/* 
+
+// /* 
     for_Int(b1, 0, p.nband) {// NO double counting term for impurity
         imp_dd_interact[2 * b1][2 * b1 + 1] = p.U;
         for_Int(b2, b1, p.nband) if (b1 != b2) { // same spin orientation
@@ -182,7 +183,9 @@ VecReal Impurity::set_interaction() {
             imp_dd_interact[2 * b1][2 * b2 + 1] = p.Uprm;
         }
     }
-*/
+// */
+
+/* 
     for_Int(b1, 0, p.nband) {// with double counting term for impurity, so we need to divide by 2
         imp_dd_interact[2 * b1][2 * b1 + 1] = p.U/2.0;
         imp_dd_interact[2 * b1 + 1][2 * b1] = p.U/2.0;
@@ -195,10 +198,11 @@ VecReal Impurity::set_interaction() {
             imp_dd_interact[2 * b1 + 1][2 * b2] = p.Uprm/2.0;
         }
     }
+*/
     
     if(mm) WRN(NAV(imp_dd_interact));
     for_Int(N_i, 0, p.norbs)for_Int(N_j, 0, p.norbs) {
-        if (imp_dd_interact[N_i][N_j] != 0)
+        // if (imp_dd_interact[N_i][N_j] != 0)
             interaction[SUM_0toX(p.nO2sets, N_i) * std::pow(n, 3) + SUM_0toX(p.nO2sets, N_j) * std::pow(n, 2) + SUM_0toX(p.nO2sets, N_j) * std::pow(n, 1) + SUM_0toX(p.nO2sets, N_i)] = imp_dd_interact[N_i][N_j];
 
     }

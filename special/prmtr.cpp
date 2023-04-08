@@ -57,9 +57,9 @@ void Prmtr::set_values() {
     nI2B = SUM(templet_control) - 1;                    // default value:
     nO2sets = SUM(templet_control);                     // default value:
     iter_max_norg = 99;                                 // default
-    nooc_mode = STR("nooc");
+    // nooc_mode = STR("nooc");
     // nooc_mode = STR("cpnooc");
-    // nooc_mode = STR("cnooc");
+    nooc_mode = STR("cnooc");
     after_modify_prmtr();
     // npartical.reset(norg_sets, 0);
     // for_Int(i, 0, norg_sets) npartical[i] = SUM(control_divs[i + 1])/2 - 1;
@@ -189,8 +189,8 @@ void Prmtr::print(std::ostream &os) const {
     prmtr_print(fit_num_omg, "The max number of fitting points.");
     prmtr_print(unit_omg*2, "The image x-axis unit for Matsubara Green's function");
     // prmtr_print(imp_backup, "if you have the impurity's back up?");
-    prmtr_print(nooc_mode, "the tight mode is refer to the correlation nature orbital constraint");
-    prmtr_print(ofx, "output filename prefix");
+    // prmtr_print(nooc_mode, "the tight mode is refer to the correlation nature orbital constraint");
+    // prmtr_print(ofx, "output filename prefix");
 
     os << "// prmtr print end  " << present() << endl;
 

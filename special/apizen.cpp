@@ -16,8 +16,9 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)  hb.g[j][i][i] = - imfrq_hybrid_function[i][j];
 	hb.write_zen("hb_zen", "Read");
 	Bath bth(mm, p);
-	bth.bath_fit(hb, or_deg_idx.truncate(0,nband));					if(mm)	bth.write_ose_hop(dmft_cnt);
-	if(mm) std::cout << std::endl;						// blank line
+	bth.read_ose_hop(); // bth.bath_fit(hb, or_deg_idx.truncate(0,nband));
+	if (mm)	bth.write_ose_hop(dmft_cnt);
+	if (mm) std::cout << std::endl;						// blank line
 
 
 	Impurity imp(mm, p, bth, or_deg_idx.truncate(0,nband));
@@ -28,8 +29,10 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 
 	// NocSpace scsp(mm_i, prmtr_i, prmtr_i.npartical);
 	// DensityMat oneedm(mm, prmtr_i, scsp;
-	NORG norg(mm, prmtr_i);
-	norg.up_date_h0_to_solve(imp.impH, 1);
+	// NORG norg(mm, prmtr_i);
+	// norg.up_date_h0_to_solve(imp.impH, 1);
+
+	
 	// NORG norg(choose_cauculation_style("one_pcl_test", imp));
 	// if (mm)	{
 	// 	norg.write_occupation_info();

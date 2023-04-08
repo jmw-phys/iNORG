@@ -282,19 +282,18 @@ Tab Operator::find_fullH_idx()
 			}
 		}
 		//! off-Diagonal term. C\power-index{i|†}C\index{j}|| C\power-index{i|†}C\power-index{j|†}C\power-index{k}C\index{l}
-		for_Int(idx_sets_i, 0, p.norg_sets)
+		for_Int(sets_i, 0, p.norg_sets)
 		{
 			{
 				// off_diagonal_term Two-Fermi
 				// i[0]:annihilation orbit's position; i[1]:creation orbit's positon; i[2]:Colum idx(i); i[3]:sign(anticommutativity)
-				VEC<VecInt> off_dt_next(a.find_each_spiless_group_off_diagonal_term(a.divocchop_ingroup(a.div_idx, idx_sets_i), idx_sets_i));
+				VEC<VecInt> off_dt_next(a.find_each_spiless_group_off_diagonal_term(a.divocchop_ingroup(a.div_idx, sets_i), sets_i));
 				for (const auto &i : off_dt_next){
 					h_idx = {sparse_idx, i[2], i[3] * (mat_hop_pos[i[1]][i[0]] + 1)};
 					for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 					
 					//! Diagonal+off-Diagonal term. n_sC_e^+C_f
 					if (p.if_norg_imp) for (const auto& x : a.filled_spinless) {
-						// for (const auto& N_s : x) if (myclamp(N_s, SUM_0toX(p.nO2sets, idx_sets_i), (SUM_0toX(p.nO2sets, idx_sets_i) - 1)) == N_s && N_s != i[0] && N_s != i[1]) {
 						for (const auto& N_s : x) if (N_s != i[0] && N_s != i[1]) {
 							//																		[i   ][j  ][k  ][l   ]
 							h_idx = { sparse_idx, i[2],-i[3] * int(mat_hop_pos.size() + 1 + tensor_u[N_s][i[1]][N_s][i[0]]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
@@ -306,10 +305,10 @@ Tab Operator::find_fullH_idx()
 				}
 			}
 
-			if (p.if_norg_imp) for_Int(idx_sets_j, 0, p.norg_sets) {
+			if (p.if_norg_imp) for_Int(sets_j, 0, p.norg_sets) {
 				// off_diagonal_term Four-Fermi
 				// [0]~[3] i-j-k-l orbit's position(C^+_i C^+_j C_k C_l); [4]:Colum idx(i);[5]:sign(fermion anticommutativity)
-				VEC<array<int, 6>> off_dt_next(a.find_off_diagonal_term_fourFermi(a.divs_change_fourFermi(a.div_idx, idx_sets_i, idx_sets_j), idx_sets_i, idx_sets_j));
+				VEC<array<int, 6>> off_dt_next(a.find_off_diagonal_term_fourFermi(a.divs_change_fourFermi(a.div_idx, sets_i, sets_j), sets_i, sets_j));
 				for (const auto &i : off_dt_next){
 					h_idx = {sparse_idx, i[4], i[5] * int(mat_hop_pos.size() + 1 + tensor_u[i[0]][i[1]][i[2]][i[3]])};
 					for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
@@ -430,6 +429,25 @@ void Operator::save_the_Tab(Tab& tab, Str name) const{
 			
 			// if(mm) WRN(NAV2(temp_tabi.size(),temp_tabi.truncate(size-100,size)));
 		}		
+	}
+	ofs.close();
+}
+
+void Operator::write_the_multiTab(Str name) const{
+	Int size(table[0].size());
+
+	OFS ofs;	ofs.open(name + to_string(mm.id()) + ".txt");
+	ofs << "\t" << setw(w_Real) << "row_idx";
+	ofs << "\t" << setw(w_Real) << "col_idx";
+	ofs << "\t" << setw(w_Real) << "hmt_idx";
+	ofs << endl; 
+	for_Int(i, 0, size) 
+	{
+		ofs << iofmt("sci");
+		ofs << "\t" << setw(w_Real) << table[0][i];
+		ofs << "\t" << setw(w_Real) << table[1][i];
+		ofs << "\t" << setw(w_Real) << table[2][i];
+		ofs << endl; 
 	}
 	ofs.close();
 }

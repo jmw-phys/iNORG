@@ -121,7 +121,6 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_contest(const VecReal& a0)
 	const Int np = a0.size();
 	const Int ntry_fine = MAX(16, 3 * mm.np() - 1);
 	const Int ntry = MAX(64 * ntry_fine, 2000);
-	// const Int ntry = MIN(64 * ntry_fine, 20);
 	const Real tol = 1.e-12;
 	Int nmin = 0;		// number of fittings reaching the minimum
 	MPI_Status status;

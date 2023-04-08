@@ -69,5 +69,7 @@ public:
 	VecReal sn_prtcl_ex_state(const Int ex_orbital_position, const VecReal ground_state, const Int crtann)const;
 
 	void save_the_Tab(Tab& tab, Str name) const;
+
+	void write_the_multiTab(Str name) const;
 	Tab read_the_Tab(Str name) const;
 };

@@ -42,6 +42,7 @@ NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, Str tab_name) :
 }
 
 void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) {
+	// oneedm.write_the_multiTab("0.25-");
 	if(mm) std::cout << std::endl;						// blank line
 	impH = impH_i;
 	// if (mm) PIO(NAV2(h0,scsp.dim));
@@ -109,6 +110,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 
 // mode 0: for not rotation; mode 1: for rotation the orbitals; 
 void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
+	// oneedm.write_the_multiTab("0.25-");
 	if(mm) std::cout << std::endl;						// blank line
 	// if (mm) WRN(NAV2(impH_i.first,scsp.dim));
 	impH = impH_i;
@@ -134,11 +136,12 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	while (iter_norg_cnt < p.iter_max_norg && !converged()) {
 		iter_norg_cnt++;
 		if(mm) PIO("The iteration counting: " + NAV(iter_norg_cnt));
-		if(mode) {
+		if (mode) {
 			VEC<MatReal> uormat_new(oneedm.find_unitary_orbital_rotation_matrix());
 			// if(mm) WRN(NAV(see_MatReal(uormat_new)));
-			for_Int(i, 0, uormat.size()) uormat[i] = uormat_new[i] * uormat[i];}
-		// if(mm) WRN(NAV(uormat[0]));
+			for_Int(i, 0, uormat.size()) uormat[i] = uormat_new[i] * uormat[i];
+		}
+		if (mm) WRN(NAV2(oneedm.dm[0], uormat[0]));
 		// scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);	//if (mm) scsp.print();
 		set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 		// if (mm)PIO("ground_state size" + NAV(oneedm.ground_state.size()));
@@ -563,21 +566,17 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 			counter += uormat_ii.nrows();
 		}
 	}
-	{// test the transform_uormat and density matrix.
-		MatReal up0_dm(see_MatReal(oneedm.dm).truncate(0, 0, p.nO2sets[0], p.nO2sets[0])), up0_U(transform_uormat.truncate(0, 0, p.nO2sets[0], p.nO2sets[0]));
-		if (mm) WRN(NAV2(up0_dm, up0_U));
-	}
-	hopint = transform_uormat * hopint * transform_uormat.ct();
 
+	hopint = transform_uormat * hopint * transform_uormat.ct();
 	// alpha:a, beta=b, gamma=g, eta=e
 	if (p.if_norg_imp) {
 	VecReal ijke = (impH_i.second.mat(n * n * n, n) * transform_uormat.ct()).vec();
 	VecReal ajke = (transform_uormat * ijke.mat(n, n * n * n)).vec();
 	VecReal	keaj = ajke.mat(n * n, n * n).tr().vec();
-	// VecReal geaj = (transform_uormat.ct().tr() * keaj.mat(n, n * n * n)).vec();
-	// VecReal geab = (geaj.mat(n * n * n, n) * transform_uormat.tr()).vec();
-	VecReal geaj = (transform_uormat * keaj.mat(n, n * n * n)).vec();
-	VecReal geab = (geaj.mat(n * n * n, n) * transform_uormat.ct()).vec();
+	VecReal geaj = (transform_uormat.ct().tr() * keaj.mat(n, n * n * n)).vec();
+	VecReal geab = (geaj.mat(n * n * n, n) * transform_uormat.tr()).vec();
+	// VecReal geaj = (transform_uormat * keaj.mat(n, n * n * n)).vec();
+	// VecReal geab = (geaj.mat(n * n * n, n) * transform_uormat.ct()).vec();
 	VecReal abge = (geab.mat(n * n, n * n).tr()).vec();
 	oper_i = concat(concat(VecReal{ 0. }, hopint.vec()), abge);
 	} else { 
@@ -673,7 +672,7 @@ void NORG::write_state_info(Int iter_cnt) const {
 
 void NORG::write_impurtiy_occupation() const {
 	using namespace std;
-	if (mm) {
+	if (mm) if(p.if_norg_imp){
 		OFS ofs;
 		ofs.open("nmat.txt");
 		VecReal counter(3);

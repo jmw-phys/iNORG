@@ -76,10 +76,7 @@ VEC<array<int, 6>> StateStatistics::find_off_diagonal_term_fourFermi(const furfr
 				ODT_i[3] = (SUM_0toX(space.sit_mat, sets_i, furfrm[i].first[3]) + cfg.div_orb_e[div_pst_ann_l][c__l]);
 				if(ODT_i[0] != ODT_i[1] && ODT_i[2] != ODT_i[3]) {
 					VecOnb newcf(cfg.cf);
-					#ifdef _ASSERTION_
-						if (newcf[div_pst_ann].isuno(cfg.div_orb_e[div_pst_ann][c]))ERR("This position can't ann");
-						if (newcf[div_pst_crt].isocc(cfg.div_orb_c[div_pst_crt][cp]))ERR("This position can't crt");
-					#endif
+					
 					newcf[div_pst_crt_i] = newcf[div_pst_crt_i].crt(cfg.div_orb_c[div_pst_crt_i][cp_i]);
 					newcf[div_pst_crt_j] = newcf[div_pst_crt_j].crt(cfg.div_orb_c[div_pst_crt_j][cp_j]);
 					newcf[div_pst_ann_k] = newcf[div_pst_ann_k].ann(cfg.div_orb_e[div_pst_ann_k][c__k]);
@@ -90,15 +87,9 @@ VEC<array<int, 6>> StateStatistics::find_off_diagonal_term_fourFermi(const furfr
 					if (ODT_i[4] > space.dim) ERR(STR("Hmlt Off-Diag Elements IHTL > IHM ") + NAV2(ODT_i[2], space.dim));
 					ODT_i[5] = cfg.sgn(ODT_i[0], ODT_i[3]);	// sign for C^+_i C_l
 					ODT_i[5] *= cfg.sgn(ODT_i[1], ODT_i[2]);// sign for C^+_j C_k
-					ODT_i[5] *= -1;
-					// if (auto [min, max] = minmax(ODT_i[0], ODT_i[2]); ODT_i[1] > min && ODT_i[1] < max) ODT_i[5] *= -1;
-					// if (auto [min, max] = minmax(ODT_i[0], ODT_i[2]); ODT_i[3] > min && ODT_i[3] < max) ODT_i[5] *= -1;
 					auto [min, max] = minmax(ODT_i[0], ODT_i[3]);
 					if (ODT_i[1] == myclamp(ODT_i[1], min, max)) ODT_i[5] *= -1;
 					if (ODT_i[2] == myclamp(ODT_i[2], min, max)) ODT_i[5] *= -1;
-					#ifdef _ASSERTION_
-						if (ODT_i[0] == ODT_i[1]) ERR("A impossible thing happened:ODT_i[0] == ODT_i[1]" + NAV(ODT_i[0]));
-					#endif
 					off_diagonal_term.push_back(ODT_i);
 				}
 			}

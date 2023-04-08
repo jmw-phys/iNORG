@@ -121,3 +121,8 @@ Version: v1.0.24 @ 2023.04.07
     finished: Now the v1.0.24 energy is same as v1.0.07-fixed.
     next do : (same as prev)
     tinking : if there some off-diagonal 4 Fermi term in the H matrix, was not considered? Or overlap?
+
+Version: v1.0.25 @ 2023.04.08
+    finished: Find the bug for the anti-commutation in state.cpp Ln:93.
+    next do : Test for the Green calc function.
+    tinking : In the rotation of the impurity orbital, the energy becomes higher, so the Green calc may be wrong. What about the beginning at no-rotation impurity orbital converge U for rotation impurity orbital?
