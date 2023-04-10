@@ -107,6 +107,7 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
             green_pre[w] = gaz;
         }
         if (ABS(SUM(green_error)) < 1.E-10 * g0.nomgs) break;
+    if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
     }
     for_Int(w, 0, g0.nomgs) g0[w][0][0] += green_pre[w];
     if (mm) PIO("The size of a and b in greaer:" + NAV2(ltd.size(), lt_sd.size()));
@@ -159,6 +160,7 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
             green_pre[w] = gaz;
         }
         if (ABS(SUM(green_error)) < 1.E-10 * g0.nomgs) break;
+        if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
     }
     for_Int(w, 0, g0.nomgs) g0[w][0][0] += green_pre[w];
     if (mm) PIO("The size of a and b in lesser:" + NAV2(ltd.size(), lt_sd.size()));
@@ -337,16 +339,20 @@ void CrrltFun::add_ex_state_part_in_rotation(const VecReal &initial_vector, VecR
     VecReal rotation_coefficients = p.rotationU[set_n].tr()[orb_before_rot];
     for_Int(pos, 0, rotation_coefficients.size()) {
         MatInt new_nospdiv = old_nosp.div[subnosp];
-        Int div_idx_in_one_set;for_Int(i, 0, p.ndiv)if (SUM_0toX(new_nospdiv[set_n], i) > pos) div_idx_in_one_set = i - 1;
-        if (crtorann == -1) --new_nospdiv[set_n][pos];
-        if (crtorann == +1) ++new_nospdiv[set_n][pos];
+        Int div_idx_in_one_set(0), pos_left(pos);
+        for_Int(i, 0, p.ndiv)  {
+            pos_left -= new_nospdiv[set_n][i];
+            if (pos_left > 0) div_idx_in_one_set++;
+        }
+        if (crtorann == -1) --new_nospdiv[set_n][div_idx_in_one_set];
+        if (crtorann == +1) ++new_nospdiv[set_n][div_idx_in_one_set];
         if (new_nosp.ifin_NocSpace(new_nospdiv, new_nosp.nppso)) {
             const ComDivs group(h_i - old_nosp.idx_div[subnosp], (old_nosp.div[subnosp]), (old_nosp.sit_mat), true);
             VecOnb exd_cf = group.cf;
             Int orbit_pos_in_div = pos - SUM_0toX(new_nospdiv[set_n], div_idx_in_one_set);
             if (if_in_this_orbital(exd_cf, crtorann, set_n, orbit_pos_in_div)) {
-                if (crtorann == -1) exd_cf[set_n * new_nosp.ndivs] = exd_cf[set_n * new_nosp.ndivs].ann(orbit_pos_in_div);
-                if (crtorann == +1) exd_cf[set_n * new_nosp.ndivs] = exd_cf[set_n * new_nosp.ndivs].crt(orbit_pos_in_div);
+                if (crtorann == -1) exd_cf[set_n * new_nosp.ndivs + div_idx_in_one_set] = exd_cf[set_n * new_nosp.ndivs + div_idx_in_one_set].ann(orbit_pos_in_div);
+                if (crtorann == +1) exd_cf[set_n * new_nosp.ndivs + div_idx_in_one_set] = exd_cf[set_n * new_nosp.ndivs + div_idx_in_one_set].crt(orbit_pos_in_div);
                 const ComDivs b(exd_cf, new_nospdiv, old_nosp.sit_mat);
                 Int begin_idx(-1);
                 begin_idx = new_nosp.divs_to_idx.at(new_nospdiv.vec().string());
@@ -389,6 +395,7 @@ VecReal CrrltFun::project_uplwer_parical_space(const VecReal& initial_vector, co
     }
     VecReal ex_state(mm.Allreduce(ex_state_part));
     // TIME_END("find_Newstate" + NAV(mm.id()), t_find_Newstate);
+    // if(mm) WRN(NAV4(initial_vector.truncate(0,1000), ex_state.truncate(0,1000), SUM(initial_vector), SUM(ex_state)));
     return ex_state;
 }
 

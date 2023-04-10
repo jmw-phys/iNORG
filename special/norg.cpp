@@ -272,9 +272,14 @@ void NORG::get_gimp(Green& imp_i, VecInt or_deg)
 			set_row_primeter_byimpH(uormat, impH, opr_sub.oper_value);
 			CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub.table, final_ground_state, i * 2);
 			if(imp_i.type_info() == STR("ImGreen")) {
+				// if (mm)WRN("The code is running here.A");
 				ImGreen green_function(1, p);
 				if(ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
+				
+				// if (mm)WRN("The code is running here.B");
 				if(ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
+
+				// if (mm)WRN("The code is running here.C");
 				for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0];
 			}
 			if(imp_i.type_info() == STR("ReGreen")) {

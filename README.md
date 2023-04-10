@@ -131,3 +131,8 @@ Version: v1.0.26 @ 2023.04.09
     finished: make some modify and now the if_norg_imp=1 mode can use the if_norg_imp=0 mode's U.
     next do : (same as prev)
     tinking : (same as prev)
+
+Version: v1.0.27 @ 2023.04.10
+    finished: Now the Green calc can run, but the valiables are not secutre.
+    next do : Cross check the Green calc function with v1.0.07-fixed.
+    tinking : The single paritcal states in the Green calc function is correct?

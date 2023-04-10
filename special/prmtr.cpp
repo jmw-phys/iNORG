@@ -49,7 +49,7 @@ void Prmtr::set_values() {
     fit_rsd = 2; // default value: 2.
 
     // NORG parameter.
-    if_norg_imp = true;
+    if_norg_imp = false;
     templet_restrain = {0, -1, -1,  0,  1,  1};
     templet_control =  {1,  3,  0,  1,  0,  3};
     ndiv = templet_control.size();
@@ -57,9 +57,9 @@ void Prmtr::set_values() {
     nI2B = SUM(templet_control) - 1;                    // default value:
     nO2sets = SUM(templet_control);                     // default value:
     iter_max_norg = 99;                                 // default
+    // nooc_mode = STR("cnooc");
     nooc_mode = STR("nooc");
     // nooc_mode = STR("cpnooc");
-    // nooc_mode = STR("cnooc");
     after_modify_prmtr();
     // npartical.reset(norg_sets, 0);
     // for_Int(i, 0, norg_sets) npartical[i] = SUM(control_divs[i + 1])/2 - 1;

@@ -26,11 +26,11 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	// imp.update();
 	if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 
-/*
+
+	NORG norg(mm, prmtr_i);
 	{// for test:
 		// NocSpace scsp(mm_i, prmtr_i, prmtr_i.npartical);
 		// DensityMat oneedm(mm, prmtr_i, scsp;
-		NORG norg(mm, prmtr_i);
 		IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
 		if (ifs_a) for_Int(i, 0, norg.uormat.size()) biread(ifs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
 		norg.up_date_h0_to_solve(imp.impH, 1);
@@ -41,10 +41,10 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 		}
 		
 	}
-*/
+
 
 	
-	NORG norg(choose_cauculation_style("one_pcl_test", imp));
+	// NORG norg(choose_cauculation_style("one_pcl_test", imp));
 	// if (mm)	{
 	// 	norg.write_occupation_info();
 	// 	std::cout << "\nnorg ground state energy: " << norg.groune_lst  << "  " << present() << std::endl;

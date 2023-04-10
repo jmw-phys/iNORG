@@ -325,16 +325,20 @@ void Crrvec::add_ex_state_part_in_rotation(const VecReal &initial_vector, VecRea
     VecReal rotation_coefficients = p.rotationU[set_n].tr()[orb_before_rot];
     for_Int(pos, 0, rotation_coefficients.size()) {
         MatInt new_nospdiv = old_nosp.div[subnosp];
-        Int div_idx_in_one_set;for_Int(i, 0, p.ndiv)if (SUM_0toX(new_nospdiv[set_n], i) > pos) div_idx_in_one_set = i - 1;
-        if (crtorann == -1) --new_nospdiv[set_n][pos];
-        if (crtorann == +1) ++new_nospdiv[set_n][pos];
+        Int div_idx_in_one_set(0), pos_left(pos);
+        for_Int(i, 0, p.ndiv)  {
+            pos_left -= new_nospdiv[set_n][i];
+            if (pos_left > 0) div_idx_in_one_set++;
+        }
+        if (crtorann == -1) --new_nospdiv[set_n][div_idx_in_one_set];
+        if (crtorann == +1) ++new_nospdiv[set_n][div_idx_in_one_set];
         if (new_nosp.ifin_NocSpace(new_nospdiv, new_nosp.nppso)) {
             const ComDivs group(h_i - old_nosp.idx_div[subnosp], (old_nosp.div[subnosp]), (old_nosp.sit_mat), true);
             VecOnb exd_cf = group.cf;
             Int orbit_pos_in_div = pos - SUM_0toX(new_nospdiv[set_n], div_idx_in_one_set);
             if (if_in_this_orbital(exd_cf, crtorann, set_n, orbit_pos_in_div)) {
-                if (crtorann == -1) exd_cf[set_n * new_nosp.ndivs] = exd_cf[set_n * new_nosp.ndivs].ann(orbit_pos_in_div);
-                if (crtorann == +1) exd_cf[set_n * new_nosp.ndivs] = exd_cf[set_n * new_nosp.ndivs].crt(orbit_pos_in_div);
+                if (crtorann == -1) exd_cf[set_n * new_nosp.ndivs + div_idx_in_one_set] = exd_cf[set_n * new_nosp.ndivs + div_idx_in_one_set].ann(orbit_pos_in_div);
+                if (crtorann == +1) exd_cf[set_n * new_nosp.ndivs + div_idx_in_one_set] = exd_cf[set_n * new_nosp.ndivs + div_idx_in_one_set].crt(orbit_pos_in_div);
                 const ComDivs b(exd_cf, new_nospdiv, old_nosp.sit_mat);
                 Int begin_idx(-1);
                 begin_idx = new_nosp.divs_to_idx.at(new_nospdiv.vec().string());

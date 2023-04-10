@@ -305,7 +305,7 @@ Tab Operator::find_fullH_idx()
 				}
 			}
 
-			if (p.if_norg_imp) for_Int(sets_j, 0, p.norg_sets) {
+			if (p.if_norg_imp) for_Int(sets_j, 0, p.norg_sets) if(sets_j != sets_i) {
 				// off_diagonal_term Four-Fermi
 				// [0]~[3] i-j-k-l orbit's position(C^+_i C^+_j C_k C_l); [4]:Colum idx(i);[5]:sign(fermion anticommutativity)
 				VEC<array<int, 6>> off_dt_next(a.find_off_diagonal_term_fourFermi(a.divs_change_fourFermi(a.div_idx, sets_i, sets_j), sets_i, sets_j));
