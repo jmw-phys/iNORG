@@ -9,7 +9,7 @@ NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i) :
 	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()),
 	occupation_err(1.), energy_err(1.), correctionerr(1.), occnum_pre(prmtr_i.n_rot_orb, 0.),
 	iter_norg_cnt(0), groune_pre(1.e99), groune_lst(0.), occnum_lst(prmtr_i.n_rot_orb, 0.),
-	scsp(mm_i, prmtr_i, prmtr_i.npartical), oneedm(mm, prmtr_i, scsp),norg_stable_count(0)
+	scsp(mm_i, prmtr_i, prmtr_i.npartical), oneedm(mm, prmtr_i, scsp),norg_stab_cnt(0)
 {
 	show_the_nozero_number_of_tabel();
 }
@@ -18,7 +18,7 @@ NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i) :
 // 	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()),
 // 	occupation_err(1.), energy_err(1.), correctionerr(1.), occnum_pre(prmtr_i.n_rot_orb, 0.),
 // 	iter_norg_cnt(0), groune_pre(1.e99), groune_lst(0.), occnum_lst(prmtr_i.n_rot_orb, 0.),
-// 	scsp(mm_i, prmtr_i, nparticals), oneedm(mm, prmtr_i, scsp),norg_stable_count(0)
+// 	scsp(mm_i, prmtr_i, nparticals), oneedm(mm, prmtr_i, scsp),norg_stab_cnt(0)
 // {
 // 	show_the_nozero_number_of_tabel();
 // }
@@ -27,7 +27,7 @@ NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab& table) :
 	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()),
 	occupation_err(1.), energy_err(1.), correctionerr(1.), occnum_pre(prmtr_i.n_rot_orb, 0.),
 	iter_norg_cnt(0), groune_pre(1.e99), groune_lst(0.), occnum_lst(prmtr_i.n_rot_orb, 0.),
-	scsp(mm_i, prmtr_i, prmtr_i.npartical, table), oneedm(mm, prmtr_i, scsp, table),norg_stable_count(0)
+	scsp(mm_i, prmtr_i, prmtr_i.npartical, table), oneedm(mm, prmtr_i, scsp, table),norg_stab_cnt(0)
 {
 
 }
@@ -36,76 +36,9 @@ NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, Str tab_name) :
 	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()),
 	occupation_err(1.), energy_err(1.), correctionerr(1.), occnum_pre(prmtr_i.n_rot_orb, 0.),
 	iter_norg_cnt(0), groune_pre(1.e99), groune_lst(0.), occnum_lst(prmtr_i.n_rot_orb, 0.),
-	scsp(mm_i, prmtr_i, prmtr_i.npartical, tab_name), oneedm(mm, prmtr_i, scsp, tab_name),norg_stable_count(0)
+	scsp(mm_i, prmtr_i, prmtr_i.npartical, tab_name), oneedm(mm, prmtr_i, scsp, tab_name),norg_stab_cnt(0)
 {
 	show_the_nozero_number_of_tabel();
-}
-
-void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) {
-	// oneedm.write_the_multiTab("0.25-");
-	if(mm) std::cout << std::endl;						// blank line
-	impH = impH_i;
-	// if (mm) PIO(NAV2(h0,scsp.dim));
-	// scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);
-	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
-	oneedm.update(); final_ground_state = oneedm.ground_state;
-	// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
-	groune_lst = oneedm.groundstate_energy;
-	if (mm)	{
-		scsp.print();
-		// write_norg_info(iter_norg_cnt);
-		// write_state_info(iter_norg_cnt);
-	}
-
-	if(sub_energy.size() != 0 && MIN(sub_energy) < groune_lst * (1 + 2e-3) )  {
-		if(mm) std::cout <<iofmt("def")<< "The energy level is so hight, "<< NAV(groune_lst) << ".\nWhich reach to " \
-		<<100*MIN(sub_energy)/groune_lst<<"%, so, the Ground state mustn't in this sub-space, and calc. will be stoped." <<"\n"<< std::endl;
-		return ;}
-	
-	while (iter_norg_cnt < p.iter_max_norg && !converged()) {
-		iter_norg_cnt++;
-		if(mm) PIO("The iteration counting: " + NAV(iter_norg_cnt));
-		VEC<MatReal> uormat_new(oneedm.find_unitary_orbital_rotation_matrix());
-		// if(mm) WRN(NAV(see_MatReal(uormat_new)));
-		for_Int(i, 0, uormat.size()) uormat[i] = uormat_new[i] * uormat[i];
-		// if(mm) WRN(NAV(uormat[0]));
-		// scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);
-		set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);	//if (mm) scsp.print();
-		// if (mm)PIO("ground_state size" + NAV(oneedm.ground_state.size()));
-		groune_pre = groune_lst;	occnum_pre = occnum_lst;
-		oneedm.update(); final_ground_state = oneedm.ground_state;
-		// if(mm) PIO(NAV(see_MatReal(oneedm.dm)));
-		// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
-		occnum_lst = VECVectoVec(oneedm.occupationnumber);
-		groune_lst = oneedm.groundstate_energy;
-		// if(mm) WRN(NAV(oneedm.dm[0]));
-		if (mm) {
-			// WRN(NAV(iter_norg_cnt));
-			// for_Int(i, 0, uormat.size()) WRN(NAV(uormat_new[i]));
-			// write_norg_info(iter_norg_cnt);
-			// write_state_info(iter_norg_cnt);
-		}
-		occupation_err = SQRT(SUM(SQR(occnum_pre - occnum_lst)) / p.norbit);
-		energy_err = 2 * (groune_pre - groune_lst) / (ABS(groune_pre) + ABS(groune_lst) + 1.);
-		if (mm) {
-			PIO(NAV2(energy_err, occupation_err));
-			std::cout << "groundE_pre " << iofmt("sci") << groune_pre << std::setw(4) << "   groundE_lst " << groune_lst  << "  " << present() << std::endl;
-		}
-		if(mm) std::cout << std::endl;						// blank line
-	}
-	iter_norg_cnt = 0;		occupation_err = 1.;		energy_err = 1.;
-	final_ground_state = oneedm.ground_state;	norg_stable_count = 0.; occnum = occnum_lst;
-	/*--------------------------------print put--------------------------------*/
-	MatReal occnum, occweight;
-	occnum = occnum_lst.mat(p.norg_sets, p.n_rot_orb/p.norg_sets);
-	occweight = occnum;
-	for_Int(i, 0, p.norg_sets) for_Int(j, 0, occnum.ncols()) occweight[i][j] = MIN(occweight[i][j],1 - occnum[i][j]) < 1e-14 ? 0 : MIN(occweight[i][j],1 - occnum[i][j]);
-	Str nppso = scsp.nppso_str();
-	if (mm) WRN(NAV4(p.if_norg_imp, nppso, occnum, occweight));
-
-	p.rotationU = uormat;
-	// Finish the NORGiteration.
-	// oneedm.save_the_Tab(oneedm.table, "mainspace");
 }
 
 // mode 0: for not rotation; mode 1: for rotation the orbitals; 
@@ -114,13 +47,8 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	if(mm) std::cout << std::endl;						// blank line
 	// if (mm) WRN(NAV2(impH_i.first,scsp.dim));
 	impH = impH_i;
+	if (mm) WRN(NAV(uormat[0]));
 	
-	// {// test
-	// 	if(mm) WRN(NAV2(scsp.coefficient.size(), present()));
-	// 	VecReal a(set_row_primeter_byimpH(uormat, impH_i));
-	// 	if(mm) WRN(NAV2( a.size(), present()));
-	// }
-
 	// scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);
 	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 
@@ -133,9 +61,10 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 		// write_state_info(iter_norg_cnt);
 	}
 	
+	// while (1) {
 	while (iter_norg_cnt < p.iter_max_norg && !converged()) {
 		iter_norg_cnt++;
-		if(mm) PIO("The iteration counting: " + NAV(iter_norg_cnt));
+		if (mm) PIO("The iteration counting: " + NAV2(iter_norg_cnt, norg_stab_cnt));
 		if (mode) {
 			VEC<MatReal> uormat_new(oneedm.find_unitary_orbital_rotation_matrix());
 			// if(mm) WRN(NAV(see_MatReal(uormat_new)));
@@ -167,12 +96,85 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 		if(mm) std::cout << std::endl;						// blank line
 	}
 	iter_norg_cnt = 0;		occupation_err = 1.;		energy_err = 1.;
-	final_ground_state = oneedm.ground_state;	norg_stable_count = 0.; occnum = occnum_lst;
+	final_ground_state = oneedm.ground_state;	norg_stab_cnt = 0.; occnum = occnum_lst;
 	//----------------------print put--------------------------------
 	if(mm) std::cout << "---------- THE NORG CONVERGED ----------" << std::endl;;
 	PIO_occweight(occnum);
 	p.rotationU = uormat;
 	write_impurtiy_occupation();
+
+	if(mm) {
+		std::cout << "\nnorg ground state energy: " << groune_lst << "  " << present() << std::endl;
+		std::cout << std::endl;							// blank line
+	}
+}
+
+void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) {
+	// oneedm.write_the_multiTab("0.25-");
+	if(mm) std::cout << std::endl;						// blank line
+	impH = impH_i;
+	// if (mm) PIO(NAV2(h0,scsp.dim));
+	// scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);
+	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
+	oneedm.update(); final_ground_state = oneedm.ground_state;
+	// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
+	groune_lst = oneedm.groundstate_energy;
+	if (mm)	{
+		scsp.print();
+		// write_norg_info(iter_norg_cnt);
+		// write_state_info(iter_norg_cnt);
+	}
+
+	if(sub_energy.size() != 0 && MIN(sub_energy) < groune_lst * (1 + 2e-3) )  {
+		if(mm) std::cout <<iofmt("def")<< "The energy level is so hight, "<< NAV(groune_lst) << ".\nWhich reach to " \
+		<<100*MIN(sub_energy)/groune_lst<<"%, so, the Ground state mustn't in this sub-space, and calc. will be stoped." <<"\n"<< std::endl;
+		return ;}
+	
+	while (iter_norg_cnt < p.iter_max_norg && !converged()) {
+		iter_norg_cnt++;
+		if (mm) PIO("The iteration counting: " + NAV2(iter_norg_cnt, norg_stab_cnt));
+		VEC<MatReal> uormat_new(oneedm.find_unitary_orbital_rotation_matrix());
+		// if(mm) WRN(NAV(see_MatReal(uormat_new)));
+		for_Int(i, 0, uormat.size()) uormat[i] = uormat_new[i] * uormat[i];
+		// if(mm) WRN(NAV(uormat[0]));
+		// scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);
+		set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);	//if (mm) scsp.print();
+		// if (mm)PIO("ground_state size" + NAV(oneedm.ground_state.size()));
+		groune_pre = groune_lst;	occnum_pre = occnum_lst;
+		oneedm.update(); final_ground_state = oneedm.ground_state;
+		// if(mm) PIO(NAV(see_MatReal(oneedm.dm)));
+		// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
+		occnum_lst = VECVectoVec(oneedm.occupationnumber);
+		groune_lst = oneedm.groundstate_energy;
+		// if(mm) WRN(NAV(oneedm.dm[0]));
+		if (mm) {
+			// WRN(NAV(iter_norg_cnt));
+			// for_Int(i, 0, uormat.size()) WRN(NAV(uormat_new[i]));
+			// write_norg_info(iter_norg_cnt);
+			// write_state_info(iter_norg_cnt);
+		}
+		occupation_err = SQRT(SUM(SQR(occnum_pre - occnum_lst)) / p.norbit);
+		energy_err = 2 * (groune_pre - groune_lst) / (ABS(groune_pre) + ABS(groune_lst) + 1.);
+		if (mm) {
+			PIO(NAV2(energy_err, occupation_err));
+			std::cout << "groundE_pre " << iofmt("sci") << groune_pre << std::setw(4) << "   groundE_lst " << groune_lst  << "  " << present() << std::endl;
+		}
+		if(mm) std::cout << std::endl;						// blank line
+	}
+	iter_norg_cnt = 0;		occupation_err = 1.;		energy_err = 1.;
+	final_ground_state = oneedm.ground_state;	norg_stab_cnt = 0.; occnum = occnum_lst;
+	/*--------------------------------print put--------------------------------*/
+	// MatReal occnum, occweight;
+	// occnum = occnum_lst.mat(p.norg_sets, p.n_rot_orb/p.norg_sets);
+	// occweight = occnum;
+	// for_Int(i, 0, p.norg_sets) for_Int(j, 0, occnum.ncols()) occweight[i][j] = MIN(occweight[i][j],1 - occnum[i][j]) < 1e-14 ? 0 : MIN(occweight[i][j],1 - occnum[i][j]);
+	// Str nppso = scsp.nppso_str();
+	// if (mm) WRN(NAV4(p.if_norg_imp, nppso, occnum, occweight));
+	PIO_occweight(occnum);
+	p.rotationU = uormat;
+	write_impurtiy_occupation();
+
+
 	// Finish the NORGiteration.
 	// oneedm.save_the_Tab(oneedm.table, "mainspace");
 }
@@ -335,17 +337,12 @@ void NORG::get_g_by_CF(Green& imp_i)
 VEC<MatReal> NORG::uormat_initialize()
 {
 	VEC<MatReal> uormat_i;
-	if(p.if_norg_imp) {
-			for_Int(i, 0, p.nO2sets.size()) {
-			MatReal temp(dmat(p.nO2sets[i], 1.));
-			uormat_i.push_back(std::move(temp));
-		}
-	} else {	
-		for_Int(i, 0, p.nI2B.size()) {
-			MatReal temp(dmat(p.nI2B[i], 1.));
-			uormat_i.push_back(std::move(temp));
-		}
+
+	for_Int(i, 0, p.nO2sets.size()) {
+		MatReal temp(dmat(p.nO2sets[i], 1.));
+		uormat_i.push_back(std::move(temp));
 	}
+
 	return std::move(uormat_i);
 }
 
@@ -354,9 +351,9 @@ bool NORG::converged()
 		const Real gseerr = ABS(energy_err);
 		if (gseerr > 1.E-3) { return false; }
 		else if (gseerr < 1.E-10) { return true; }
-		else if (energy_err < 1.E-7) { 
-			norg_stable_count++;
-			if (norg_stable_count > 10) return true;
+		else if (ABS(energy_err) < 1.E-7) { 
+			norg_stab_cnt++;
+			if (norg_stab_cnt > 10) return true;
 			}
 		else if (iter_norg_cnt > 40) {
 			const Real occerr = ABS(occupation_err);
@@ -557,7 +554,6 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 	
 	if (!uormat_i.empty()) {
 		for (const auto& uormat_ii : uormat_i) {
-			if(p.if_norg_imp == false) counter += p.nO2sets[0] - p.nI2B[0];
 			for_Int(i, 0, uormat_ii.nrows()) {
 				for_Int(j, 0, uormat_ii.ncols()) {
 					transform_uormat[i + counter][j + counter] = uormat_ii[i][j];
@@ -648,7 +644,6 @@ void NORG::write_occupation_info() const {
 
 void NORG::write_state_info(Int iter_cnt) const {
 	using namespace std;
-	// OFS ofs_app_state(STR(iter_cnt) + "write_state_info.txt", ios::app);
 	OFS ofs_app_state; ofs_app_state.open(STR(iter_cnt) + "write_state_info.txt");
 	ofs_app_state << setw(4) << "iter_cnt";
 	ofs_app_state << "\t" << setw(w_Real) << "state";
@@ -694,10 +689,8 @@ void NORG::write_impurtiy_occupation() const {
 		ofs << setw(6) << "sdn" << setw(p_Real) << counter[1] << endl;
 		ofs << setw(6) << "sum" << setw(p_Real) << counter[2];
 		ofs.close();
-
-		std::cout << "\nnorg ground state energy: " << groune_lst << "  " << present() << std::endl;
-		std::cout << std::endl;							// blank line
 	}
+
 }
 
 

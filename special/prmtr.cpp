@@ -57,9 +57,9 @@ void Prmtr::set_values() {
     nI2B = SUM(templet_control) - 1;                    // default value:
     nO2sets = SUM(templet_control);                     // default value:
     iter_max_norg = 99;                                 // default
-    // nooc_mode = STR("nooc");
+    nooc_mode = STR("nooc");
     // nooc_mode = STR("cpnooc");
-    nooc_mode = STR("cnooc");
+    // nooc_mode = STR("cnooc");
     after_modify_prmtr();
     // npartical.reset(norg_sets, 0);
     // for_Int(i, 0, norg_sets) npartical[i] = SUM(control_divs[i + 1])/2 - 1;
@@ -168,6 +168,7 @@ void Prmtr::print(std::ostream &os) const {
     using namespace std;
     MatInt stage2(concat(stage2_restrain,stage2_control).mat(2,stage2_control.size()));    
 	Str cnooc = nooc_mode;
+	Str rotation_imp = if_norg_imp ? "Yes" : "NO";
 
     os << "// prmtr print bgn  " << present() << endl;
     prmtr_print(np, "number of mpi processes");
@@ -175,6 +176,7 @@ void Prmtr::print(std::ostream &os) const {
 
     prmtr_print(norbs, "number of spin-orbitals");
    	prmtr_print(cnooc, "Correlation nature orbital occupation constraint.");
+	prmtr_print(rotation_imp, "if rotation impurity orbital is used. ");
     prmtr_print(control_divs, "to set the number of division and the shortcut restratin.");
     // prmtr_print(stage2, "to set the number of division and the shortcut restratin @ stage2.");
     prmtr_print(U, "The hubbard U interaction strength");

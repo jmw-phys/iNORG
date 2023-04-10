@@ -275,9 +275,9 @@ Tab Operator::find_fullH_idx()
 				VEC<Int> N_veci(a.filled_spinless[set_i]), N_vecj(a.filled_spinless[set_j]);
 				for (const auto& N_i : N_veci) for (const auto& N_j : N_vecj) 
 					if (N_i != N_j) {
-						Int interact_pos = mat_hop_pos.size() + 1 + tensor_u[N_i][N_j][N_j][N_i];
-						h_idx = { sparse_idx, h_i, interact_pos };
-						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+						h_idx = { sparse_idx, h_i, int(mat_hop_pos.size() + 1 + tensor_u[N_i][N_j][N_j][N_i]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+						// ? not sure if this term(↓) is necessary?
+						// h_idx = { sparse_idx, h_i,-int(mat_hop_pos.size() + 1 + tensor_u[N_i][N_j][N_i][N_j]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 					}
 			}
 		}

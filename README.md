@@ -126,3 +126,8 @@ Version: v1.0.25 @ 2023.04.08
     finished: Find the bug for the anti-commutation in state.cpp Ln:93.
     next do : Test for the Green calc function.
     tinking : In the rotation of the impurity orbital, the energy becomes higher, so the Green calc may be wrong. What about the beginning at no-rotation impurity orbital converge U for rotation impurity orbital?
+
+Version: v1.0.26 @ 2023.04.09
+    finished: make some modify and now the if_norg_imp=1 mode can use the if_norg_imp=0 mode's U.
+    next do : (same as prev)
+    tinking : (same as prev)

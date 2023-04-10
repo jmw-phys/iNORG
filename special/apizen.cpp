@@ -16,7 +16,7 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)  hb.g[j][i][i] = - imfrq_hybrid_function[i][j];
 	hb.write_zen("hb_zen", "Read");
 	Bath bth(mm, p);
-	bth.read_ose_hop(); // bth.bath_fit(hb, or_deg_idx.truncate(0,nband));
+	bth.read_ose_hop(); //bth.bath_fit(hb, or_deg_idx.truncate(0,nband));
 	if (mm)	bth.write_ose_hop(dmft_cnt);
 	if (mm) std::cout << std::endl;						// blank line
 
@@ -26,23 +26,37 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	// imp.update();
 	if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 
-
-	// NocSpace scsp(mm_i, prmtr_i, prmtr_i.npartical);
-	// DensityMat oneedm(mm, prmtr_i, scsp;
-	// NORG norg(mm, prmtr_i);
-	// norg.up_date_h0_to_solve(imp.impH, 1);
+/*
+	{// for test:
+		// NocSpace scsp(mm_i, prmtr_i, prmtr_i.npartical);
+		// DensityMat oneedm(mm, prmtr_i, scsp;
+		NORG norg(mm, prmtr_i);
+		IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
+		if (ifs_a) for_Int(i, 0, norg.uormat.size()) biread(ifs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
+		norg.up_date_h0_to_solve(imp.impH, 1);
+		if (mm) {
+			OFS ofs_a;
+			ofs_a.open("ru" + norg.scsp.nppso_str() + ".bi");
+			for_Int(i, 0, norg.uormat.size()) biwrite(ofs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
+		}
+		
+	}
+*/
 
 	
-	// NORG norg(choose_cauculation_style("one_pcl_test", imp));
+	NORG norg(choose_cauculation_style("one_pcl_test", imp));
 	// if (mm)	{
 	// 	norg.write_occupation_info();
 	// 	std::cout << "\nnorg ground state energy: " << norg.groune_lst  << "  " << present() << std::endl;
 	// 	std::cout << std::endl;							// blank line
 	// }
-/* 
+
+
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);					if (mm)	g0imp.write_zen("g0imp");
 	ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));	if (mm) gfimp.write_zen("gfimp");
-*/
+	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();	
+	if (mm) seimp.write_zen("seimp");
+
 
  /*
 	{
@@ -64,14 +78,14 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	}
 */
 	// ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp);				if (mm) gfimp.write_zen("gfimp");
-/* 
+
 
 	// if(mm) gfimp.write_occupation_info();
 	// if(mm) WRN(NAV(gfimp.particle_number().diagonal()));
-	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();	
+	// ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();	
 	// if (mm) seimp.write_zen("before_fix_seimp");						seimp = fix_se(seimp);
-	if (mm) seimp.write_zen("seimp");
-*/
+	// if (mm) seimp.write_zen("seimp");
+
 
 }
 
@@ -305,8 +319,8 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		controler[0] = {0, -1, p.control_divs[0][2], 0, p.control_divs[0][4], 1};
 		{
 			Int band1(p.npartical[0]), band2(p.npartical[0]);
-			if(nband == 5) p.npartical = {band1, band1, band1, band1, band2, band2, band1, band1, band2, band2};
-			if(nband == 3) {p.npartical = {band1, band1, band1, band1, band1, band1}; /*p.npartical += 1;*/}
+			if (nband == 5) p.npartical = { band1, band1, band1, band1, band2, band2, band1, band1, band2, band2 };
+			if (nband == 3) { p.npartical = { band1, band1, band1, band1, band1, band1 }; /*p.npartical += 1;*/ }
 			p.according_nppso(p.npartical);
 			NORG norg(mm, p);
 			IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
@@ -314,9 +328,9 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 			norg.up_date_h0_to_solve(imp.impH, 1);
 
 			uormat = norg.uormat;
-			occnum = norg.occnum.mat(p.norg_sets, p.nbath/p.norg_sets); occweight = occnum;
+			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb/p.norg_sets); occweight = occnum;
 			nppso = norg.scsp.nppso;
-			if(mm) norg.write_state_info(0);
+			// if(mm) norg.write_state_info(0);
 		}
 		for_Int(i, 0, p.norg_sets) for_Int(j, 0, p.ndiv) if(occnum[i][j] > 0.5) occweight[i][j] = 1 - occnum[i][j];
 
@@ -344,7 +358,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 			OFS ofs_a;
 			ofs_a.open("ru" + frezeorb.scsp.nppso_str() + ".bi");
 			for_Int(i, 0, frezeorb.uormat.size()) biwrite(ofs_a, CharP(frezeorb.uormat[i].p()), frezeorb.uormat[i].szof());
-			frezeorb.write_state_info(1);
+			// frezeorb.write_state_info(1);
 		}
 		return frezeorb;
 	}

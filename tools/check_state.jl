@@ -6,13 +6,13 @@ using Plots
 # x_value = parse(Float64, match(r"--x=([0-9\.]+)", ARGS[1])[1])
 # println(x_value)
 b = readdir()
-xsize = 59999
-accurt = 0.00001
+# xsize = 59999
+xsize = 1
+accurt = 0.0000001
 
 for a in b
     if (a != "code" && a != "output" ) 
         m = readdlm(a)
-        # m = readdlm("0write_state_info.txt")
         println("test the ",a)
         no = reverse(m[1:size(m)[1],4])
         no = no[1:size(no,1)-1]
@@ -26,7 +26,7 @@ for a in b
                 # cutoff = x_value
                 left = size(no,1) - j
                 if(sum > cutoff*accurt) 
-                    println("Cut for if sum > ", cutoff*accurt)
+                    println("Cut for if sum = ", cutoff*accurt, " of whole state.")
                     println(j," The Full size ",size(no,1)," left size ",left," left ",100*(left)/size(no,1),"% ")
                     println("first and last element",no[1],"  ",no[size(no,1)])
                     mstate[cutoff,1] = cutoff*accurt

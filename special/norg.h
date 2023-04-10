@@ -20,7 +20,7 @@ class NORG {
 	// typedef VEC<VecInt> Tab;
 	//*****************iteration***************
 	Int iter_norg_cnt;						// count the NORG optimize iteration times.
-	Int norg_stable_count;					// count the NORG stability iteration times.
+	Int norg_stab_cnt;						// count the NORG stability iteration times.
 	VecReal occnum_pre;						// occupation number record before one optimize iteration.
 	VecReal occnum_lst;						// occupation number record after one optimize iteration.
 	Real	groune_pre;						// ground state energy record before one optimize iteration.
@@ -162,7 +162,6 @@ public:
 		MatReal transform_uormat(dmat(p.norbit, 1.));
 		Int counter(0);
 		for (const auto& uormat_ii : uormat_i) {
-			if (p.if_norg_imp == false) counter += p.nO2sets[0] - p.nI2B[0];
 			for_Int(i, 0, uormat_ii.nrows()) {
 				for_Int(j, 0, uormat_ii.ncols()) {
 					transform_uormat[i + counter][j + counter] = uormat_ii[i][j];

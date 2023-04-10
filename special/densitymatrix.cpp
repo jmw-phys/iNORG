@@ -330,16 +330,18 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 		for_Int(i, 0, p.norg_sets) {
 			VecReal evalu_i(rotaionU[i].nrows(), 0.);
 			heevr(rotaionU[i], evalu_i); rotaionU[i] = rotaionU[i].tr(); evalue.push_back(std::move(evalu_i));
-			for_Int(j, 0, (p.nO2sets[i] / 2.)) {
+			for_Int(j, 0, (p.nO2sets[i] / 2)) {
 				SWAP(rotaionU[i][j], rotaionU[i][p.nO2sets[i] - j - 1]);
 				SWAP(evalue[i][j], evalue[i][p.nO2sets[i] - j - 1]);
 			}
+			// if(mm) WRN(NAV(evalu_i));
 		}
 		for_Int(i, 0, rotaionU.size()) rotaionU[i] = rotaionU[i - (i%2)]; //! using the spin inversion symmetry
 		occupationnumber = evalue;
 	} else {
+		VEC<MatReal> rotaionU_bath;
 		for_Int(i, 0, p.norg_sets) {
-			rotaionU.push_back(dm[i].truncate(1, 1, p.nI2B[i] + 1, p.nI2B[i] + 1));
+			rotaionU_bath.push_back(dm[i].truncate(1, 1, p.nI2B[i] + 1, p.nI2B[i] + 1));
 			// if(mm) WRN(NAV(dm[i][0][0]))
 			if(mm) std::cout << "The "<<i<<"-th impurity occupation number: "<<iofmt()<<dm[i][0][0]<< std::endl;
 		}
@@ -347,20 +349,26 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 
 		VEC<VecReal> evalue;
 		for_Int(i, 0, p.norg_sets) {
-			VecReal evalu_i(rotaionU[i].nrows(), 0.);
-			// if(mm) WRN("New dm for bath" + NAV3(i, rotaionU[i], rotaionU.size()));
-			heevr(rotaionU[i], evalu_i); rotaionU[i] = rotaionU[i].tr(); evalue.push_back(std::move(evalu_i));
-			// if(mm) WRN("New U for bath" + NAV2(rotaionU[i], evalue[i]));
+			VecReal evalu_i(rotaionU_bath[i].nrows(), 0.);
+			// if(mm) WRN("New dm for bath" + NAV3(i, rotaionU_bath[i], rotaionU_bath.size()));
+			heevr(rotaionU_bath[i], evalu_i); rotaionU_bath[i] = rotaionU_bath[i].tr(); evalue.push_back(std::move(evalu_i));
+			// if(mm) WRN("New U for bath" + NAV2(rotaionU_bath[i], evalue[i]));
 			for_Int(j, 0, (p.nI2B[i] / 2.)) {
-				SWAP(rotaionU[i][j], rotaionU[i][p.nI2B[i] - j - 1]);
+				SWAP(rotaionU_bath[i][j], rotaionU_bath[i][p.nI2B[i] - j - 1]);
 				SWAP(evalue[i][j], evalue[i][p.nI2B[i] - j - 1]);
 			}
-			//DBG("New uorm111" + NAV3(i, rotaionU[i], evalue[i]));
+			//DBG("New uorm111" + NAV3(i, rotaionU_bath[i], evalue[i]));
 		}
 		// if(mm) WRN(NAV3(evalue[0].mat(1,p.nI2B[0]), evalue[1].mat(1,p.nI2B[1]), evalue[2].mat(1,p.nI2B[2])));
-		for_Int(i, 0, rotaionU.size()) rotaionU[i] = rotaionU[i - (i%2)]; //! using the spin inversion symmetry
+		for_Int(i, 0, rotaionU_bath.size()) rotaionU_bath[i] = rotaionU_bath[i - (i%2)]; //! using the spin inversion symmetry
 
 		occupationnumber = evalue;
+		for_Int(i, 0, p.nO2sets.size()) {
+			MatReal temp(dmat(p.nO2sets[i], 1.));
+			Int gap(p.nO2sets[i] - p.nI2B[i]);
+			for_Int(j, 0, p.nI2B[i]) for_Int(k, 0, p.nI2B[i]) temp[j + gap][k + gap] = rotaionU_bath[i][j][k];
+			rotaionU.push_back(temp);
+		}
 	}
 	return rotaionU;
 }
