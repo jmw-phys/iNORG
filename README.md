@@ -136,3 +136,8 @@ Version: v1.0.27 @ 2023.04.10
     finished: Now the Green calc can run, but the valiables are not secutre.
     next do : Cross check the Green calc function with v1.0.07-fixed.
     tinking : The single paritcal states in the Green calc function is correct?
+
+Version: v1.0.28 @ 2023.04.11
+    finished: The no-rotation mode imp-orbital fixed.
+    next do : (same as prev)
+    tinking : (same as prev)

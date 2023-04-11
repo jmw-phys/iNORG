@@ -239,7 +239,7 @@ void NORG::get_gimp(Green& imp_i)
 			Operator opr_sub(mm, p, scsp_sub);
 			// scsp_sub.coefficient = set_row_primeter_byimpH(uormat, impH);
 			set_row_primeter_byimpH(uormat, impH, opr_sub.oper_value);
-			CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub.table, final_ground_state, i * 2);
+			CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, final_ground_state, i * 2);
 			if(imp_i.type_info() == STR("ImGreen")) {
 				ImGreen green_function(1, p);
 				if(ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
@@ -270,7 +270,7 @@ void NORG::get_gimp(Green& imp_i, VecInt or_deg)
 			Operator opr_sub(mm, p, scsp_sub);
 			// scsp_sub.coefficient = set_row_primeter_byimpH(uormat, impH);
 			set_row_primeter_byimpH(uormat, impH, opr_sub.oper_value);
-			CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub.table, final_ground_state, i * 2);
+			CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, final_ground_state, i * 2);
 			if(imp_i.type_info() == STR("ImGreen")) {
 				// if (mm)WRN("The code is running here.A");
 				ImGreen green_function(1, p);
@@ -322,8 +322,8 @@ void NORG::get_g_by_CF(Green& imp_i)
 		set_row_primeter_byimpH(uormat, impH, n1mone.oper_value);
 
 		for_Int(i, 0, imp_i.g[0].nrows()){
-			CrrltFun greaer(mm, p, scsp, scsp_1pone, n1pone.table, final_ground_state, 0 * 2, i);
-			CrrltFun lesser(mm, p, scsp, scsp_1mone, n1mone.table, final_ground_state, 0 * 2, i);
+			CrrltFun greaer(mm, p, scsp, scsp_1pone, n1pone, final_ground_state, 0 * 2, i);
+			CrrltFun lesser(mm, p, scsp, scsp_1mone, n1mone, final_ground_state, 0 * 2, i);
 
 			{// test
 				if(mm) WRN(NAV2(greaer.ex_state.norm(), lesser.ex_state.norm()));

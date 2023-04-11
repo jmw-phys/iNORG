@@ -330,7 +330,7 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 		for_Int(i, 0, p.norg_sets) {
 			VecReal evalu_i(rotaionU[i].nrows(), 0.);
 			heevr(rotaionU[i], evalu_i); rotaionU[i] = rotaionU[i].tr(); evalue.push_back(std::move(evalu_i));
-			for_Int(j, 0, (p.nO2sets[i] / 2)) {
+			for_Int(j, 0, (p.nO2sets[i] / 2.)) {
 				SWAP(rotaionU[i][j], rotaionU[i][p.nO2sets[i] - j - 1]);
 				SWAP(evalue[i][j], evalue[i][p.nO2sets[i] - j - 1]);
 			}
