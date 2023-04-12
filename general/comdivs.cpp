@@ -138,9 +138,9 @@ Int ComDivs::count_electrons(const Int& lw, const Int& up) const
 
 	for_Int(i, 0, ns.size()) {
 		for_Int(j, 0, ns[i]) {
+			if (counter >= up)	return nele;
 			if (counter >= lw && cf[i].isocc(j)) nele++;
 			counter++;
-			if(counter >= up)	return nele;
 		}
 	}
 #ifdef _ASSERTION_

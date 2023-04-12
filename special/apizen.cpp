@@ -16,8 +16,9 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)  hb.g[j][i][i] = - imfrq_hybrid_function[i][j];
 	hb.write_zen("hb_zen", "Read");
 	Bath bth(mm, p);
-	bth.read_ose_hop(); //bth.bath_fit(hb, or_deg_idx.truncate(0,nband));
-	if (mm)	bth.write_ose_hop(dmft_cnt);
+	bth.read_ose_hop();	bth.bath_fit(hb, or_deg_idx.truncate(0,nband));			if (mm)	bth.write_ose_hop(dmft_cnt);
+
+
 	if (mm) std::cout << std::endl;						// blank line
 
 
@@ -27,35 +28,24 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 
 
-	NORG norg(mm, prmtr_i);
+	// NORG norg(mm, prmtr_i);		// for test
 	{// for test:
-		// NocSpace scsp(mm_i, prmtr_i, prmtr_i.npartical);
-		// DensityMat oneedm(mm, prmtr_i, scsp;
-		IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
-		if (ifs_a) for_Int(i, 0, norg.uormat.size()) biread(ifs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
-		norg.up_date_h0_to_solve(imp.impH, 1);
-		if (mm) {
-			OFS ofs_a;
-			ofs_a.open("ru" + norg.scsp.nppso_str() + ".bi");
-			for_Int(i, 0, norg.uormat.size()) biwrite(ofs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
-		}
-		
+		// IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
+		// if (ifs_a) for_Int(i, 0, norg.uormat.size()) biread(ifs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
+		// norg.up_date_h0_to_solve(imp.impH, 1);
+		// if (mm) {
+		// 	OFS ofs_a;
+		// 	ofs_a.open("ru" + norg.scsp.nppso_str() + ".bi");
+		// 	for_Int(i, 0, norg.uormat.size()) biwrite(ofs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
+		// }		
 	}
 
 
-	
-	// NORG norg(choose_cauculation_style("one_pcl_test", imp));
-	// if (mm)	{
-	// 	norg.write_occupation_info();
-	// 	std::cout << "\nnorg ground state energy: " << norg.groune_lst  << "  " << present() << std::endl;
-	// 	std::cout << std::endl;							// blank line
-	// }
 
-
+	NORG norg(choose_cauculation_style("ful_pcl_sch", imp));
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);									if (mm)	g0imp.write_zen("g0imp");
 	ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));	if (mm) gfimp.write_zen("gfimp");
-	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();	
-	if (mm) seimp.write_zen("seimp");
+	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();			if (mm) seimp.write_zen("seimp");
 
 
  /*

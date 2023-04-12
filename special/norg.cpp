@@ -47,7 +47,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	if(mm) std::cout << std::endl;						// blank line
 	// if (mm) WRN(NAV2(impH_i.first,scsp.dim));
 	impH = impH_i;
-	if (mm) WRN(NAV(uormat[0]));
+	// if (mm) WRN(NAV(uormat[0]));
 	
 	// scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);
 	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
@@ -70,7 +70,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 			// if(mm) WRN(NAV(see_MatReal(uormat_new)));
 			for_Int(i, 0, uormat.size()) uormat[i] = uormat_new[i] * uormat[i];
 		}
-		if (mm) WRN(NAV2(oneedm.dm[0], uormat[0]));
+		// if (mm) WRN(NAV2(oneedm.dm[0], uormat[0]));
 		// scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);	//if (mm) scsp.print();
 		set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 		// if (mm)PIO("ground_state size" + NAV(oneedm.ground_state.size()));
@@ -272,14 +272,11 @@ void NORG::get_gimp(Green& imp_i, VecInt or_deg)
 			set_row_primeter_byimpH(uormat, impH, opr_sub.oper_value);
 			CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, final_ground_state, i * 2);
 			if(imp_i.type_info() == STR("ImGreen")) {
-				// if (mm)WRN("The code is running here.A");
 				ImGreen green_function(1, p);
 				if(ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
 				
-				// if (mm)WRN("The code is running here.B");
 				if(ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
 
-				// if (mm)WRN("The code is running here.C");
 				for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0];
 			}
 			if(imp_i.type_info() == STR("ReGreen")) {

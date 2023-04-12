@@ -276,7 +276,7 @@ Tab Operator::find_fullH_idx()
 				for (const auto& N_i : N_veci) for (const auto& N_j : N_vecj) 
 					if (N_i != N_j) {
 						h_idx = { sparse_idx, h_i, int(mat_hop_pos.size() + 1 + tensor_u[N_i][N_j][N_j][N_i]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-						// ? not sure if this term(↓) is necessary?
+						// ? if this term(↓) is necessary? only can mute this term when the interaction happen in different sets.
 						// h_idx = { sparse_idx, h_i,-int(mat_hop_pos.size() + 1 + tensor_u[N_i][N_j][N_i][N_j]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 					}
 			}
@@ -291,7 +291,7 @@ Tab Operator::find_fullH_idx()
 				for (const auto &i : off_dt_next){
 					h_idx = {sparse_idx, i[2], i[3] * (mat_hop_pos[i[1]][i[0]] + 1)};
 					for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-					
+
 					//! Diagonal+off-Diagonal term. n_sC_e^+C_f
 					if (p.if_norg_imp) for (const auto& x : a.filled_spinless) {
 						for (const auto& N_s : x) if (N_s != i[0] && N_s != i[1]) {
@@ -306,6 +306,7 @@ Tab Operator::find_fullH_idx()
 			}
 
 			if (p.if_norg_imp) {				
+				// for_Int(sets_j, 0, p.norg_sets) {
 				for_Int(sets_j, 0, p.norg_sets) if (sets_j != sets_i) {
 					// off_diagonal_term Four-Fermi
 					// [0]~[3] i-j-k-l orbit's position(C^+_i C^+_j C_k C_l); [4]:Colum idx(i);[5]:sign(fermion anticommutativity)

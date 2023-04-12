@@ -141,3 +141,8 @@ Version: v1.0.28 @ 2023.04.11
     finished: The no-rotation mode imp-orbital fixed.
     next do : (same as prev)
     tinking : (same as prev)
+
+Version: v1.0.29 @ 2023.04.12
+    finished: Finished the Green calc function; Now the Calc of Green function is the same in the two modes.
+    next do : using this version to test the SrVO3.
+    tinking : how to move the code to the Copper-based superconductivity CMDFT calc; And how to move the 2 band calc.

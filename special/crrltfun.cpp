@@ -64,7 +64,7 @@ ImGreen CrrltFun::find_density_density_correlation_function(const Real &ge0) {
 void CrrltFun::find_gf_greater(const Real& ge0, Green &g0) 
 {
     Real upper_fraction(DOT(ex_state, ex_state));
-    if (mm) WRN(NAV(upper_fraction));
+    // if (mm) WRN(NAV(upper_fraction));
     //VECtrdgnl trdignl(find_trdgnl_first(ex_state));
     VEC<Real> ltd;	        // diagonal elements 
     VEC<Real> lt_sd;	    // sub-diagonal elements
@@ -118,7 +118,7 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
 void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0) 
 {
     Real upper_fraction(DOT(ex_state, ex_state));
-    if (mm) WRN(NAV(upper_fraction));
+    // if (mm) WRN(NAV(upper_fraction));
     //VECtrdgnl trdignl(find_trdgnl_first(ex_state));
     VEC<Real> ltd;	        // diagonal elements 
     VEC<Real> lt_sd;	    // sub-diagonal elements
@@ -338,9 +338,9 @@ void CrrltFun::find_trdgnl_one_step(const VecReal& initial_vector, VecReal& v0, 
 
 void CrrltFun::add_ex_state_part_in_rotation(const VecReal &initial_vector, VecReal& ex_state_part, const Int& set_n, const Int orb_before_rot, const Int& h_i) const {
     const Int subnosp(old_nosp.wherein_NocSpace(h_i));
-    
-    StateStatistics a(h_i, old_nosp.wherein_NocSpace(h_i), old_nosp);
-		
+
+    StateStatistics a(h_i, subnosp, old_nosp);
+
     VecReal rotation_coefficients = p.rotationU[set_n].tr()[orb_before_rot];
     for_Int(pos, 0, rotation_coefficients.size()) {
         MatInt new_nospdiv = old_nosp.div[subnosp];
@@ -349,17 +349,16 @@ void CrrltFun::add_ex_state_part_in_rotation(const VecReal &initial_vector, VecR
         if (crtorann == -1) --new_nospdiv[set_n][div_idx_in_one_set];
         if (crtorann == +1) ++new_nospdiv[set_n][div_idx_in_one_set];
         if (new_nosp.ifin_NocSpace(new_nospdiv, new_nosp.nppso)) {
-            const ComDivs group(h_i - old_nosp.idx_div[subnosp], (old_nosp.div[subnosp]), (old_nosp.sit_mat), true);
-            VecOnb exd_cf = group.cf;
+            VecOnb exd_cf = a.cfg.cf;
             Int orbit_pos_in_div = pos - SUM_0toX(old_nosp.sit_mat[set_n], div_idx_in_one_set);
-            if (if_in_this_orbital(exd_cf, crtorann, set_n, orbit_pos_in_div)) {
+            if (if_in_this_orbital(exd_cf, crtorann, set_n * new_nosp.ndivs + div_idx_in_one_set, orbit_pos_in_div)) {
                 if (crtorann == -1) exd_cf[set_n * new_nosp.ndivs + div_idx_in_one_set] = exd_cf[set_n * new_nosp.ndivs + div_idx_in_one_set].ann(orbit_pos_in_div);
                 if (crtorann == +1) exd_cf[set_n * new_nosp.ndivs + div_idx_in_one_set] = exd_cf[set_n * new_nosp.ndivs + div_idx_in_one_set].crt(orbit_pos_in_div);
-                const ComDivs b(exd_cf, new_nospdiv, old_nosp.sit_mat);
+                const ComDivs b(exd_cf, new_nospdiv, new_nosp.sit_mat);
                 Int begin_idx(-1);
                 begin_idx = new_nosp.divs_to_idx.at(new_nospdiv.vec().string());
-                Int sign  = a.cfg.sgn(0, pos + SUM_0toX(p.nO2sets, set_n));
-                if (begin_idx == -1) ERR("wrong with ex_state" + NAV2(group.ne, new_nospdiv));
+                Int sign  = a.cfg.sgn(-1, pos + SUM_0toX(p.nO2sets, set_n));
+                if (begin_idx == -1) ERR("wrong with ex_state" + NAV2(a.cfg.ne, new_nospdiv));
                 ex_state_part[begin_idx + b.idx] += sign * rotation_coefficients[pos] * initial_vector[h_i];
             }
         }
@@ -392,7 +391,7 @@ VecReal CrrltFun::project_uplwer_parical_space(const VecReal& initial_vector, co
                 Int begin_idx(-1);
                 begin_idx = new_nosp.divs_to_idx.at(new_nospdiv.vec().string());
                 if (begin_idx == -1) ERR("wrong with ex_state" + NAV2(group.ne, new_nospdiv));
-                ex_state_part[begin_idx + b.idx] = exd_cf[norg_set * new_nosp.ndivs].sgn(orbit_pos_in_div) * initial_vector[h_i];
+                ex_state_part[begin_idx + b.idx] = exd_cf[norg_set * new_nosp.ndivs].sgn(orbit_pos_in_div) * initial_vector[h_i]; //! Here the "sgn(orbit_pos_in_div)" is useful only on the ↑ spin orbital.
             }
         }
     }
@@ -402,8 +401,8 @@ VecReal CrrltFun::project_uplwer_parical_space(const VecReal& initial_vector, co
     return ex_state;
 }
 
-bool CrrltFun::if_in_this_orbital(const VecOnb &exd_cf, const Int crtann, const Int norg_set, const Int orbit_pos_in_div) const {
-    if (crtann == -1) return exd_cf[norg_set * new_nosp.ndivs].isocc(orbit_pos_in_div);
-    if (crtann == +1) return exd_cf[norg_set * new_nosp.ndivs].isuno(orbit_pos_in_div);
+bool CrrltFun::if_in_this_orbital(const VecOnb &exd_cf, const Int crtann, const Int div_in_one_row_pos, const Int orbit_pos_in_div) const {
+    if (crtann == -1) return exd_cf[div_in_one_row_pos].isocc(orbit_pos_in_div);
+    if (crtann == +1) return exd_cf[div_in_one_row_pos].isuno(orbit_pos_in_div);
     ERR("Some thing wrong with this function, if_in_this_orbital ()!")
 }
