@@ -146,3 +146,8 @@ Version: v1.0.29 @ 2023.04.12
     finished: Finished the Green calc function; Now the Calc of Green function is the same in the two modes.
     next do : using this version to test the SrVO3.
     tinking : how to move the code to the Copper-based superconductivity CMDFT calc; And how to move the 2 band calc.
+
+Version: v1.0.30 @ 2023.04.15
+    finished: add the "dmft_bethe" for the norg to study the bethe lattice model, but the code is not finished. move from v3.26.1@2022.11.18 version.
+    next do : finish the "dmft_bethe" code.
+    tinking : (same as prev)

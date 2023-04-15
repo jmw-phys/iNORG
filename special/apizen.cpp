@@ -268,7 +268,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		{
 			NORG norg(opcler.find_ground_state_partical(imp.impH, or_deg_idx.truncate(0,nband)));
 			uormat = norg.uormat;
-			occnum = norg.occnum.mat(p.norg_sets, p.nbath/p.norg_sets); occweight = occnum;
+			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb/p.norg_sets); occweight = occnum;
 			nppso = norg.scsp.nppso;
 		}
 		for_Int(i, 0, p.norg_sets) for_Int(j, 0, p.ndiv) if(occnum[i][j] > 0.5) occweight[i][j] = 1 - occnum[i][j];

@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
 	using namespace std;
 	MPI_Init(&argc, &argv);
 	MyMpi mm;
-	if (mm) cout << "\n\nVersion: v1.0.29 @ 2023.04.12\
+	if (mm) cout << "\n\nVersion: v1.0.30 @ 2023.04.15\
 (running "<< present() <<")\n\n" << endl;
 	if (mm) cout << NAV(pwd()) << endl; 
 	use_mkl(mm);
