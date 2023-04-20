@@ -67,25 +67,18 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_
 {
     Int counter_norg(0);
     VEC<MatReal> u_temp;
-    Int band1(p.npartical[0]), band2(p.npartical[0]);
-    p.npartical = {band1, band1, band1, band1, band2, band2, band1, band1, band2, band2};
     while(1){
             Int counter(0);
-            // if(mm) WRN(NAV(nparticals.mat(1,10)));
             VEC<VecInt> nppsos = list_all_posible_nppsos(nparticals, or_deg);
             sub_energy.reset(nppsos.size(),0.); sub_energy = 0.;
         for(const auto& nppso: nppsos) {
-            // if(mm) WRN(NAV3(nparticals.mat(1,10), or_deg.mat(1,5), nppsos[counter].mat(1,nppsos[counter].size())))
             if (mm) std::cout << "The " << ++counter_norg << "-th NORG begin" << std::endl; // norg counter
-            
+
             p.according_nppso(nparticals = nppso);
-            // if(mm) WRN(NAV3(nparticals.mat(1,10),nppsos.size(), p.control_divs));
             NORG a(mm, p);
             IFS ifs_a("ru" + nppso_str(a.scsp.nppso) + ".bi");
             if (ifs_a) for_Int(i, 0, a.uormat.size()) biread(ifs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());
-            // else if(counter_norg > 1) a.uormat = u_temp;
             a.up_date_h0_to_solve(impH_i, sub_energy.truncate(0, counter)); sub_energy[counter] = a.groune_lst;
-            // if(counter%3 == 0) u_temp = a.uormat;
             if (mm) {
                 // OFS ofs_a;
                 // ofs_a.open("ru" + nppso_str(a.scsp.nppso) + ".bi"); 
@@ -98,12 +91,12 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_
         if(sub_energy.idx_min() == 0) {
             p.according_nppso(nparticals = nppsos[0]);
             NORG a(mm, p);
-            
+
             IFS ifs_a("ru" + nppso_str(a.scsp.nppso) + ".bi");
             if (ifs_a) for_Int(i, 0, a.uormat.size()) biread(ifs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());
             a.up_date_h0_to_solve(impH_i);
 
-            if(mm) {std::cout << "The ground state's NOOC: " << std::endl; /* a.scsp.print();*/}
+            // if(mm) {std::cout << "The ground state's NOOC: " << std::endl; /* a.scsp.print();*/}
             return a;}
         else {
             // nppsos.clear();
