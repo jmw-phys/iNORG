@@ -5,8 +5,6 @@ Impurity::Impurity(const MyMpi &mm_i, const Prmtr &prmtr_i, const Bath &bth_i, c
 {
     // if (!file.empty()) read(file);
     for_Int(i, 0, ni) imp_lvl[i] = p.eimp[i] - p.mu;
-    set_factor();
-    impH = std::make_pair(h0, set_interaction());
 }
 
 Impurity::Impurity(const MyMpi &mm_i, const Prmtr &prmtr_i, const Bath &bth_i, const VecInt or_deg)
@@ -14,7 +12,7 @@ Impurity::Impurity(const MyMpi &mm_i, const Prmtr &prmtr_i, const Bath &bth_i, c
 {
     // if (!file.empty()) read(file);
     VecInt ordeg(concat(or_deg,or_deg).mat(2, p.nband).tr().vec());
-    // if(mm) WRN(NAV(ordeg));
+    
     VecReal deg_lvl(MAX(ordeg), 0.);
     for_Int(i, 0, ni) deg_lvl[ordeg[i] - 1] += p.eimp[i] - p.mu;
     for_Int(i, 0, MAX(ordeg)) {
@@ -23,9 +21,6 @@ Impurity::Impurity(const MyMpi &mm_i, const Prmtr &prmtr_i, const Bath &bth_i, c
         deg_lvl[i] = deg_lvl[i] / Real(cnt);
     }
     for_Int(i, 0, ni) imp_lvl[i] = deg_lvl[ordeg[i] - 1];
-    set_factor();
-
-    impH = std::make_pair(h0, set_interaction());
 }
 
 using namespace std;
@@ -89,10 +84,18 @@ MatReal Impurity::find_hop_for_test() const
     return h0;
 }
 
-void Impurity::update() {
-    set_factor();
-    impH  = std::make_pair(h0,set_interaction());
+void Impurity::update(Str mode) {
+    if (mode.empty()) {
+        set_factor();
+        impH = std::make_pair(h0, set_interaction());
+    }
+    else if (mode == "behte") {
+        p.jz = 0.;
+        set_factor();
+        impH = std::make_pair(h0, set_interaction());
+    }
 }
+
 
 // ! not finished.
 // void Impurity::update(VecInt or_deg) {
@@ -151,28 +154,8 @@ VecReal Impurity::set_interaction() {
     VecReal interaction(std::pow(n, 4), 0.);
     // Mat<MatReal> imp_interact(p.norbs, p.norbs, MatReal(p.norbs, p.norbs, 0.));
     MatReal imp_dd_interact(p.norbs, p.norbs,  0.);
-/*
-    for_Int(N_i, 0, p.norbs){
-        for_Int(N_j, N_i, p.norbs) if(N_i != N_j){
-            if ((N_i % 2) == (N_j % 2)) { // same spin orientation
-                imp_interact[N_i][N_j][N_j][N_i] = p.Uprm - p.jz;
-            } else {
-                if (N_i / 2 == N_j / 2)  imp_interact[N_i][N_j][N_j][N_i] = p.U;
-                else imp_interact[N_i][N_j][N_j][N_i] = p.Uprm;
-            }
 
-            if (mm) {
-                Str n_i = to_string(N_i / 2) + Str(N_i % 2 == 0 ? "↑" : "↓");
-                Str n_j = to_string(N_j / 2) + Str(N_j % 2 == 0 ? "↑" : "↓");
-                Real value = imp_interact[N_i][N_j][N_j][N_i];
-                if(value != 0) WRN(NAV3(n_i, n_j, value));
-            }
-            interaction[SUM_0toX(p.nO2sets, N_i) * std::pow(n, 3) + SUM_0toX(p.nO2sets, N_j) * std::pow(n, 2) + SUM_0toX(p.nO2sets, N_j) * std::pow(n, 1) + SUM_0toX(p.nO2sets, N_i)] = imp_interact[N_i][N_j][N_j][N_i];
-        }
-    }
-*/
 
-// /* 
     for_Int(b1, 0, p.nband) {// NO double counting term for impurity
         imp_dd_interact[2 * b1][2 * b1 + 1] = p.U;
         for_Int(b2, b1, p.nband) if (b1 != b2) { // same spin orientation
@@ -183,7 +166,6 @@ VecReal Impurity::set_interaction() {
             imp_dd_interact[2 * b1][2 * b2 + 1] = p.Uprm;
         }
     }
-// */
 
 /* 
     for_Int(b1, 0, p.nband) {// with double counting term for impurity, so we need to divide by 2

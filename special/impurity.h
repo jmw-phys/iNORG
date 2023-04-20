@@ -27,7 +27,7 @@ private:
 	const Int ns;				// number of sites,ns=ni+nb
 	const Int nb;				// number of bath sites
 	MatReal h0;					// hopping factors
-	VecReal pos_imp;   			// position of imp site
+	VecReal pos_imp;			// position of imp site
 	VecReal imp_lvl;			// impurity energy level
 public:
 	Impdata impH;				// The impurity H construction data
@@ -47,7 +47,7 @@ public:
 	
 	MatReal find_hop_for_test() const;
 
-	void update();
+	void update(Str mode = empty_str);
 	
 
 	// void write_H0info(const Bath &b) const;

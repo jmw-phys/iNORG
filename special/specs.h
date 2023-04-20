@@ -25,7 +25,7 @@ const Str topfx = "tso\\";		//testoutput directory prefix
 const Str dirslash = "\\";		// directory slash
 const Str cdrpfx = "io\\..\\";	// code root directory prefix
 #else
-const Str iopfx = "io/";		//        io directory prefix
+const Str iopfx = "../io/";		//        io directory prefix
 const Str bipfx = "bi/";		// binary io directory prefix
 const Str topfx = "tso/";		//testoutput directory prefix
 const Str cdrpfx = "io/../";	// code root directory prefix

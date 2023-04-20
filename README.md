@@ -151,3 +151,8 @@ Version: v1.0.30 @ 2023.04.15
     finished: add the "dmft_bethe" for the norg to study the bethe lattice model, but the code is not finished. move from v3.26.1@2022.11.18 version.
     next do : finish the "dmft_bethe" code.
     tinking : (same as prev)
+
+Version: v1.0.31 @ 2023.04.19
+    finished: finish the "dmft_bethe" code. but still has some bug, and the code is not tested.<!--! Not finished.-->
+    next do : modify for the Zen test KV3Sb5. <!--! force changed--> 
+    tinking : (same as prev)

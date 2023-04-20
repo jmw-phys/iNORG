@@ -16,9 +16,9 @@ Prmtr::Prmtr(const MyMpi &mm) : np(mm.np())
 
 void Prmtr::set_inert_values()
 {
-    nband = 5;         
+    nband = 2;         
     norbs = nband * 2;
-    project = NAV(nband)+"SrVO3";
+    project = "2band_KH";
     
 	gauss_n_max = 512;		        // default value: 2048
 	gauss_n_min = 64;		        // default value: 64
@@ -50,6 +50,7 @@ void Prmtr::set_values() {
 
     // NORG parameter.
     if_norg_imp = true;
+    imp_backup = false;
     templet_restrain = {0, -1, -1,  0,  1,  1};
     templet_control =  {1,  3,  0,  1,  0,  3};
     ndiv = templet_control.size();

@@ -8,23 +8,22 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	mm(mm_i), p(prmtr_i),num_omg(prmtr_i.num_omg),
 	num_nondegenerate(-1), test_mode(test_mode_i), dmft_cnt(0)
 {
-	read_ZEN(file);	p.U = Uc; p.mu = mu; p.jz = Jz; p.nband = nband; p.norg_sets = p.norbs = norbs;
-	p.templet_restrain = restrain; p.templet_control = distribute;
-	p.after_modify_prmtr(); p.recalc_partical_number();
-	if(mm) p.print();
+	{// modify the parameters from ZEN.in
+		read_ZEN(file);	p.U = Uc; p.mu = mu; p.jz = Jz; p.nband = nband; p.norg_sets = p.norbs = norbs;
+		p.templet_restrain = restrain; p.templet_control = distribute; p.project = NAV(nband)+"KVSb";
+		p.after_modify_prmtr(); p.recalc_partical_number();
+		if(mm) p.print();
+	}
+
 	ImGreen hb(nband, p);
 	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)  hb.g[j][i][i] = - imfrq_hybrid_function[i][j];
 	hb.write_zen("hb_zen", "Read");
-	Bath bth(mm, p);
-	bth.read_ose_hop();	bth.bath_fit(hb, or_deg_idx.truncate(0,nband));			if (mm)	bth.write_ose_hop(dmft_cnt);
-
+	Bath bth(mm, p);bth.read_ose_hop(); bth.bath_fit(hb, or_deg_idx.truncate(0,nband));if (mm) bth.write_ose_hop(dmft_cnt);
 
 	if (mm) std::cout << std::endl;						// blank line
 
-
-	Impurity imp(mm, p, bth, or_deg_idx.truncate(0,nband));
+	Impurity imp(mm, p, bth, or_deg_idx.truncate(0,nband));			imp.update();
 	ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 	if (mm) hb_imp.write_zen("hb_imp", "Fit");
-	// imp.update();
 	if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 
 
@@ -40,13 +39,10 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 		// }		
 	}
 
-
-
 	NORG norg(choose_cauculation_style("ful_pcl_sch", imp));
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);									if (mm)	g0imp.write_zen("g0imp");
 	ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));	if (mm) gfimp.write_zen("gfimp");
 	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();			if (mm) seimp.write_zen("seimp");
-
 
  /*
 	{
@@ -69,14 +65,11 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 */
 	// ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp);				if (mm) gfimp.write_zen("gfimp");
 
-
 	// if(mm) gfimp.write_occupation_info();
 	// if(mm) WRN(NAV(gfimp.particle_number().diagonal()));
 	// ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();	
 	// if (mm) seimp.write_zen("before_fix_seimp");						seimp = fix_se(seimp);
 	// if (mm) seimp.write_zen("seimp");
-
-
 }
 
 void APIzen::test_for_fitting(const Bath& bth, const ImGreen& hby_i, Int num)

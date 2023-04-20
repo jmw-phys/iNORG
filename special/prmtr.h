@@ -17,9 +17,9 @@ public:
 	Real bandw;						// The bandwidth of this model.
 	
 	// square lattice, model parameters
-	Real U;						// Hubbard interaction U
-	Real jz;						// hund interaction Jz
-	mutable Real Uprm;			// U^' as U - 2 * Jz
+	mutable Real U;					// Hubbard interaction U
+	mutable Real jz;				// hund interaction Jz
+	mutable Real Uprm;				// U^' as U - 2 * Jz
 	Real mu;						// chemical potential
 	VecReal	eimp;					// the impurity energy 
 	// VecReal t;					// The  hopping for sites,t[0] is (on-site energy-mu)
@@ -37,7 +37,7 @@ public:
 	mutable Real max_omg;					// imaginary frequency cutoff, 4 * (half bandwidth) suggested
 	mutable Real nmesh;						// imaginary frequency number form Zen.
 	mutable Int num_omg;					// number of positive imaginary frequencies
-	mutable VecCmplx Im_z;		
+	mutable VecCmplx Im_z;
 
 	//fitting related		
 	mutable Real fit_max_omg;				// imaginary frequency upper bound used for bath fitting
