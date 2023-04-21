@@ -58,8 +58,8 @@ void Prmtr::set_values() {
     nI2B = SUM(templet_control) - 1;                    // default value:
     nO2sets = SUM(templet_control);                     // default value:
     iter_max_norg = 99;                                 // default
-    // nooc_mode = STR("cnooc");
-    nooc_mode = STR("nooc");
+    nooc_mode = STR("cnooc");
+    // nooc_mode = STR("nooc");
     // nooc_mode = STR("cpnooc");
     after_modify_prmtr();
     // npartical.reset(norg_sets, 0);

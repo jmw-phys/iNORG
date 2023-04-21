@@ -166,3 +166,8 @@ Version: v1.0.33 @ 2023.04.21
     finished: modify for no-rotation impurity orbital mode;
     next do : 1.test the different between rotation and no-rotation impurity orbital mode in 3band imp model; 2.calc the KV3Sb5 in no-rotation mode with 4bath ed.
     tinking : (same as prev)
+
+Version: v1.0.34 @ 2023.04.21
+    finished: bug fixed for the NORG orbital.densitymatrix.cpp Ln337-347. <!--! IMPORTANT --> 
+    next do : (same as prev)
+    tinking : (same as prev)

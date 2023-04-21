@@ -29,8 +29,8 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 
 	NORG norg(mm, prmtr_i);		// for test
 	{// for test:
-		IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
-		if (ifs_a) for_Int(i, 0, norg.uormat.size()) biread(ifs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
+		// IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
+		// if (ifs_a) for_Int(i, 0, norg.uormat.size()) biread(ifs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
 		norg.up_date_h0_to_solve(imp.impH, 1);
 		if (mm) {
 			OFS ofs_a;

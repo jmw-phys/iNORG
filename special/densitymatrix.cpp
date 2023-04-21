@@ -334,6 +334,18 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 				SWAP(rotaionU[i][j], rotaionU[i][p.nO2sets[i] - j - 1]);
 				SWAP(evalue[i][j], evalue[i][p.nO2sets[i] - j - 1]);
 			}
+			VEC<MatReal> rotaionU_temp = rotaionU; VEC<VecReal> evalue_temp = evalue;
+			for_Int(j, 0, p.nO2sets[i]) {
+				Int nimp = p.nO2sets[i] - p.nI2B[i];
+				if (j < nimp) {
+					rotaionU[i][j] = rotaionU_temp[i][j + SUM_0toX(scsp.sit_mat[i], p.ndiv / 2) - scsp.sit_mat[i][0]];
+					evalue[i][j] = evalue_temp[i][j + SUM_0toX(scsp.sit_mat[i], p.ndiv / 2) - scsp.sit_mat[i][0]];
+				} else if (j - nimp < p.nI2B[i] / 2. - 1) {
+					rotaionU[i][j] = rotaionU_temp[i][j - nimp];
+					evalue[i][j] = evalue_temp[i][j - nimp];
+				}
+			}
+			if(mm && i == 0) WRN(NAV4(rotaionU_temp[0], rotaionU[0], evalue_temp[0], evalue[0]));
 			// if(mm) WRN(NAV(evalu_i));
 		}
 		for_Int(i, 0, rotaionU.size()) rotaionU[i] = rotaionU[i - (i%2)]; //! using the spin inversion symmetry
@@ -341,7 +353,8 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 	} else {
 		VEC<MatReal> rotaionU_bath;
 		for_Int(i, 0, p.norg_sets) {
-			rotaionU_bath.push_back(dm[i].truncate(1, 1, p.nI2B[i] + 1, p.nI2B[i] + 1));
+			Int nimp = p.nO2sets[i] - p.nI2B[i];
+			rotaionU_bath.push_back(dm[i].truncate(nimp, nimp, p.nO2sets[i], p.nO2sets[i]));
 			// if(mm) WRN(NAV(dm[i][0][0]))
 			if(mm) std::cout << "The "<<i<<"-th impurity occupation number: "<<iofmt()<<dm[i][0][0]<< std::endl;
 		}
@@ -360,7 +373,7 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 			//DBG("New uorm111" + NAV3(i, rotaionU_bath[i], evalue[i]));
 		}
 		// if(mm) WRN(NAV3(evalue[0].mat(1,p.nI2B[0]), evalue[1].mat(1,p.nI2B[1]), evalue[2].mat(1,p.nI2B[2])));
-		for_Int(i, 0, rotaionU_bath.size()) rotaionU_bath[i] = rotaionU_bath[i - (i%2)]; //! using the spin inversion symmetry
+		for_Int(i, 0, rotaionU_bath.size()) rotaionU_bath[i] = rotaionU_bath[i - (i%2)]; //! using the spin inversion symmetry(suit for SC).
 
 		occupationnumber = evalue;
 		for_Int(i, 0, p.nO2sets.size()) {
