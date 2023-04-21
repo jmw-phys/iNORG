@@ -49,7 +49,7 @@ void Prmtr::set_values() {
     fit_rsd = 2; // default value: 2.
 
     // NORG parameter.
-    if_norg_imp = false;
+    if_norg_imp = true;
     imp_backup = false;
     templet_restrain = {0, -1, -1,  0,  1,  1};
     templet_control =  {1,  3,  0,  1,  0,  3};

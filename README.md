@@ -161,3 +161,8 @@ Version: v1.0.32 @ 2023.04.20
     finished: finish the modify.
     next do : Zen test 3-band SrVO3.
     tinking : (same as prev)
+
+Version: v1.0.33 @ 2023.04.21
+    finished: modify for no-rotation impurity orbital mode;
+    next do : 1.test the different between rotation and no-rotation impurity orbital mode in 3band imp model; 2.calc the KV3Sb5 in no-rotation mode with 4bath ed.
+    tinking : (same as prev)

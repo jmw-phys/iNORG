@@ -154,7 +154,7 @@ public:
 //--------------------------------------- for the io---------------------------------
 	void write_norg_info(Int iter_cnt) const;
 	
-	void write_occupation_info() const;
+	//void write_occupation_info() const;// ! Abandon
 
 	void write_state_info(Int iter_cnt) const;
 

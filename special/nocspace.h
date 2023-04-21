@@ -48,6 +48,7 @@ private:
 
 	// Find all the combined number subspaces, with speed up.
 	void find_all_noc_subspaces();
+	void find_all_noc_subspaces_multi();
 	void find_all_noc_subspaces_by_row();
 	void find_thought_noc_subspaces();
 
@@ -83,6 +84,7 @@ private:
 
 	VecInt read_from_col_lable(const VEC<Int> x, const VEC<VEC<Int> > a) const;
 
+	void find_all_possible_state(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const;
 	void find_all_possible_state_by_col(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const;
 	void find_all_possible_state_by_row(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const;
 	void find_all_possible_state_by_nooc(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const;

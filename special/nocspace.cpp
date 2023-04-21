@@ -40,6 +40,7 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_
 	// find_all_noc_subspaces();
 	// find_all_noc_subspaces_by_row();
 	find_thought_noc_subspaces();
+	// find_all_noc_subspaces();// ! test for the CDMFT version.
 
 	if(mm) PIO("Begin find_combined_number_subspaces()"+ NAV(dim)+"   "+present());
 }
@@ -190,7 +191,7 @@ void NocSpace::find_combined_number_subspaces(const Int mode)
 	}
 }
 
-void NocSpace::find_all_noc_subspaces()
+void NocSpace::find_all_noc_subspaces_multi()
 {
 	Idx length_ECNS;						// length for each combined number subspaces(ECNS).
 	idx_div.push_back(dim);
@@ -221,6 +222,30 @@ void NocSpace::find_all_noc_subspaces()
 	// 	biwrite(ofs, CharP(judger_out.p()), judger_out.szof());
 	// 	ofs.close();
 	// }
+}
+
+void NocSpace::find_all_noc_subspaces()
+{
+	Idx length_ECNS;						// length for each combined number subspaces(ECNS).
+	idx_div.push_back(dim);
+	VEC<VEC<Int> > a;
+	VEC<VEC<Int> > s;
+
+	find_all_possible_state(a, s);
+	for (const auto &x : s)
+	{
+		VecInt spilss_div_v(read_from_col_lable(x,a));
+		MatInt spilss_div_tr(spilss_div_v.mat(control_divs.ncols(), control_divs.nrows() - 1));
+		MatInt spilss_div(spilss_div_tr.tr());
+		if (ifin_NocSpace(spilss_div, nppso)) {
+			div.push_back(spilss_div);
+			divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
+			length_ECNS = 1;
+			for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
+			dim += length_ECNS;
+			idx_div.push_back(dim);
+		}
+	}
 }
 
 void NocSpace::find_thought_noc_subspaces()
@@ -496,6 +521,35 @@ void NocSpace::find_all_possible_state_by_nooc(VEC<VEC<Int> >& a, VEC<VEC<Int> >
 	s = cart_product(a_lable);
 }
 
+void NocSpace::find_all_possible_state(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const {
+	VEC<VEC<Int> > a_lable;
+	Int counter(0);
+	for_Int(col, 0, control_divs.ncols()) {
+		VEC<VEC<Int>> temp_a;
+		VEC<VEC<Int> > a_rol_temp;
+		for_Int(row, 1, control_divs.nrows()) {
+			VEC<Int> one_div;
+			for_Int(spl, 0, control_divs[row][col] + 1) {
+				if (if_div_in_restraint(control_divs[0], col, control_divs[row][col], spl))
+					one_div.push_back(spl);
+			}
+			a_rol_temp.push_back(one_div);
+		}
+		temp_a = cart_product(a_rol_temp);
+		for (const auto& one_divs : temp_a) {
+			if (if_col_divs_in_restraint(control_divs[0][col], one_divs, col))
+				a.push_back(one_divs);
+		}
+		VEC<Int> a_lable_i;
+		for_Int(i, counter, a.size()) {
+			a_lable_i.push_back(i);
+			counter++;
+		}
+		a_lable.push_back(a_lable_i);
+	}
+	s = cart_product(a_lable);
+}
+
 bool NocSpace::ifin_NocSpace(MatInt& spilss_div) const
 {
 	if (SUM(spilss_div) == nspa) {
@@ -681,14 +735,13 @@ Int NocSpace::wherein_NocSpace(const Int& h_i)const
 }
 
 
-void NocSpace::print(std::ostream& os) const
-{
+void NocSpace::print(std::ostream& os) const {
 #define nocspace_print(var, comment) print(os, NAME(var), STR(var), comment)
 
 	using namespace std;
 	Str NOOC = p.nooc_mode;
 	Str nppsos = nppso_str(nppso);
-	Int norbits = SUM(nppso)*2;
+	Int norbits = SUM(sit_mat);
 	Str rotation_imp = p.if_norg_imp ? "Yes" : "NO";
 
 
@@ -706,8 +759,8 @@ void NocSpace::print(std::ostream& os) const
 	// nocspace_print(h0, "transformed hopping integral");
 	// nocspace_print(mu, "-mu");
 	nocspace_print(p.U, "The Hubbard term U.");
-    nocspace_print(p.Uprm, "The U^' term");
-    nocspace_print(p.jz, "The hund coupling");
+	nocspace_print(p.Uprm, "The U^' term");
+	nocspace_print(p.jz, "The hund coupling");
 	// u_hbd, p.U12, p.U12, p.U12
 
 	os << "// prmtr print end  " << present() << endl;
