@@ -584,10 +584,10 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 	VecReal& ijkD(ijkl),AjkD(ijkl),kDAj(ijkl),CDAj(ijkl),CDAB(ijkl),ABCD(ijkl);
 	ijkD = (temp.sm(n * n * n, n, ijkl) * transform_uormat.ct()).vec();
 	AjkD = (transform_uormat * temp.sm(n, n * n * n, ijkD)).vec();
-	kDAj = temp.sm(n * n, n * n, AjkD.p()).tr().vec();
-	CDAj = (transform_uormat * temp.sm(n, n * n * n, kDAj.p())).vec();
+	kDAj = temp.sm(n * n, n * n, AjkD).tr().vec();
+	CDAj = (transform_uormat * temp.sm(n, n * n * n, kDAj)).vec();
 	CDAB = (temp.sm(n * n * n, n, CDAj) * transform_uormat.ct()).vec();
-	ABCD = temp.sm(n * n, n * n, CDAB.p()).tr().vec();
+	ABCD = temp.sm(n * n, n * n, CDAB).tr().vec();
 	oper_i = concat(concat(VecReal{ 0. }, hopint.vec()), ABCD);
 	// */
 	} else { 
