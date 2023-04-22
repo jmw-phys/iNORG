@@ -170,4 +170,9 @@ Version: v1.0.33 @ 2023.04.21
 Version: v1.0.34 @ 2023.04.21
     finished: bug fixed for the NORG orbital.densitymatrix.cpp Ln337-347. <!--! IMPORTANT --> 
     next do : (same as prev)
+    tinking : Why would you forget the the NORG orbital order in densitymatrix.cpp !?
+
+Version: v1.0.35 @ 2023.04.21
+    finished: upgrade, add the share memory for speed up reason.
+    next do : 1.test the different between rotation and no-rotation impurity orbital mode in 3band imp model;
     tinking : (same as prev)

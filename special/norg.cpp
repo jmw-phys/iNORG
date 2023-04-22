@@ -566,17 +566,30 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 	}
 
 	hopint = transform_uormat * hopint * transform_uormat.ct();
-	// alpha:a, beta=b, gamma=g, eta=e
+
+	/* // From ijkl to ABCD
 	if (p.if_norg_imp) {
-	VecReal ijke = (impH_i.second.mat(n * n * n, n) * transform_uormat.ct()).vec();
-	VecReal ajke = (transform_uormat * ijke.mat(n, n * n * n)).vec();
-	VecReal	keaj = ajke.mat(n * n, n * n).tr().vec();
-	VecReal geaj = (transform_uormat.ct().tr() * keaj.mat(n, n * n * n)).vec();
-	VecReal geab = (geaj.mat(n * n * n, n) * transform_uormat.tr()).vec();
-	// VecReal geaj = (transform_uormat * keaj.mat(n, n * n * n)).vec();
-	// VecReal geab = (geaj.mat(n * n * n, n) * transform_uormat.ct()).vec();
-	VecReal abge = (geab.mat(n * n, n * n).tr()).vec();
-	oper_i = concat(concat(VecReal{ 0. }, hopint.vec()), abge);
+	VecReal ijkD = (impH_i.second.mat(n * n * n, n) * transform_uormat.ct()).vec();
+	VecReal AjkD = (transform_uormat * ijkD.mat(n, n * n * n)).vec();
+	VecReal	kDAj = AjkD.mat(n * n, n * n).tr().vec();
+	VecReal CDAj = (transform_uormat * kDAj.mat(n, n * n * n)).vec();
+	VecReal CDAB = (CDAj.mat(n * n * n, n) * transform_uormat.tr()).vec();
+	VecReal ABCD = (CDAB.mat(n * n, n * n).tr()).vec();
+	oper_i = concat(concat(VecReal{ 0. }, hopint.vec()), ABCD);
+	*/
+
+	// /*	//! share memory mode.  TESTED :)
+	if (p.if_norg_imp) {
+	MatReal temp; VecReal ijkl(impH_i.second);
+	VecReal& ijkD(ijkl),AjkD(ijkl),kDAj(ijkl),CDAj(ijkl),CDAB(ijkl),ABCD(ijkl);
+	ijkD = (temp.sm(n * n * n, n, ijkl) * transform_uormat.ct()).vec();
+	AjkD = (transform_uormat * temp.sm(n, n * n * n, ijkD)).vec();
+	kDAj = temp.sm(n * n, n * n, AjkD.p()).tr().vec();
+	CDAj = (transform_uormat * temp.sm(n, n * n * n, kDAj.p())).vec();
+	CDAB = (temp.sm(n * n * n, n, CDAj) * transform_uormat.ct()).vec();
+	ABCD = temp.sm(n * n, n * n, CDAB.p()).tr().vec();
+	oper_i = concat(concat(VecReal{ 0. }, hopint.vec()), ABCD);
+	// */
 	} else { 
 		oper_i = concat(concat(VecReal{ 0. }, hopint.vec()), impH_i.second);
 	}
