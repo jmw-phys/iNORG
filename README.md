@@ -176,3 +176,8 @@ Version: v1.0.35 @ 2023.04.21
     finished: upgrade, add the share memory for speed up reason.
     next do : 1.test the different between rotation and no-rotation impurity orbital mode in 3band imp model;
     tinking : (same as prev)
+
+Version: v1.0.36 @ 2023.04.22
+    finished: modify for test the 3band and KVSb.
+    next do : test the code with ZEN(2a;KVSb)
+    tinking : what's the physical of KVSb?

@@ -18,7 +18,7 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	ImGreen hb(nband, p);
 	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)  hb.g[j][i][i] = - imfrq_hybrid_function[i][j];
 	hb.write_zen("hb_zen", "Read");
-	Bath bth(mm, p); bth.read_ose_hop();// bth.bath_fit(hb, or_deg_idx.truncate(0,nband)); if(mm) bth.write_ose_hop(dmft_cnt);
+	Bath bth(mm, p); bth.read_ose_hop(); bth.bath_fit(hb, or_deg_idx.truncate(0,nband)); if(mm) bth.write_ose_hop(dmft_cnt);
 
 	if (mm) std::cout << std::endl;						// blank line
 
@@ -26,7 +26,7 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 	if (mm) hb_imp.write_zen("hb_imp", "Fit");
 	if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 
-
+/*
 	NORG norg(mm, prmtr_i);		// for test
 	{// for test:
 		// IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
@@ -38,8 +38,8 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 			for_Int(i, 0, norg.uormat.size()) biwrite(ofs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
 		}		
 	}
-
-	// NORG norg(choose_cauculation_style("ful_pcl_sch", imp));
+*/
+	NORG norg(choose_cauculation_style("ful_pcl_sch", imp));
 	// NORG norg(choose_cauculation_style("one_pcl_test", imp));
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);									if (mm)	g0imp.write_zen("g0imp");
 	ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));	if (mm) gfimp.write_zen("gfimp");
@@ -240,6 +240,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		controler[0] = {0, -1, p.control_divs[0][2], 0, p.control_divs[0][4], 1};
 		// if(mm) WRN(NAV(controler[0]));
 		{
+			p.if_norg_imp = false; p.after_modify_prmtr(); 
 			NORG norg(opcler.find_ground_state_partical(imp.impH, or_deg_idx.truncate(0,nband)));
 			uormat = norg.uormat;
 			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb / p.norg_sets);occweight = occnum;

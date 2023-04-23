@@ -345,7 +345,7 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 					evalue[i][j] = evalue_temp[i][j - nimp];
 				}
 			}
-			if(mm && i == 0) WRN(NAV4(rotaionU_temp[0], rotaionU[0], evalue_temp[0], evalue[0]));
+			// if(mm && i == 0) WRN(NAV4(rotaionU_temp[0], rotaionU[0], evalue_temp[0], evalue[0]));
 			// if(mm) WRN(NAV(evalu_i));
 		}
 		for_Int(i, 0, rotaionU.size()) rotaionU[i] = rotaionU[i - (i%2)]; //! using the spin inversion symmetry
