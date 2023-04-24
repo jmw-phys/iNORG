@@ -252,8 +252,8 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 			Int o(0), freze_o(0), e(0), freze_e(0), orb_rep(0), nooc_o(0), nooc_e(0);
 			for_Int(j, 0, p.norg_sets) {orb_rep = j; if(ordeg[j] == i + 1) break;}
 			o = nppso[orb_rep] - 1; e = p.nI2B[orb_rep] - nppso[orb_rep];
-			for_Int(j, 0, o) 							if(occweight[orb_rep][j] < 1e-6) freze_o++;
-			for_Int(j, nppso[orb_rep], p.nI2B[orb_rep])	if(occweight[orb_rep][j] < 1e-6) freze_e++;
+			for_Int(j, 0, o) 							if(occweight[orb_rep][j] < 1e-7) freze_o++;
+			for_Int(j, nppso[orb_rep], p.nI2B[orb_rep])	if(occweight[orb_rep][j] < 1e-7) freze_e++;
 			nooc_o = o - freze_o; nooc_e = e - freze_e;
 			controler[i+1] = VecInt{1, freze_o, nooc_o, 1, nooc_e, freze_e };
 		}

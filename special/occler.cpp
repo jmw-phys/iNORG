@@ -76,8 +76,8 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_
 
             p.according_nppso(nparticals = nppso);
             NORG a(mm, p);
-            IFS ifs_a("ru" + nppso_str(a.scsp.nppso) + ".bi");
-            if (ifs_a) for_Int(i, 0, a.uormat.size()) biread(ifs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());
+            // IFS ifs_a("ru" + nppso_str(a.scsp.nppso) + ".bi");
+            // if (ifs_a) for_Int(i, 0, a.uormat.size()) biread(ifs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());
             a.up_date_h0_to_solve(impH_i, sub_energy.truncate(0, counter)); sub_energy[counter] = a.groune_lst;
             if (mm) {
                 // OFS ofs_a;
@@ -92,8 +92,8 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_
             p.according_nppso(nparticals = nppsos[0]);
             NORG a(mm, p);
 
-            IFS ifs_a("ru" + nppso_str(a.scsp.nppso) + ".bi");
-            if (ifs_a) for_Int(i, 0, a.uormat.size()) biread(ifs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());
+            // IFS ifs_a("ru" + nppso_str(a.scsp.nppso) + ".bi");
+            // if (ifs_a) for_Int(i, 0, a.uormat.size()) biread(ifs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());
             a.up_date_h0_to_solve(impH_i);
 
             // if(mm) {std::cout << "The ground state's NOOC: " << std::endl; /* a.scsp.print();*/}
