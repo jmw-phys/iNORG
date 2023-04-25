@@ -340,9 +340,15 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 				if (j < nimp) {
 					rotaionU[i][j] = rotaionU_temp[i][j + SUM_0toX(scsp.sit_mat[i], p.ndiv / 2) - scsp.sit_mat[i][0]];
 					evalue[i][j] = evalue_temp[i][j + SUM_0toX(scsp.sit_mat[i], p.ndiv / 2) - scsp.sit_mat[i][0]];
-				} else if (j - nimp < p.nI2B[i] / 2. - 1) {
-					rotaionU[i][j] = rotaionU_temp[i][j - nimp];
-					evalue[i][j] = evalue_temp[i][j - nimp];
+				} else {
+					if (p.nI2B[i] % 2 != 0 && j - nimp < p.nI2B[i] / 2. - 1) {
+						rotaionU[i][j] = rotaionU_temp[i][j - nimp];
+						evalue[i][j] = evalue_temp[i][j - nimp];
+					}
+					if (p.nI2B[i] % 2 == 0 && j - nimp < p.nI2B[i] / 2.) {
+						rotaionU[i][j] = rotaionU_temp[i][j - nimp];
+						evalue[i][j] = evalue_temp[i][j - nimp];
+					}
 				}
 			}
 			// if(mm && i == 0) WRN(NAV4(rotaionU_temp[0], rotaionU[0], evalue_temp[0], evalue[0]));

@@ -550,7 +550,7 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& impH_i, VecReal& oper_i)
 {
 	using namespace std;
-	MatReal hopint(impH_i.first), transform_uormat(dmat(p.norbit, 1.));
+	MatReal hopint(impH_i.first), full_uormat(dmat(p.norbit, 1.));
 	Int counter(0), n(p.n_rot_orb);
 	if (uormat_i.empty() || oper_i.size() == 0) ERR("the uormat_i or oper_value is empty!!");
 	
@@ -558,42 +558,44 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 		for (const auto& uormat_ii : uormat_i) {
 			for_Int(i, 0, uormat_ii.nrows()) {
 				for_Int(j, 0, uormat_ii.ncols()) {
-					transform_uormat[i + counter][j + counter] = uormat_ii[i][j];
+					full_uormat[i + counter][j + counter] = uormat_ii[i][j];
 				}
 			}
 			counter += uormat_ii.nrows();
 		}
 	}
 
-	hopint = transform_uormat * hopint * transform_uormat.ct();
+	hopint = full_uormat * hopint * full_uormat.ct();
 
 	/* // From ijkl to ABCD
 	if (p.if_norg_imp) {
-	VecReal ijkD = (impH_i.second.mat(n * n * n, n) * transform_uormat.ct()).vec();
-	VecReal AjkD = (transform_uormat * ijkD.mat(n, n * n * n)).vec();
+	VecReal ijkD = (impH_i.second.mat(n * n * n, n) * full_uormat.ct()).vec();
+	VecReal AjkD = (full_uormat * ijkD.mat(n, n * n * n)).vec();
 	VecReal	kDAj = AjkD.mat(n * n, n * n).tr().vec();
-	VecReal CDAj = (transform_uormat * kDAj.mat(n, n * n * n)).vec();
-	VecReal CDAB = (CDAj.mat(n * n * n, n) * transform_uormat.tr()).vec();
+	VecReal CDAj = (full_uormat * kDAj.mat(n, n * n * n)).vec();
+	VecReal CDAB = (CDAj.mat(n * n * n, n) * full_uormat.tr()).vec();
 	VecReal ABCD = (CDAB.mat(n * n, n * n).tr()).vec();
 	oper_i = concat(concat(VecReal{ 0. }, hopint.vec()), ABCD);
 	*/
 
-	// /*	//! share memory mode.  TESTED :)
+	//! share memory mode.  TESTED :)
 	if (p.if_norg_imp) {
-	MatReal temp; VecReal ijkl(impH_i.second);
-	VecReal& ijkD(ijkl),AjkD(ijkl),kDAj(ijkl),CDAj(ijkl),CDAB(ijkl),ABCD(ijkl);
-	ijkD = (temp.sm(n * n * n, n, ijkl) * transform_uormat.ct()).vec();
-	AjkD = (transform_uormat * temp.sm(n, n * n * n, ijkD)).vec();
-	kDAj = temp.sm(n * n, n * n, AjkD).tr().vec();
-	CDAj = (transform_uormat * temp.sm(n, n * n * n, kDAj)).vec();
-	CDAB = (temp.sm(n * n * n, n, CDAj) * transform_uormat.ct()).vec();
-	ABCD = temp.sm(n * n, n * n, CDAB).tr().vec();
-	oper_i = concat(concat(VecReal{ 0. }, hopint.vec()), ABCD);
-	// */
+		MatReal t_m; VecReal ijkl(impH_i.second), t_v;
+		VecReal& ijkL(ijkl),IjkL(ijkl),kLIj(ijkl),KLIj(ijkl),KLIJ(ijkl),IJKL(ijkl);
+		// The tensor rotation as follows:
+		ijkL = t_v.sm(t_m.sm(n * n * n, n, ijkl) * full_uormat.ct());
+		IjkL = t_v.sm(full_uormat * t_m.sm(n, n * n * n, ijkL));
+		kLIj = t_v.sm(t_m.sm(n * n, n * n, IjkL).tr());
+		KLIj = t_v.sm(full_uormat * t_m.sm(n, n * n * n, kLIj));
+		KLIJ = t_v.sm(t_m.sm(n * n * n, n, KLIj) * full_uormat.ct());
+		IJKL = t_v.sm(t_m.sm(n * n, n * n, KLIJ).tr());
+		
+		oper_i = concat(concat(VecReal{ 0. }, t_v.sm(hopint)), IJKL);
 	} else { 
-		oper_i = concat(concat(VecReal{ 0. }, hopint.vec()), impH_i.second);
+		VecReal t_v;
+		oper_i = concat(concat(VecReal{ 0. }, t_v.sm(hopint)), impH_i.second);
 	}
-	// if(mm) WRN(NAV(transform_uormat));
+	// if(mm) WRN(NAV(full_uormat));
 }
 
 

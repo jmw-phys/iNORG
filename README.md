@@ -181,3 +181,8 @@ Version: v1.0.36 @ 2023.04.22
     finished: modify for test the 3band and KVSb.
     next do : test the code with ZEN(2a;KVSb)
     tinking : what's the physical of KVSb?
+
+Version: v1.0.37 @ 2023.04.24
+    finished: 1. finished the Bug finding in densitymatrix.cpp and prmt.cpp for even I2B number; 2. upgraded the crrvec function for green calc. 3. upgrade the norg.cpp set_row_primeter_byimpH() function for share memory.
+    next do : Using no special imp(*) orbital to modify the code.
+    thinking: what if the impurity interaction acting on the right? (not the left)
