@@ -224,7 +224,6 @@ Tab Operator::find_fullH_idx()
 	for_Int(i, 0, tensor_u.nrows()) for_Int(j, 0, tensor_u.ncols()) for_Int(k, 0, mat_hop_pos.nrows()) for_Int(l, 0, mat_hop_pos.ncols())
 		tensor_u[i][j][k][l] = i * std::pow(p.norbit, 3) + j * std::pow(p.norbit, 2) + k * std::pow(p.norbit, 1) + l;
 		// tensor_u[i][j][k][l] = (i * tensor_u.ncols() + j) * mat_hop_pos.size() + k * mat_hop_pos.ncols() + l;
-
 	for_Int(h_i, row_H.bgn(), row_H.end()) {
 		// To save as sparse matrix, [0]: row number;[1]: colum number;[2]: idx.
 		VecInt h_idx(3, 0);
@@ -282,8 +281,7 @@ Tab Operator::find_fullH_idx()
 			}
 		}
 		//! off-Diagonal term. C\power-index{i|†}C\index{j}|| C\power-index{i|†}C\power-index{j|†}C\power-index{k}C\index{l}
-		for_Int(sets_i, 0, p.norg_sets)
-		{
+		for_Int(sets_i, 0, p.norg_sets) {
 			{
 				// off_diagonal_term Two-Fermi
 				// i[0]:annihilation orbit's position; i[1]:creation orbit's positon; i[2]:Colum idx(i); i[3]:sign(anticommutativity)

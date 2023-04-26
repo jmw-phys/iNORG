@@ -39,8 +39,8 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_
 	// find_combined_number_subspaces(1);
 	// find_all_noc_subspaces();
 	// find_all_noc_subspaces_by_row();
-	find_thought_noc_subspaces();
-	// find_all_noc_subspaces();// ! test for the CDMFT version.
+	// find_thought_noc_subspaces();
+	find_all_noc_subspaces();// ! test for the CDMFT version.
 
 	if(mm) PIO("Begin find_combined_number_subspaces()"+ NAV(dim)+"   "+present());
 }
@@ -232,8 +232,8 @@ void NocSpace::find_all_noc_subspaces()
 	VEC<VEC<Int> > s;
 
 	find_all_possible_state(a, s);
-	for (const auto &x : s)
-	{
+	// if(mm) WRN(NAV(s.size()));
+	for (const auto& x : s) {
 		VecInt spilss_div_v(read_from_col_lable(x,a));
 		MatInt spilss_div_tr(spilss_div_v.mat(control_divs.ncols(), control_divs.nrows() - 1));
 		MatInt spilss_div(spilss_div_tr.tr());
@@ -246,6 +246,7 @@ void NocSpace::find_all_noc_subspaces()
 			idx_div.push_back(dim);
 		}
 	}
+			// WRN(NAV(dim));
 }
 
 void NocSpace::find_thought_noc_subspaces()
@@ -388,8 +389,7 @@ Vec<MatInt> NocSpace::multi_judger_with_return(VEC<VEC<int> >& s, const VEC<VEC<
 				// if(mm) WRN(NAV(left_ii[j].size()));
 			}
 			
-			for (const auto &x : cart_product(left_ii))
-			{
+			if (!p.if_norg_imp) for (const auto& x : cart_product(left_ii)) {
 				MatInt unnooc(p.norg_sets, 2);
 				for_Int(j, 0, x.size()) unnooc[j] = x[j];
 				MatInt div(concat(concat(unnooc.tr()[0],spilss_div.tr().truncate_row(0,spilss_div.ncols()/2).vec()), \
@@ -576,28 +576,12 @@ bool NocSpace::ifin_NocSpace(MatInt& spilss_div, const VecInt& nppso) const
 		for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) if (spilss_div[i - 1][j] < 0 || spilss_div[i - 1][j] > control_divs[i][j]) return false;
 		VecInt spilsdiv_countvec(ndivs, 0);
 		for_Int(j, 0, spilss_div.ncols()) for_Int(i, 0, spilss_div.nrows()) spilsdiv_countvec[j] += spilss_div[i][j];
-		/*
-		if (spilsdiv_countvec[1] >= shortcut_countvec[1] + control_divs[0][1] && \
-			spilsdiv_countvec[1] <= shortcut_countvec[1] && \
-			spilsdiv_countvec[2] >= shortcut_countvec[2] + control_divs[0][2] && \
-			spilsdiv_countvec[2] <= shortcut_countvec[2] && \
-			spilsdiv_countvec[4] >= 0 && \
-			spilsdiv_countvec[4] <= control_divs[0][4] && \
-			spilsdiv_countvec[5] >= 0 && \
-			spilsdiv_countvec[5] <= control_divs[0][5]){
-				
-				if(p.nooc_mode == STR("nooc"))return true;
-				else if(p.nooc_mode == STR("cnooc")){
-					if( shortcut_countvec[2] - spilsdiv_countvec[2] + spilsdiv_countvec[4] <= control_divs[0][4] && \
-						shortcut_countvec[1] - spilsdiv_countvec[1] + spilsdiv_countvec[5] <= control_divs[0][5]) return true;
-				}
-				else ERR("nooc_mode in put was wrong!");
-		}
-		*/
-		for_Int(i, 1, ndivs) if(!check_each_column(i, spilsdiv_countvec)) return false;
+
+		Int start = p.if_norg_imp ? 0 : 1;
+		for_Int(i, start, ndivs) if(!check_each_column(i, spilsdiv_countvec)) return false;
 		if(p.nooc_mode == STR("nooc")) return true;
-		else if(p.nooc_mode == STR("cpnooc")) {for_Int(i, 1, ndivs/2 - 1) if(check_correlated_column(i, spilsdiv_countvec)) return false;}
-		else if(p.nooc_mode == STR("cnooc")) {for_Int(i, 1, ndivs/2) if(check_correlated_column(i, spilsdiv_countvec)) return false;}
+		else if(p.nooc_mode == STR("cpnooc")) {for_Int(i, start, ndivs/2 - 1) if(check_correlated_column(i, spilsdiv_countvec)) return false;}
+		else if(p.nooc_mode == STR("cnooc")) {for_Int(i, start, ndivs/2) if(check_correlated_column(i, spilsdiv_countvec)) return false;}
 		else ERR("nooc_mode in put was wrong!");
 		return true;
 	}
@@ -689,18 +673,28 @@ bool NocSpace::ifin_NocSpace_judge_by_nppso(const MatInt& spilss_div, const VecI
 
 bool NocSpace::if_div_in_restraint(const VecInt& restraint, const Int position, const Int max, const Int now) const
 {
-	if (!p.if_norg_imp && (position == 0 || position == ndivs / 2)) return true;
-	if (position < ndivs / 2 && now >= (max + restraint[position])) return true;
-	if (position > ndivs / 2 && now <= restraint[position]) return true;
+	if(p.if_norg_imp){
+		if (position < ndivs / 2 && now >= (max + restraint[position])) return true;
+		if (position >= ndivs / 2 && now <= restraint[position]) return true;
+	} else {
+		if (position == 0 || position == ndivs / 2) return true;
+		if (position < ndivs / 2 && now >= (max + restraint[position])) return true;
+		if (position > ndivs / 2 && now <= restraint[position]) return true;
+	}
 	return false;
 }
 
 bool NocSpace::if_col_divs_in_restraint(const Int& restraint, const VEC<Int>& divcol_i, Int col_idx) const
 {
-	VecInt divcol(divcol_i);
-	if (!p.if_norg_imp && (col_idx == 0 || col_idx == ndivs / 2)) return true;
-	if(col_idx < ndivs / 2 && SUM(divcol) >= (shortcut_countvec[col_idx] + restraint)) return true;
-	if(col_idx > ndivs / 2 && SUM(divcol) <= restraint ) return true;
+	VecInt divcol(divcol_i);	
+	if(p.if_norg_imp){
+		if(col_idx < ndivs / 2 && SUM(divcol) >= (shortcut_countvec[col_idx] + restraint)) return true;
+		if(col_idx >= ndivs / 2 && SUM(divcol) <= restraint ) return true;
+	} else {
+		if (col_idx == 0 || col_idx == ndivs / 2) return true;
+		if(col_idx < ndivs / 2 && SUM(divcol) >= (shortcut_countvec[col_idx] + restraint)) return true;
+		if(col_idx > ndivs / 2 && SUM(divcol) <= restraint ) return true;
+	}
 	return false;
 }
 

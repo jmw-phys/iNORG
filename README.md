@@ -182,12 +182,17 @@ Version: v1.0.36 @ 2023.04.22
     next do : test the code with ZEN(2a;KVSb)
     tinking : what's the physical of KVSb?
 
-Version: v1.0.37 @ 2023.04.24
+Version: v1.0.37 @ 2023.04.24 <!--! NAME: Version: v1.1.00 --> 
     finished: 1. finished the Bug finding in densitymatrix.cpp and prmt.cpp for even I2B number; 2. upgraded the crrvec function for green calc. 3. upgrade the norg.cpp set_row_primeter_byimpH() function for share memory.
     next do : Using no special imp(*) orbital to modify the code.
     thinking: what if the impurity interaction acting on the right? (not the left)
 
-Version: v1.0.28 @ 2023.04.25
+Version: v1.1.01 @ 2023.04.25
     finished: 1.upgrade the crrvec.cpp .h; 2. upgrade the apizen for read [-1 -2 -3  3  2  1] restrain.
     next do : (same as prev)
     thinking: (same as prev)
+
+Version: v1.1.02 @ 2023.04.26
+    finished: 1. finish the first version of the NORG for using [-1 -2 -3  3  2  1] restrain; 
+    next do : 1.modify the code for using the col restrain to calc the dim; 2.debug the code for the cpnooc mode.
+    thinking: How to update the bethe lattice model? and how to study the half-filling hubbard model case for multi-band?

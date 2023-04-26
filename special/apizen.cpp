@@ -26,6 +26,8 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 	if (mm) hb_imp.write_zen("hb_imp", "Fit");
 	if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 
+	// NocSpace scsp(mm_i, prmtr_i, prmtr_i.npartical);
+	// DensityMat oneedm(mm, prmtr_i, scsp);
 // /*
 	NORG norg(mm, prmtr_i);		// for test
 	{// for test:
@@ -38,12 +40,12 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 			for_Int(i, 0, norg.uormat.size()) biwrite(ofs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
 		}		
 	}
-// */
 	// NORG norg(choose_cauculation_style("ful_pcl_sch", imp));
 	// NORG norg(choose_cauculation_style("one_pcl_test", imp));
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);									if (mm)	g0imp.write_zen("g0imp");
 	ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));	if (mm) gfimp.write_zen("gfimp");
 	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();			if (mm) seimp.write_zen("seimp");
+// */
 
  /*
 	{
@@ -117,7 +119,6 @@ void APIzen::read_ZEN(const Str& file)
 							ifs >> t_restrain;
 							restrain[i] = t_restrain;
 						}
-						PIO("Finish the restrain input:" + NAV(restrain.mat(1,restrain.size())));
 					} else 
 					{
 						Int l2, l1, r1, r2;

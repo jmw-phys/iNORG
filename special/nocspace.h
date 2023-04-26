@@ -70,10 +70,15 @@ private:
 	Vec<MatInt> multi_judger_with_return(VEC<VEC<int> >& s, const VEC<VEC<int> >& a) const;
 
 	bool check_each_column(const Int& col_pos, const VecInt& div_colsum) const {
-		if (col_pos == div_colsum.size() / 2) return true;
-		if (col_pos < div_colsum.size() / 2 && div_colsum[col_pos] >= shortcut_countvec[col_pos] + control_divs[0][col_pos] && div_colsum[col_pos] <= shortcut_countvec[col_pos]) return true;
-		if (col_pos > div_colsum.size() / 2 && div_colsum[col_pos] >= 0 && div_colsum[col_pos] <= control_divs[0][col_pos]) return true;
-		// if (control_divs[0][col_pos] ==0 && ((col_pos < div_colsum.size()/2 && div_colsum[col_pos]==shortcut_countvec[col_pos]) || (col_pos > div_colsum.size()/2 && div_colsum[col_pos]==0))) return true;
+		if (p.if_norg_imp) {
+			if (col_pos < div_colsum.size() / 2 && div_colsum[col_pos] >= shortcut_countvec[col_pos] + control_divs[0][col_pos] && div_colsum[col_pos] <= shortcut_countvec[col_pos]) return true;
+			if (col_pos >= div_colsum.size() / 2 && div_colsum[col_pos] >= 0 && div_colsum[col_pos] <= control_divs[0][col_pos]) return true;
+		}
+		else {
+			if (col_pos == div_colsum.size() / 2) return true;
+			if (col_pos < div_colsum.size() / 2 && div_colsum[col_pos] >= shortcut_countvec[col_pos] + control_divs[0][col_pos] && div_colsum[col_pos] <= shortcut_countvec[col_pos]) return true;
+			if (col_pos > div_colsum.size() / 2 && div_colsum[col_pos] >= 0 && div_colsum[col_pos] <= control_divs[0][col_pos]) return true;
+		}
 		return false;
 	}
 

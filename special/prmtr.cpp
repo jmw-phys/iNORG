@@ -59,8 +59,8 @@ void Prmtr::set_values() {
     nI2B = SUM(templet_control) - 1;                    // default value:
     nO2sets = SUM(templet_control);                     // default value:
     iter_max_norg = 99;                                 // default
-    nooc_mode = STR("cnooc");
-    // nooc_mode = STR("nooc");
+    // nooc_mode = STR("cnooc");
+    nooc_mode = STR("nooc");
     // nooc_mode = STR("cpnooc");
     after_modify_prmtr();
     // npartical.reset(norg_sets, 0);
@@ -76,10 +76,15 @@ void Prmtr::after_modify_prmtr() const
     control_divs.reset(norg_sets + 1, ndiv, 0);
     control_divs[0] = templet_restrain;
     for_Int(i, 0, norg_sets) control_divs[i + 1] = templet_control;
-    for_Int(i, 0, norg_sets) nI2B[i] = SUM(control_divs[i + 1]) - control_divs[i + 1][0];
-    for_Int(i, 0, norg_sets) nO2sets[i] = SUM(control_divs[i + 1]);
-    nbath = SUM(nI2B);
-    norbit = SUM(control_divs.tr()[0]) + nbath;
+    MatInt sit_mat(control_divs.truncate_row(1,norg_sets + 1));
+    for_Int(i, 0, norg_sets) nI2B[i] = SUM(sit_mat[i]) - sit_mat[i][0];
+    for_Int(i, 0, norg_sets) nO2sets[i] = SUM(sit_mat[i]);
+    norbit = SUM(sit_mat);
+    nbath = norbit - 2 * nband;
+    if (if_norg_imp) {
+        for_Int(i, 0, norg_sets) nI2B[i] = nbath/norg_sets;
+        for_Int(i, 0, norg_sets) nO2sets[i] = norbit/norg_sets;
+    }
     // npartical.reset(norg_sets, 0);
     // for_Int(i, 0, norg_sets) npartical[i] = SUM(control_divs[i + 1])/2;
     Uprm = U - 2 * jz;

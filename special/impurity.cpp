@@ -94,6 +94,7 @@ void Impurity::update(Str mode) {
         set_factor();
         impH = std::make_pair(h0, set_interaction());
     }
+    // if(mm) WRN(NAV(h0));
 }
 
 
