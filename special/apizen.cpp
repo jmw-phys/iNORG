@@ -18,7 +18,7 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	ImGreen hb(nband, p);
 	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)  hb.g[j][i][i] = - imfrq_hybrid_function[i][j];
 	hb.write_zen("hb_zen", "Read");
-	Bath bth(mm, p); bth.read_ose_hop(); bth.bath_fit(hb, or_deg_idx.truncate(0,nband)); if(mm) bth.write_ose_hop(dmft_cnt);
+	Bath bth(mm, p); bth.read_ose_hop();// bth.bath_fit(hb, or_deg_idx.truncate(0,nband)); if(mm) bth.write_ose_hop(dmft_cnt);
 
 	if (mm) std::cout << std::endl;						// blank line
 
@@ -26,7 +26,7 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 	if (mm) hb_imp.write_zen("hb_imp", "Fit");
 	if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 
-/*
+// /*
 	NORG norg(mm, prmtr_i);		// for test
 	{// for test:
 		// IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
@@ -38,8 +38,8 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 			for_Int(i, 0, norg.uormat.size()) biwrite(ofs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
 		}		
 	}
-*/
-	NORG norg(choose_cauculation_style("ful_pcl_sch", imp));
+// */
+	// NORG norg(choose_cauculation_style("ful_pcl_sch", imp));
 	// NORG norg(choose_cauculation_style("one_pcl_test", imp));
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);									if (mm)	g0imp.write_zen("g0imp");
 	ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));	if (mm) gfimp.write_zen("gfimp");
@@ -110,17 +110,28 @@ void APIzen::read_ZEN(const Str& file)
 				if(strr == "beta") { ifs >> strr; ifs >> p.beta; }
 				if(strr == "nmesh") { ifs >> strr; ifs >> p.nmesh; }
 				if (strr == "restrain") {
-					Int l2, l1, r1, r2;
-					ifs >> strr; ifs >> strr;
-					ifs >> l2;	ifs >> l1; ifs >> strr; ifs >> r1; ifs >> r2;
-					restrain = { 0, l2, l1, 0, r1, r2 };
+					if(p.if_norg_imp){
+						ifs >> strr;
+						Int t_restrain(0);restrain.reset(p.ndiv);
+						for_Int(i, 0, restrain.size()){
+							ifs >> t_restrain;
+							restrain[i] = t_restrain;
+						}
+						PIO("Finish the restrain input:" + NAV(restrain.mat(1,restrain.size())));
+					} else 
+					{
+						Int l2, l1, r1, r2;
+						ifs >> strr; ifs >> strr;
+						ifs >> l2;	ifs >> l1; ifs >> strr; ifs >> r1; ifs >> r2;
+						restrain = { 0, l2, l1, 0, r1, r2 };
+					}
 					if (mm) PIO("Finish the restrain input:" + NAV(restrain.mat(1,restrain.size())));
 				}
 				if (strr == "distribute") {
-					Int l2, l1, m0, r1, r2;
-					ifs >> strr; ifs >> strr;
-					ifs >> l2;	ifs >> l1; ifs >> m0; ifs >> r1; ifs >> r2;
-					distribute = { 1, l2, l1, m0, r1, r2 };
+					Int m0, l2, l1, m1, r1, r2;
+					ifs >> strr; ifs >> m0;
+					ifs >> l2;	ifs >> l1; ifs >> m1; ifs >> r1; ifs >> r2;
+					distribute = { m0, l2, l1, m1, r1, r2 };
 					if (mm) PIO("Finish the division distribute input:" + NAV(distribute.mat(1,distribute.size())));
 				}
 				if (strr == "norm_mode") {
@@ -240,7 +251,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		controler[0] = {0, -1, p.control_divs[0][2], 0, p.control_divs[0][4], 1};
 		// if(mm) WRN(NAV(controler[0]));
 		{
-			p.if_norg_imp = false; p.after_modify_prmtr(); 
+			// p.if_norg_imp = false; p.after_modify_prmtr(); 
 			NORG norg(opcler.find_ground_state_partical(imp.impH, or_deg_idx.truncate(0,nband)));
 			uormat = norg.uormat;
 			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb / p.norg_sets);occweight = occnum;
@@ -258,7 +269,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 			controler[i+1] = VecInt{1, freze_o, nooc_o, 1, nooc_e, freze_e };
 		}
 
-		p.if_norg_imp = true; p.after_modify_prmtr(); 
+		// p.if_norg_imp = true; p.after_modify_prmtr(); 
 		p.according_controler(controler, ordeg);
 		// {// WRN
 		// 	MatInt m_controler(MAX(or_deg_idx) + 1, p.ndiv);
@@ -310,7 +321,6 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 			controler[i+1] = VecInt{1, freze_o, nooc_o, 1, nooc_e, freze_e };
 		}
 
-		// p.if_norg_imp = true; p.after_modify_prmtr(); 
 		p.according_controler(controler, ordeg);
 		// {// WRN
 		// 	MatInt m_controler(MAX(or_deg_idx) + 1, p.ndiv);

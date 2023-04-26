@@ -108,7 +108,7 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
             green_pre[w] = gaz;
         }
         if (ABS(SUM(green_error)) < 1.E-10 * g0.nomgs) break;
-        if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
+        // if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
     }
     for_Int(w, 0, g0.nomgs) g0[w][0][0] += green_pre[w];
     if (mm) PIO("The size of a and b in greaer:" + NAV2(ltd.size(), lt_sd.size()));
@@ -162,7 +162,7 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
             green_pre[w] = gaz;
         }
         if (ABS(SUM(green_error)) < 1.E-10 * g0.nomgs) break;
-        if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
+        // if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
     }
     for_Int(w, 0, g0.nomgs) g0[w][0][0] += green_pre[w];
     if (mm) PIO("The size of a and b in lesser:" + NAV2(ltd.size(), lt_sd.size()));
@@ -336,6 +336,7 @@ void CrrltFun::find_trdgnl_one_step(const VecReal& initial_vector, VecReal& v0, 
     a = DOT(v1, v0);
 }
 
+//--------------------------------------------- ex_state function part ---------------------------------------------
 void CrrltFun::add_ex_state_part_in_rotation(const VecReal &initial_vector, VecReal& ex_state_part, const Int& set_n, const Int orb_before_rot, const Int& h_i) const {
     const Int subnosp(old_nosp.wherein_NocSpace(h_i));
 

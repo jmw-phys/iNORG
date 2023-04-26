@@ -334,6 +334,7 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 				SWAP(rotaionU[i][j], rotaionU[i][p.nO2sets[i] - j - 1]);
 				SWAP(evalue[i][j], evalue[i][p.nO2sets[i] - j - 1]);
 			}
+			/*
 			VEC<MatReal> rotaionU_temp = rotaionU; VEC<VecReal> evalue_temp = evalue;
 			for_Int(j, 0, p.nO2sets[i]) {
 				Int nimp = p.nO2sets[i] - p.nI2B[i];
@@ -352,6 +353,7 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 				}
 			}
 			// if(mm && i == 0) WRN(NAV4(rotaionU_temp[0], rotaionU[0], evalue_temp[0], evalue[0]));
+			*/
 			// if(mm) WRN(NAV(evalu_i));
 		}
 		for_Int(i, 0, rotaionU.size()) rotaionU[i] = rotaionU[i - (i%2)]; //! using the spin inversion symmetry

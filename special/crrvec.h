@@ -55,7 +55,7 @@ private:
 	// return the ex_state_part_in_rotation
 	void add_ex_state_part_in_rotation(const VecReal &initial_vector, VecReal& ex_state_part, const Int& set_n, const Int orb_in_sets, const Int& h_i) const;
 
-	bool if_in_this_orbital(const VecOnb &exd_cf, const Int crtann, const Int norg_set, const Int orbit_pos_in_div) const;
+	bool if_in_this_orbital(const VecOnb &exd_cf, const Int crtann, const Int div_in_one_row_pos, const Int orbit_pos_in_div) const;
 
 public:
 	//Crrvec(const MyMpi &mm_i, const Prmtr &prmtr_i, const NocSpace &old_nosp, const NocSpace &main_nosp, const VecReal &vgs_i, const Real &gs, const Int right_set, const Real omeg = 0., const Real eta_i = 0.01);

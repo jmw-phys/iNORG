@@ -51,7 +51,8 @@ void Prmtr::set_values() {
     // NORG parameter.
     if_norg_imp = true;
     imp_backup = false;
-    templet_restrain = {0, -1, -1,  0,  1,  1};
+    templet_restrain = !if_norg_imp ? VecInt{0, -1, -4,  0,  4,  1} : VecInt{-1, -2, -3,  3,  2,  1};
+    // templet_restrain = {0, -1, -1,  0,  1,  1};
     templet_control =  {1,  3,  0,  1,  0,  3};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
@@ -83,6 +84,11 @@ void Prmtr::after_modify_prmtr() const
     // for_Int(i, 0, norg_sets) npartical[i] = SUM(control_divs[i + 1])/2;
     Uprm = U - 2 * jz;
     n_rot_orb = if_norg_imp ? norbit : nbath;
+    if(if_norg_imp) {
+        if (control_divs[0][0] == control_divs[0][ndiv / 2]) ERR("For full orbit rotation mode, The restrain is not suit for" + NAV(control_divs[0]))
+    } else {
+        if (control_divs[0][0] != control_divs[0][ndiv / 2]) ERR("For only baths rotation mode, The restrain is not suit for" + NAV(control_divs[0]))
+    }
     derive_ImGreen();
 }
 

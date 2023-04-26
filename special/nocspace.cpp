@@ -488,7 +488,7 @@ void NocSpace::find_all_possible_state_by_nooc(VEC<VEC<Int> >& a, VEC<VEC<Int> >
 {
 	VEC<VEC<Int> > a_lable;
 	Int counter(0);
-	for_Int(col, 0, control_divs.ncols()) if(col != 0 && col != ndivs/2)
+	for_Int(col, 0, control_divs.ncols()) if (p.if_norg_imp || (col != 0 && col != ndivs / 2))
 	{
 		VEC<VEC<Int>> temp_a, a_rol_temp;
 		for_Int(row, 1, control_divs.nrows())
@@ -689,8 +689,7 @@ bool NocSpace::ifin_NocSpace_judge_by_nppso(const MatInt& spilss_div, const VecI
 
 bool NocSpace::if_div_in_restraint(const VecInt& restraint, const Int position, const Int max, const Int now) const
 {
-	if (position == 0 || position == ndivs / 2) return true;
-	// if (restraint[position] <= 0 && now >= (max + restraint[position])) return true;
+	if (!p.if_norg_imp && (position == 0 || position == ndivs / 2)) return true;
 	if (position < ndivs / 2 && now >= (max + restraint[position])) return true;
 	if (position > ndivs / 2 && now <= restraint[position]) return true;
 	return false;
@@ -699,9 +698,7 @@ bool NocSpace::if_div_in_restraint(const VecInt& restraint, const Int position, 
 bool NocSpace::if_col_divs_in_restraint(const Int& restraint, const VEC<Int>& divcol_i, Int col_idx) const
 {
 	VecInt divcol(divcol_i);
-	// if(restraint == 0) return true;
-	if (col_idx == 0 || col_idx == ndivs / 2) return true;
-	// if(restraint < 0 && SUM(divcol) >= (shortcut_countvec[col_idx] + restraint) ) return true;
+	if (!p.if_norg_imp && (col_idx == 0 || col_idx == ndivs / 2)) return true;
 	if(col_idx < ndivs / 2 && SUM(divcol) >= (shortcut_countvec[col_idx] + restraint)) return true;
 	if(col_idx > ndivs / 2 && SUM(divcol) <= restraint ) return true;
 	return false;
