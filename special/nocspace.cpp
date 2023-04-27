@@ -39,8 +39,9 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_
 	// find_combined_number_subspaces(1);
 	// find_all_noc_subspaces();
 	// find_all_noc_subspaces_by_row();
-	// find_thought_noc_subspaces();
-	find_all_noc_subspaces();// ! test for the CDMFT version.
+
+	// find_all_noc_subspaces();// ! tested for the YBCO-CDMFT version.
+	find_thought_noc_subspaces();
 	
 
 	if(mm) PIO("Begin find_combined_number_subspaces()"+ NAV(dim)+"   "+present());
@@ -66,271 +67,7 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_
 	if(mm) WRN("Begin find_combined_number_subspaces()"+ NAV(dim));
 }
 
-void NocSpace::set_control()
-{
-	control_divs = p.control_divs;
-	sit_mat = control_divs.truncate_row(1, control_divs.nrows());
-	for_Int(j, 0, control_divs.ncols())for_Int(i, 1, control_divs.nrows()) orbital_divcnt[j] += control_divs[i][j];
-	// sit_mat.reset(control_divs.truncate_row(1, control_divs.nrows()));
-}
-
-/*
-VecReal NocSpace::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const MatReal& h0)
-{
-	hopint = h0;
-	MatReal transform_uormat(dmat(p.norbit, 1.));
-	Int counter(0);
-	if (!uormat_i.empty()) {
-		for (const auto& uormat_ii : uormat_i)
-		{
-			counter++;
-			for_Int(i, 0, uormat_ii.nrows()) {
-				for_Int(j, 0, uormat_ii.ncols()) {
-					transform_uormat[i + counter][j + counter] = uormat_ii[i][j];
-				}
-			}
-			counter += uormat_ii.nrows();
-		}
-	}
-	hopint = transform_uormat * hopint * transform_uormat.ct();
-	VecReal coefficient_i(hopint.vec());
-	VecReal check_point(1, 0.); coefficient_i.reset(concat(check_point, coefficient_i));
-	// // VecReal orbital_correction({ u_hbd, (u_hbd - (2 * j_ob)), (u_hbd - (3 * j_ob)), (u_hbd - (3 * j_ob)) });
-	// // VecReal orbital_correction({ u_hbd, p.U12, p.U12, p.U12 });
-	// {U, U':u d, U':u u, U':d d}
-	VecReal orbital_correction({ p.U, p.Uprm, p.Uprm - p.jz, p.Uprm - p.jz });
-	// VecReal orbital_correction({ p.U * 0.25, p.Uprm * 0.25, (p.Uprm - p.jz) * 0.25, (p.Uprm - p.jz) * 0.25 });
-	// VecReal orbital_correction({ 0.25 * p.U, 0. * p.U, 0. * p.U, 0. * p.U });
-	return concat(coefficient_i, orbital_correction);
-}
-
-
-// C^+_i C^+_j C_k C_l h_inter from [i][l][j][k] to [alpha][eta][beta][gamma]
-VecReal NocSpace::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const MatReal& h0, const Mat<MatReal>& h_inter)
-{
-	hopint = h0;
-	MatReal transform_uormat(dmat(p.norbit, 1.));
-	Int counter(0);
-	if (!uormat_i.empty()) {
-		for (const auto& uormat_ii : uormat_i)
-		{
-			counter++;
-			for_Int(i, 0, uormat_ii.nrows()) {
-				for_Int(j, 0, uormat_ii.ncols()) {
-					transform_uormat[i + counter][j + counter] = uormat_ii[i][j];
-				}
-			}
-			counter += uormat_ii.nrows();
-		}
-	}
-	hopint = transform_uormat * hopint * transform_uormat.ct();
-
-	Mat<MatReal> h_correcation = h_inter;
-	for_Int(alpha, 0, p.norbit) {
-		for_Int(eta, 0, p.norbit) {
-			MatReal h_inter_bta_gmm(p.norbit, p.norbit, 0.);
-			for_Int(i, 0, p.norbit) {
-				for_Int(l, 0, p.norbit) {
-					h_inter_bta_gmm += transform_uormat[alpha][i] * transform_uormat.ct()[l][eta] * transform_uormat * h_inter[i][l] * transform_uormat.ct();
-				}
-			} 
-			h_correcation[alpha][eta] = h_inter_bta_gmm;
-		}
-	} 
-
-	VecReal coefficient_i(hopint.vec());
-	VecReal check_point(1, 0.); coefficient_i.reset(concat(check_point, coefficient_i));
-	// // {U, U':u d, U':u u, U':d d}
-	// VecReal orbital_correction({ p.U, p.Uprm, p.Uprm - p.jz, p.Uprm - p.jz });
-	VecReal orbital_correction(0);
-	for_Int(i, 0, h_correcation.vec().size()) orbital_correction.reset(concat(orbital_correction, h_correcation.vec()[i].vec()));
-
-	return concat(coefficient_i, orbital_correction);
-}
-*/
-
-// find all the combined number subspaces OR find all the combined number subspaces with special partical control.
-void NocSpace::find_combined_number_subspaces(const Int mode)
-{
-	Idx length_ECNS;			// length for each combined number subspaces(ECNS).
-	idx_div.push_back(dim);
-	VEC<VEC<Int> > a;
-	for_Int(row, 1, control_divs.nrows()) {
-		for_Int(col, 0, control_divs.ncols()) {
-			VEC<Int> one_div;
-			for_Int(spl, 0, control_divs[row][col] + 1) {
-				if(if_div_in_restraint(control_divs[0],col, control_divs[row][col],spl)) one_div.push_back(spl);
-			}
-			a.push_back(one_div);
-		}
-	}
-	Idx total_posibile(1);
-	for (const auto& u : a) total_posibile *= u.size();
-
-	if(mode == 1) {
-		for_Idx(x, 0, total_posibile) {
-			VecInt spilss_div_v(free_div_base_decode(x, a));
-			MatInt spilss_div(spilss_div_v.mat(control_divs.nrows() - 1, control_divs.ncols()));
-			if (ifin_NocSpace(spilss_div, nppso)) {
-				div.push_back(spilss_div);	length_ECNS = 1;
-				for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
-				dim += length_ECNS;			idx_div.push_back(dim);
-			}
-		}
-	}
-
-	if(mode == 0) {
-		for_Idx(x, 0, total_posibile) {
-			VecInt spilss_div_v(free_div_base_decode(x, a));
-			MatInt spilss_div(spilss_div_v.mat(control_divs.nrows() - 1, control_divs.ncols()));
-			if (ifin_NocSpace(spilss_div)) {
-				div.push_back(spilss_div);	length_ECNS = 1;
-				for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
-				dim += length_ECNS;			idx_div.push_back(dim);
-			}
-		}
-	}
-}
-
-void NocSpace::find_all_noc_subspaces_multi()
-{
-	Idx length_ECNS;						// length for each combined number subspaces(ECNS).
-	idx_div.push_back(dim);
-	VEC<VEC<Int> > a, s;
-
-	find_all_possible_state_by_col(a, s);
-	if(mm) PIO(NAV(s.size())+"   "+present());
-	IFS ifs(STR("judger"+nppso_str(nppso)+ ".bdat"));
-	VecInt judger_out(s.size());
-	if(!ifs) judger_out = multi_judger(s, a);
-	else biread(ifs, CharP(judger_out.p()), judger_out.szof());
-	// for (const auto &x : out)
-	for_Int(ii, 0, s.size()) if(judger_out[ii]) {
-		VEC<Int>& x = s[ii];
-		VecInt spilss_div_v(read_from_col_lable(x,a));
-		MatInt spilss_div_tr(spilss_div_v.mat(control_divs.ncols(), control_divs.nrows() - 1));
-		MatInt spilss_div(spilss_div_tr.tr());
-		// if (ifin_NocSpace(spilss_div, nppso)) 
-		div.push_back(spilss_div);
-		divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
-		length_ECNS = 1;
-		for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
-		dim += length_ECNS;
-		idx_div.push_back(dim);
-	}
-	// if(mm) {
-	// 	OFS ofs;	ofs.open("judger"+nppso_str(nppso)+ ".bdat");
-	// 	biwrite(ofs, CharP(judger_out.p()), judger_out.szof());
-	// 	ofs.close();
-	// }
-}
-
-void NocSpace::find_all_noc_subspaces()
-{
-	Idx length_ECNS;						// length for each combined number subspaces(ECNS).
-	idx_div.push_back(dim);
-	VEC<VEC<Int> > a;
-	VEC<VEC<Int> > s;
-
-
-	find_all_possible_state_by_col(a, s);
-	// if(mm) WRN(NAV(s.size()));
-	for (const auto& x : s) {
-		VecInt spilss_div_v(read_from_col_lable(x,a));
-		MatInt spilss_div_tr(spilss_div_v.mat(control_divs.ncols(), control_divs.nrows() - 1));
-		MatInt spilss_div(spilss_div_tr.tr());
-		if (ifin_NocSpace(spilss_div, nppso)) {
-			div.push_back(spilss_div);
-			divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
-			length_ECNS = 1;
-			for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
-			dim += length_ECNS;
-			idx_div.push_back(dim);
-		}
-	}
-			// WRN(NAV(dim));
-}
-
-void NocSpace::find_thought_noc_subspaces()
-{
-	Idx length_ECNS;						// length for each combined number subspaces(ECNS).
-	idx_div.push_back(dim);
-	VEC<VEC<Int> > a, s;
-
-	find_all_possible_state_by_nooc(a, s);
-	// if(mm) WRN(NAV(s.size()));
-	Vec<MatInt> spilss_divs = multi_judger_with_return(s, a);
-	// if(mm) WRN(NAV(spilss_divs.size()));
-	for_Int(k, 0, spilss_divs.size()) {
-		const MatInt & spilss_div(spilss_divs[k]);
-		div.push_back(spilss_div);
-		divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
-		length_ECNS = 1;
-		for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
-		dim += length_ECNS;
-		idx_div.push_back(dim);
-	}
-}
-
-void NocSpace::find_all_noc_subspaces_by_row()
-{
-	Idx length_ECNS;						// length for each combined number subspaces(ECNS).
-	idx_div.push_back(dim);
-	VEC<VEC<Int> > a, s;
-
-	find_all_possible_state_by_row(a, s);
-	if(mm) PIO(NAV(s.size())+"   "+present());
-	IFS ifs(STR("judger"+nppso_str(nppso)+ ".bdat"));
-	VecInt judger_out(s.size());
-	if(!ifs) judger_out = multi_judger_by_row(s, a);
-	else biread(ifs, CharP(judger_out.p()), judger_out.szof());
-	// for (const auto &x : out)
-	for_Int(ii, 0, s.size()) if(judger_out[ii]) {
-		MatInt spilss_div(read_from_col_lable(s[ii],a).mat( control_divs.nrows() - 1, control_divs.ncols()));
-		div.push_back(spilss_div);
-		divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
-		length_ECNS = 1;
-		for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
-		dim += length_ECNS;
-		idx_div.push_back(dim);
-	}
-	// if(mm) {
-	// 	OFS ofs;	ofs.open("judger"+nppso_str(nppso)+ ".bdat");
-	// 	biwrite(ofs, CharP(judger_out.p()), judger_out.szof());
-	// 	ofs.close();
-	// }
-}
-
-VecInt NocSpace::multi_judger(const VEC<VEC<int> >& s, const VEC<VEC<int> >& a) const{
-	VecPartition div_dim(mm.np(), mm.id(), s.size());
-	// MatInt div_dim()
-	VecInt splited_out(div_dim.len(), 0);
-	// VecInt temp_splited_out()
-	for_Int(i, div_dim.bgn(), div_dim.end()){
-		// VEC<Int> x(s[i]);
-		// VecInt spilss_div_v(read_from_col_lable(x,a));
-		// MatInt spilss_div_tr(spilss_div_v.mat(control_divs.ncols(), control_divs.nrows() - 1));
-		// MatInt spilss_div(spilss_div_tr.tr());
-		MatInt spilss_div(read_from_col_lable(s[i],a).mat(control_divs.ncols(), control_divs.nrows() - 1).tr());
-		if (ifin_NocSpace(spilss_div, nppso)) splited_out[i-div_dim.bgn()] = 1;
-		// if (ifin_NocSpace_judge_by_nppso(spilss_div, nppso)) splited_out[i-div_dim.bgn()] = 1;
-	}
-	VecInt out(s.size());
-	out = mm.Allgatherv(splited_out, div_dim);
-	return out;
-}
-
-VecInt NocSpace::multi_judger_by_row(const VEC<VEC<int> >& s, const VEC<VEC<int> >& a) const{
-	VecPartition div_dim(mm.np(), mm.id(), s.size());
-	VecInt splited_out(div_dim.len(), 0);
-	for_Int(i, div_dim.bgn(), div_dim.end()){
-		MatInt spilss_div(read_from_col_lable(s[i],a).mat( control_divs.nrows() - 1, control_divs.ncols()));
-		if (ifin_NocSpace(spilss_div, nppso)) splited_out[i-div_dim.bgn()] = 1;
-	}
-	VecInt out(s.size());
-	out = mm.Allgatherv(splited_out, div_dim);
-	return out;
-}
+//----------------------------- judge function -----------------------------
 
 Vec<MatInt> NocSpace::multi_judger_with_return(VEC<VEC<int> >& s, const VEC<VEC<int> >& a) const {
 	/*
@@ -376,7 +113,20 @@ Vec<MatInt> NocSpace::multi_judger_with_return(VEC<VEC<int> >& s, const VEC<VEC<
 	*/
 
 	VEC<MatInt> split_spilss_divs;
-	for_Int(i, 0, s.size()){
+	
+	if (p.if_norg_imp) {
+		VecPartition div_dim(mm.np(), mm.id(), s.size()); VecInt splited_judge(div_dim.len(), 0), judge(s.size());
+		for_Int(i, div_dim.bgn(), div_dim.end()) {
+			MatInt spilss_div(read_from_col_lable(s[i], a).mat(control_divs.ncols(), control_divs.nrows() - 1).tr());
+			if (ifin_NocSpace(spilss_div, nppso)) splited_judge[i - div_dim.bgn()] = 1;
+		}
+		judge = mm.Allgatherv(splited_judge, div_dim);
+
+		for_Int(i, 0, s.size()) if(judge[i]) {
+			MatInt spilss_div(read_from_col_lable(s[i], a).mat(control_divs.ncols(), control_divs.nrows() - 1).tr());
+			if (ifin_NocSpace(spilss_div, nppso)) split_spilss_divs.push_back(spilss_div);
+		}
+	} else for_Int(i, 0, s.size()) {
 		MatInt spilss_div(read_from_col_lable(s[i], a).mat(control_divs.ncols() - 2, control_divs.nrows() - 1).tr());
 		if (suit_NOOC(spilss_div, nppso)) {
 			// if (mm) WRN(NAV(spilss_div));
@@ -401,155 +151,40 @@ Vec<MatInt> NocSpace::multi_judger_with_return(VEC<VEC<int> >& s, const VEC<VEC<
 			}			
 		}
 	}
+
 	Vec<MatInt> out = Vec(split_spilss_divs);
 	return out;
 }
 
-VecInt NocSpace::read_from_col_lable(const VEC<Int> x, const VEC<VEC<Int> > a) const{
-	VecInt ren;
-	for (const auto &lable : x)
-	{
-		VecInt ren_i(ren);
-		VecInt col(a[lable]);
-		ren.reset(concat(ren_i, col));
+VecInt NocSpace::multi_judger(const VEC<VEC<int> >& s, const VEC<VEC<int> >& a) const{
+	VecPartition div_dim(mm.np(), mm.id(), s.size());
+	// MatInt div_dim()
+	VecInt splited_out(div_dim.len(), 0);
+	// VecInt temp_splited_out()
+	for_Int(i, div_dim.bgn(), div_dim.end()){
+		// VEC<Int> x(s[i]);
+		// VecInt spilss_div_v(read_from_col_lable(x,a));
+		// MatInt spilss_div_tr(spilss_div_v.mat(control_divs.ncols(), control_divs.nrows() - 1));
+		// MatInt spilss_div(spilss_div_tr.tr());
+		MatInt spilss_div(read_from_col_lable(s[i],a).mat(control_divs.ncols(), control_divs.nrows() - 1).tr());
+		if (ifin_NocSpace(spilss_div, nppso)) splited_out[i-div_dim.bgn()] = 1;
+		// if (ifin_NocSpace_judge_by_nppso(spilss_div, nppso)) splited_out[i-div_dim.bgn()] = 1;
 	}
-	return ren;
+	VecInt out(s.size());
+	out = mm.Allgatherv(splited_out, div_dim);
+	return out;
 }
 
-void NocSpace::find_all_possible_state_by_col(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const
-{
-	VEC<VEC<Int> > a_lable;
-	Int counter(0);
-	for_Int(col, 0, control_divs.ncols())
-	{
-		VEC<VEC<Int>> temp_a, a_rol_temp;
-		for_Int(row, 1, control_divs.nrows())
-		{
-			VEC<Int> one_div;
-			for_Int(spl, 0, control_divs[row][col] + 1)
-			{
-				if (if_div_in_restraint(control_divs[0], col, control_divs[row][col], spl))
-					one_div.push_back(spl);
-			}
-			a_rol_temp.push_back(one_div);
-		}
-		temp_a = cart_product(a_rol_temp);
-		for (const auto &one_divs : temp_a)	{
-			if (if_col_divs_in_restraint(control_divs[0][col], one_divs, col))
-				a.push_back(one_divs);
-		}
-		VEC<Int> a_lable_i;
-		for_Int(i, counter, a.size()){
-			a_lable_i.push_back(i);
-			counter++;
-		}
-		a_lable.push_back(a_lable_i);
-		// if(mm) WRN(NAV2( col,a.size()));
+VecInt NocSpace::multi_judger_by_row(const VEC<VEC<int> >& s, const VEC<VEC<int> >& a) const{
+	VecPartition div_dim(mm.np(), mm.id(), s.size());
+	VecInt splited_out(div_dim.len(), 0);
+	for_Int(i, div_dim.bgn(), div_dim.end()){
+		MatInt spilss_div(read_from_col_lable(s[i],a).mat( control_divs.nrows() - 1, control_divs.ncols()));
+		if (ifin_NocSpace(spilss_div, nppso)) splited_out[i-div_dim.bgn()] = 1;
 	}
-
-	s = cart_product_monitor_col(a_lable, a);
-	// s = cart_product(a_lable);
-}
-
-
-void NocSpace::find_all_possible_state_by_row(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const
-{
-	VEC<VEC<Int> > a_lable;
-	Int counter(0);
-	for_Int(row, 1, control_divs.nrows())
-	{
-		VEC<VEC<Int>> temp_a, a_row_temp;
-		for_Int(col, 0, control_divs.ncols())
-		{
-			VEC<Int> one_div;
-			for_Int(spl, 0, control_divs[row][col] + 1)
-			{
-				if (if_div_in_restraint(control_divs[0], col, control_divs[row][col], spl))
-					one_div.push_back(spl);
-			}
-			a_row_temp.push_back(one_div);
-		}
-		temp_a = cart_product(a_row_temp);
-		for (const auto &one_divs : temp_a)	{
-			if (if_row_divs_in_restraint(nppso[row-1], one_divs, sit_mat[row-1])) a.push_back(one_divs);
-		}
-		VEC<Int> a_lable_i;
-		for_Int(i, counter, a.size()){
-			a_lable_i.push_back(i);
-			counter++;
-		}
-		a_lable.push_back(a_lable_i);
-		// if(mm) WRN(NAV2( row,a.size()));
-	}
-
-	s = cart_product_monitor_row(a_lable, a);
-	// s = cart_product(a_lable);
-}
-
-void NocSpace::find_all_possible_state_by_nooc(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const
-{
-	VEC<VEC<Int> > a_lable;
-	Int counter(0);
-	for_Int(col, 0, control_divs.ncols()) if (p.if_norg_imp || (col != 0 && col != ndivs / 2))
-	{
-		VEC<VEC<Int>> temp_a, a_rol_temp;
-		for_Int(row, 1, control_divs.nrows())
-		{
-			VEC<Int> one_div;
-			for_Int(spl, 0, control_divs[row][col] + 1)
-			{
-				if (if_div_in_restraint(control_divs[0], col, control_divs[row][col], spl))
-					one_div.push_back(spl);
-			}
-			a_rol_temp.push_back(one_div);
-		}
-		temp_a = cart_product(a_rol_temp);
-		for (const auto &one_divs : temp_a)	{
-			if (if_col_divs_in_restraint(control_divs[0][col], one_divs, col))
-				{a.push_back(one_divs);
-				// if(mm)WRN(NAV(Vec(one_divs)));
-				}
-		}
-		VEC<Int> a_lable_i;
-		for_Int(i, counter, a.size()){
-			a_lable_i.push_back(i);
-			counter++;
-		}
-		a_lable.push_back(a_lable_i);
-		// if(mm) WRN(NAV2( col,a.size()));
-	}
-
-	// s = cart_product_monitor_col(a_lable, a);
-	s = cart_product(a_lable);
-}
-
-void NocSpace::find_all_possible_state(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const {
-	VEC<VEC<Int> > a_lable;
-	Int counter(0);
-	for_Int(col, 0, control_divs.ncols()) {
-		VEC<VEC<Int>> temp_a;
-		VEC<VEC<Int> > a_rol_temp;
-		for_Int(row, 1, control_divs.nrows()) {
-			VEC<Int> one_div;
-			for_Int(spl, 0, control_divs[row][col] + 1) {
-				if (if_div_in_restraint(control_divs[0], col, control_divs[row][col], spl))
-					one_div.push_back(spl);
-			}
-			a_rol_temp.push_back(one_div);
-		}
-		temp_a = cart_product(a_rol_temp);
-		for (const auto& one_divs : temp_a) {
-			if (if_col_divs_in_restraint(control_divs[0][col], one_divs, col))
-				a.push_back(one_divs);
-		}
-		VEC<Int> a_lable_i;
-		for_Int(i, counter, a.size()) {
-			a_lable_i.push_back(i);
-			counter++;
-		}
-		a_lable.push_back(a_lable_i);
-	}
-	s = cart_product(a_lable);
+	VecInt out(s.size());
+	out = mm.Allgatherv(splited_out, div_dim);
+	return out;
 }
 
 bool NocSpace::ifin_NocSpace(MatInt& spilss_div) const
@@ -714,68 +349,308 @@ bool NocSpace::if_row_divs_in_restraint(const Int& restraint, const VEC<Int>& di
 	return true;
 }
 
-Int NocSpace::wherein_NocSpace(const Int& h_i)const
+
+//----------------------------- space function before judge -----------------------------
+
+
+void NocSpace::find_all_possible_state_by_col(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const
 {
-	Int comdiv_idx(0);
-	for_Int(j, 0, idx_div.size()) {
-		if (h_i < idx_div[j]) {
-			comdiv_idx = j - 1;
-			break;
+	VEC<VEC<Int> > a_lable;
+	Int counter(0);
+	for_Int(col, 0, control_divs.ncols())
+	{
+		VEC<VEC<Int>> temp_a, a_rol_temp;
+		for_Int(row, 1, control_divs.nrows())
+		{
+			VEC<Int> one_div;
+			for_Int(spl, 0, control_divs[row][col] + 1)
+			{
+				if (if_div_in_restraint(control_divs[0], col, control_divs[row][col], spl))
+					one_div.push_back(spl);
+			}
+			a_rol_temp.push_back(one_div);
 		}
-		else if (h_i >= idx_div[idx_div.size() - 1]) comdiv_idx = idx_div.size() - 1;
+		temp_a = cart_product(a_rol_temp);
+		for (const auto &one_divs : temp_a)	{
+			if (if_col_divs_in_restraint(control_divs[0][col], one_divs, col))
+				a.push_back(one_divs);
+		}
+		VEC<Int> a_lable_i;
+		for_Int(i, counter, a.size()){
+			a_lable_i.push_back(i);
+			counter++;
+		}
+		a_lable.push_back(a_lable_i);
+		// if(mm) WRN(NAV2( col,a.size()));
 	}
-	return comdiv_idx;
+
+	s = cart_product_monitor_col(a_lable, a);
+	// s = cart_product(a_lable);
+}
+
+void NocSpace::find_all_possible_state_by_row(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const
+{
+	VEC<VEC<Int> > a_lable;
+	Int counter(0);
+	for_Int(row, 1, control_divs.nrows())
+	{
+		VEC<VEC<Int>> temp_a, a_row_temp;
+		for_Int(col, 0, control_divs.ncols())
+		{
+			VEC<Int> one_div;
+			for_Int(spl, 0, control_divs[row][col] + 1)
+			{
+				if (if_div_in_restraint(control_divs[0], col, control_divs[row][col], spl))
+					one_div.push_back(spl);
+			}
+			a_row_temp.push_back(one_div);
+		}
+		temp_a = cart_product(a_row_temp);
+		for (const auto &one_divs : temp_a)	{
+			if (if_row_divs_in_restraint(nppso[row-1], one_divs, sit_mat[row-1])) a.push_back(one_divs);
+		}
+		VEC<Int> a_lable_i;
+		for_Int(i, counter, a.size()){
+			a_lable_i.push_back(i);
+			counter++;
+		}
+		a_lable.push_back(a_lable_i);
+		// if(mm) WRN(NAV2( row,a.size()));
+	}
+
+	s = cart_product_monitor_row(a_lable, a);
+	// s = cart_product(a_lable);
+}
+
+void NocSpace::find_all_possible_state_by_nooc(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const
+{
+	VEC<VEC<Int> > a_lable;
+	Int counter(0);
+	for_Int(col, 0, control_divs.ncols()) if (p.if_norg_imp || (col != 0 && col != ndivs / 2))
+	{
+		VEC<VEC<Int>> temp_a, a_rol_temp;
+		for_Int(row, 1, control_divs.nrows())
+		{
+			VEC<Int> one_div;
+			for_Int(spl, 0, control_divs[row][col] + 1)
+			{
+				if (if_div_in_restraint(control_divs[0], col, control_divs[row][col], spl))
+					one_div.push_back(spl);
+			}
+			a_rol_temp.push_back(one_div);
+		}
+		temp_a = cart_product(a_rol_temp);
+		for (const auto &one_divs : temp_a)	{
+			if (if_col_divs_in_restraint(control_divs[0][col], one_divs, col))
+				{a.push_back(one_divs);
+				// if(mm)WRN(NAV(Vec(one_divs)));
+				}
+		}
+		VEC<Int> a_lable_i;
+		for_Int(i, counter, a.size()){
+			a_lable_i.push_back(i);
+			counter++;
+		}
+		a_lable.push_back(a_lable_i);
+		// if(mm) WRN(NAV2( col,a.size()));
+	}
+
+	// s = cart_product_monitor_col(a_lable, a);
+	s = cart_product(a_lable);
+}
+
+void NocSpace::find_all_possible_state(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const {
+	VEC<VEC<Int> > a_lable;
+	Int counter(0);
+	for_Int(col, 0, control_divs.ncols()) {
+		VEC<VEC<Int>> temp_a;
+		VEC<VEC<Int> > a_rol_temp;
+		for_Int(row, 1, control_divs.nrows()) {
+			VEC<Int> one_div;
+			for_Int(spl, 0, control_divs[row][col] + 1) {
+				if (if_div_in_restraint(control_divs[0], col, control_divs[row][col], spl))
+					one_div.push_back(spl);
+			}
+			a_rol_temp.push_back(one_div);
+		}
+		temp_a = cart_product(a_rol_temp);
+		for (const auto& one_divs : temp_a) {
+			if (if_col_divs_in_restraint(control_divs[0][col], one_divs, col))
+				a.push_back(one_divs);
+		}
+		VEC<Int> a_lable_i;
+		for_Int(i, counter, a.size()) {
+			a_lable_i.push_back(i);
+			counter++;
+		}
+		a_lable.push_back(a_lable_i);
+	}
+	s = cart_product(a_lable);
 }
 
 
-void NocSpace::print(std::ostream& os) const {
-#define nocspace_print(var, comment) print(os, NAME(var), STR(var), comment)
 
-	using namespace std;
-	Str NOOC = p.nooc_mode;
-	Str nppsos = nppso_str(nppso);
-	Int norbits = SUM(sit_mat);
-	Str rotation_imp = p.if_norg_imp ? "Yes" : "NO";
+//----------------------------- space function after judge -----------------------------
 
+void NocSpace::find_thought_noc_subspaces()
+{
+	Idx length_ECNS;						// length for each combined number subspaces(ECNS).
+	idx_div.push_back(dim);
+	VEC<VEC<Int> > a, s;
 
-	os << "// NORG setting" << endl;
-
-	// nocspace_print(ndivs, "The amount of divisons's number. ");
-	nocspace_print(dim, "the dimension of the Shortcut space.");
-	nocspace_print(nppsos, "The number of partical per spin orbital. ");
-	nocspace_print(nspa, "The amount of partical's number.");
-	nocspace_print(norbits, "The amount of orbital(imp+bath) number.");
-	nocspace_print(NOOC, "Correlation nature orbital occupation constraint.");
-	nocspace_print(rotation_imp, "if rotation impurity orbital is used. ");
-	// nocspace_print(ndivs, "The amount of divisons's number. ");
-	nocspace_print(control_divs, "to set the number of division and the shortcut restratin.");
-	// nocspace_print(h0, "transformed hopping integral");
-	// nocspace_print(mu, "-mu");
-	nocspace_print(p.U, "The Hubbard term U.");
-	nocspace_print(p.Uprm, "The U^' term");
-	nocspace_print(p.jz, "The hund coupling");
-	// u_hbd, p.U12, p.U12, p.U12
-
-	os << "// prmtr print end  " << present() << endl;
-
-#undef nocspace_print
+	if(p.if_norg_imp) find_all_possible_state_by_col(a, s);
+	else find_all_possible_state_by_nooc(a, s);
+	// if(mm) WRN(NAV(s.size()));
+	Vec<MatInt> spilss_divs = multi_judger_with_return(s, a);
+	// if(mm) WRN(NAV(spilss_divs.size()));
+	for_Int(k, 0, spilss_divs.size()) {
+		const MatInt & spilss_div(spilss_divs[k]);
+		div.push_back(spilss_div);
+		divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
+		length_ECNS = 1;
+		for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
+		dim += length_ECNS;
+		idx_div.push_back(dim);
+	}
 }
 
-// VEC<VEC<Int> > NocSpace::cart_product (const VEC<VEC<Int> >& v)const
-// {
-//     VEC<VEC<Int> > s = {{}};
-//     for (const auto& u : v) {
-//         VEC<VEC<Int> > r;
-//         for (const auto& x : s) {
-//             for (const auto y : u) {
-//                 r.push_back(x);
-//                 r.back().push_back(y);
-//             }
-//         }
-//         s = move(r);
-//     }
-//     return s;
-// }
+void NocSpace::find_all_noc_subspaces()
+{
+	Idx length_ECNS;						// length for each combined number subspaces(ECNS).
+	idx_div.push_back(dim);
+	VEC<VEC<Int> > a, s;
+
+
+	find_all_possible_state_by_col(a, s);
+	// if(mm) WRN(NAV(s.size()));
+	for (const auto& x : s) {
+		VecInt spilss_div_v(read_from_col_lable(x,a));
+		MatInt spilss_div_tr(spilss_div_v.mat(control_divs.ncols(), control_divs.nrows() - 1));
+		MatInt spilss_div(spilss_div_tr.tr());
+		if (ifin_NocSpace(spilss_div, nppso)) {
+			// if (mm) WRN(NAV(spilss_div));
+			div.push_back(spilss_div);
+			divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
+			length_ECNS = 1;
+			for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
+			dim += length_ECNS;
+			idx_div.push_back(dim);
+		}
+	}
+			// WRN(NAV(dim));
+}
+
+// find all the possible state speed up with MPI.
+void NocSpace::find_all_noc_subspaces_multi() {
+	Idx length_ECNS;						// length for each combined number subspaces(ECNS).
+	idx_div.push_back(dim);
+	VEC<VEC<Int> > a, s;
+
+	find_all_possible_state_by_col(a, s);
+	if(mm) PIO(NAV(s.size())+"   "+present());
+	IFS ifs(STR("judger"+nppso_str(nppso)+ ".bdat"));
+	VecInt judger_out(s.size());
+	if(!ifs) judger_out = multi_judger(s, a);
+	else biread(ifs, CharP(judger_out.p()), judger_out.szof());
+	// for (const auto &x : out)
+	for_Int(ii, 0, s.size()) if(judger_out[ii]) {
+		VEC<Int>& x = s[ii];
+		VecInt spilss_div_v(read_from_col_lable(x,a));
+		MatInt spilss_div_tr(spilss_div_v.mat(control_divs.ncols(), control_divs.nrows() - 1));
+		MatInt spilss_div(spilss_div_tr.tr());
+		// if (ifin_NocSpace(spilss_div, nppso)) 
+		div.push_back(spilss_div);
+		divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
+		length_ECNS = 1;
+		for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
+		dim += length_ECNS;
+		idx_div.push_back(dim);
+	}
+}
+
+void NocSpace::find_all_noc_subspaces_by_row()
+{
+	Idx length_ECNS;						// length for each combined number subspaces(ECNS).
+	idx_div.push_back(dim);
+	VEC<VEC<Int> > a, s;
+
+	find_all_possible_state_by_row(a, s);
+	if(mm) PIO(NAV(s.size())+"   "+present());
+	IFS ifs(STR("judger"+nppso_str(nppso)+ ".bdat"));
+	VecInt judger_out(s.size());
+	if(!ifs) judger_out = multi_judger_by_row(s, a);
+	else biread(ifs, CharP(judger_out.p()), judger_out.szof());
+	// for (const auto &x : out)
+	for_Int(ii, 0, s.size()) if(judger_out[ii]) {
+		MatInt spilss_div(read_from_col_lable(s[ii],a).mat( control_divs.nrows() - 1, control_divs.ncols()));
+		div.push_back(spilss_div);
+		divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
+		length_ECNS = 1;
+		for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
+		dim += length_ECNS;
+		idx_div.push_back(dim);
+	}
+	// if(mm) {
+	// 	OFS ofs;	ofs.open("judger"+nppso_str(nppso)+ ".bdat");
+	// 	biwrite(ofs, CharP(judger_out.p()), judger_out.szof());
+	// 	ofs.close();
+	// }
+}
+
+//----------------------------- (old/stable)space function -----------------------------
+
+// find all the combined number subspaces OR find all the combined number subspaces with special partical control.
+void NocSpace::find_combined_number_subspaces(const Int mode)
+{
+	Idx length_ECNS;			// length for each combined number subspaces(ECNS).
+	idx_div.push_back(dim);
+	VEC<VEC<Int> > a;
+	for_Int(row, 1, control_divs.nrows()) {
+		for_Int(col, 0, control_divs.ncols()) {
+			VEC<Int> one_div;
+			for_Int(spl, 0, control_divs[row][col] + 1) {
+				if(if_div_in_restraint(control_divs[0],col, control_divs[row][col],spl)) one_div.push_back(spl);
+			}
+			a.push_back(one_div);
+		}
+	}
+	Idx total_posibile(1);
+	for (const auto& u : a) total_posibile *= u.size();
+
+	if(mode == 1) {
+		for_Idx(x, 0, total_posibile) {
+			VecInt spilss_div_v(free_div_base_decode(x, a));
+			MatInt spilss_div(spilss_div_v.mat(control_divs.nrows() - 1, control_divs.ncols()));
+			if (ifin_NocSpace(spilss_div, nppso)) {
+				div.push_back(spilss_div);	length_ECNS = 1;
+				for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
+				dim += length_ECNS;			idx_div.push_back(dim);
+			}
+		}
+	}
+
+	if(mode == 0) {
+		for_Idx(x, 0, total_posibile) {
+			VecInt spilss_div_v(free_div_base_decode(x, a));
+			MatInt spilss_div(spilss_div_v.mat(control_divs.nrows() - 1, control_divs.ncols()));
+			if (ifin_NocSpace(spilss_div)) {
+				div.push_back(spilss_div);	length_ECNS = 1;
+				for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
+				dim += length_ECNS;			idx_div.push_back(dim);
+			}
+		}
+	}
+}
+
+//----------------------------- basic function -----------------------------
+
+void NocSpace::set_control()
+{
+	control_divs = p.control_divs;
+	sit_mat = control_divs.truncate_row(1, control_divs.nrows());
+	for_Int(j, 0, control_divs.ncols())for_Int(i, 1, control_divs.nrows()) orbital_divcnt[j] += control_divs[i][j];
+	// sit_mat.reset(control_divs.truncate_row(1, control_divs.nrows()));
+}
 
 VEC<VEC<Int> > NocSpace::cart_product_monitor_col (const VEC<VEC<Int> >& v, const VEC<VEC<Int> >& a)const
 {
@@ -822,8 +697,7 @@ VEC<VEC<Int> > NocSpace::cart_product_monitor_row (const VEC<VEC<Int> >& v, cons
     return s;
 }
 
-VecInt NocSpace::free_div_base_decode(Int idx, VEC<VEC<Int> > v) const
-{
+VecInt NocSpace::free_div_base_decode(Int idx, VEC<VEC<Int> > v) const {
 	VecInt base(v.size() + 1, 1);
 	for_Int(i, 1, base.size()) base[i] = base[i - 1] * v[i - 1].size();
 
@@ -831,4 +705,60 @@ VecInt NocSpace::free_div_base_decode(Int idx, VEC<VEC<Int> > v) const
 	for_Int(i, 0, rep.size()) rep[i] = v[i][(idx % base[i + 1]) / base[i]];
 	if (idx >= base[base.size() - 1]) ERR(STR("free div base decode error."));
 	return rep;
+}
+
+VecInt NocSpace::read_from_col_lable(const VEC<Int> x, const VEC<VEC<Int> > a) const {
+	VecInt ren;
+	for (const auto& lable : x) {
+		VecInt ren_i(ren);
+		VecInt col(a[lable]);
+		ren.reset(concat(ren_i, col));
+	}
+	return ren;
+}
+
+Int NocSpace::wherein_NocSpace(const Int& h_i)const
+{
+	Int comdiv_idx(0);
+	for_Int(j, 0, idx_div.size()) {
+		if (h_i < idx_div[j]) {
+			comdiv_idx = j - 1;
+			break;
+		}
+		else if (h_i >= idx_div[idx_div.size() - 1]) comdiv_idx = idx_div.size() - 1;
+	}
+	return comdiv_idx;
+}
+
+void NocSpace::print(std::ostream& os) const {
+#define nocspace_print(var, comment) print(os, NAME(var), STR(var), comment)
+
+	using namespace std;
+	Str NOOC = p.nooc_mode;
+	Str nppsos = nppso_str(nppso);
+	Int norbits = SUM(sit_mat);
+	Str rotation_imp = p.if_norg_imp ? "Yes" : "NO";
+
+
+	os << "// NORG setting" << endl;
+
+	// nocspace_print(ndivs, "The amount of divisons's number. ");
+	nocspace_print(dim, "the dimension of the Shortcut space.");
+	nocspace_print(nppsos, "The number of partical per spin orbital. ");
+	nocspace_print(nspa, "The amount of partical's number.");
+	nocspace_print(norbits, "The amount of orbital(imp+bath) number.");
+	nocspace_print(NOOC, "Correlation nature orbital occupation constraint.");
+	nocspace_print(rotation_imp, "if rotation impurity orbital is used. ");
+	// nocspace_print(ndivs, "The amount of divisons's number. ");
+	nocspace_print(control_divs, "to set the number of division and the shortcut restratin.");
+	// nocspace_print(h0, "transformed hopping integral");
+	// nocspace_print(mu, "-mu");
+	nocspace_print(p.U, "The Hubbard term U.");
+	nocspace_print(p.Uprm, "The U^' term");
+	nocspace_print(p.jz, "The hund coupling");
+	// u_hbd, p.U12, p.U12, p.U12
+
+	os << "// prmtr print end  " << present() << endl;
+
+#undef nocspace_print
 }

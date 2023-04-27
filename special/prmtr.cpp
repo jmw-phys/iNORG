@@ -59,8 +59,8 @@ void Prmtr::set_values() {
     nI2B = SUM(templet_control) - 1;                    // default value:
     nO2sets = SUM(templet_control);                     // default value:
     iter_max_norg = 99;                                 // default
-    // nooc_mode = STR("nooc");
-    nooc_mode = STR("cpnooc");
+    nooc_mode = STR("nooc");
+    // nooc_mode = STR("cpnooc");
     // nooc_mode = STR("cnooc");
     after_modify_prmtr();
     // npartical.reset(norg_sets, 0);
@@ -103,16 +103,21 @@ void Prmtr::according_nppso(const VecInt& nppsos) const
 {
     control_divs[0] = templet_restrain;
     for_Int(i, 0, norg_sets) {
-        control_divs[i + 1] = templet_control;
-        control_divs[i + 1][1] = nppsos[i] - ((control_divs[i + 1][0] + control_divs[i + 1][ndiv / 2]) / 2) \
-        - SUM(control_divs[i + 1].truncate(2, Int(ndiv / 2)));
-        control_divs[i + 1][ndiv-1] = (nI2B[i]+control_divs[i + 1][0] - nppsos[i])\
-        - Int_ROUND((control_divs[i + 1][0] + control_divs[i + 1][ndiv / 2]) / 2.) - SUM(control_divs[i + 1].truncate(2, Int(ndiv / 2)));
+        if (if_norg_imp) {
+            control_divs[i + 1] = templet_control;
+            
+        } else {
+            control_divs[i + 1] = templet_control;
+            control_divs[i + 1][1] = nppsos[i] - ((control_divs[i + 1][0] + control_divs[i + 1][ndiv / 2]) / 2) \
+                - SUM(control_divs[i + 1].truncate(2, Int(ndiv / 2)));
+            control_divs[i + 1][ndiv - 1] = (nI2B[i] + control_divs[i + 1][0] - nppsos[i])\
+                - Int_ROUND((control_divs[i + 1][0] + control_divs[i + 1][ndiv / 2]) / 2.) - SUM(control_divs[i + 1].truncate(2, Int(ndiv / 2)));
 
-        if (control_divs[i + 1][1] < 0 && control_divs[i + 1][2] > 0) {
-            int t = -control_divs[i + 1][1];
-            control_divs[i + 1][2] -= t; control_divs[i + 1][ndiv-2] += t; 
-            control_divs[i + 1][ndiv-1] += -t; control_divs[i + 1][1] = 0; 
+            if (control_divs[i + 1][1] < 0 && control_divs[i + 1][2] > 0) {
+                int t = -control_divs[i + 1][1];
+                control_divs[i + 1][2] -= t; control_divs[i + 1][ndiv - 2] += t;
+                control_divs[i + 1][ndiv - 1] += -t; control_divs[i + 1][1] = 0;
+            }
         }
     }
 }
@@ -129,8 +134,13 @@ void Prmtr::according_controler(const Vec<VecInt>& controler, const VecInt& or_d
 void Prmtr::recalc_partical_number() const
 {
     npartical.reset(norg_sets, 0);
-    for_Int(i, 0, norg_sets) npartical[i] = SUM(control_divs[i + 1].truncate(1, Int(ndiv / 2))) + \
-    (control_divs[i + 1][0] + control_divs[i + 1][ndiv / 2]) / 2;
+    for_Int(i, 0, norg_sets) if (if_norg_imp) {
+        npartical[i] = SUM(control_divs[i + 1].truncate(0, Int(ndiv / 2)));
+
+    } else {
+        npartical[i] = SUM(control_divs[i + 1].truncate(1, Int(ndiv / 2))) + \
+            (control_divs[i + 1][0] + control_divs[i + 1][ndiv / 2]) / 2;
+    }
 }
 
 void Prmtr::change_the_norg_restrain_and_div(VecInt new_restrain, VecInt new_control) const {

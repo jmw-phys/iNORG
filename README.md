@@ -201,3 +201,8 @@ Version: v1.1.03 @ 2023.04.27
     finished: 1.densitymatirx.cpp: Fixed the bug for dm build; 2.Using the col restrain to calc the dim; 3. fix the cpnooc and cnooc mode.
     next do : 1.update the bethe lattice model.
     thinking: (same as prev)
+
+Version: v1.1.04 @ 2023.04.27
+    finished: Fix the bug for no-Rimp mode, R mode ED benchmarked with v1.0.37 and get the energy also same as v1.0.07.
+    next do : 1.update the bethe lattice model.
+    thinking: (same as prev)
