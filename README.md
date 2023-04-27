@@ -196,3 +196,8 @@ Version: v1.1.02 @ 2023.04.26
     finished: 1. finish the first version of the NORG for using [-1 -2 -3  3  2  1] restrain; 
     next do : 1.modify the code for using the col restrain to calc the dim; 2.debug the code for the cpnooc mode.
     thinking: How to update the bethe lattice model? and how to study the half-filling hubbard model case for multi-band?
+
+Version: v1.1.03 @ 2023.04.27
+    finished: 1.densitymatirx.cpp: Fixed the bug for dm build; 2.Using the col restrain to calc the dim; 3. fix the cpnooc and cnooc mode.
+    next do : 1.update the bethe lattice model.
+    thinking: (same as prev)

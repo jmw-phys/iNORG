@@ -112,7 +112,7 @@ VEC<MatReal> DensityMat::find_one_electron_density_matrix(const MatReal& state, 
 
 	VEC<MatReal> D_splited;
 	for_Int(i, 0, p.nI2B.size()) {
-		MatReal temp(p.nI2B[i] + scsp.sit_mat[i][0], p.nI2B[i] + scsp.sit_mat[i][0], 0.);
+		MatReal temp(p.nO2sets[i], p.nO2sets[i], 0.);
 		D_splited.push_back(std::move(temp));
 	}
 
@@ -125,7 +125,7 @@ VEC<MatReal> DensityMat::find_one_electron_density_matrix(const MatReal& state, 
 			Int check_point(0);
 			for_Int(i, 0, p.nI2B.size()) {
 				check_point = 0;
-				if (row_n >= 0 && row_n < (p.nI2B[i] + scsp.sit_mat[i][0]) && col_n >= 0 && col_n < (p.nI2B[i] + scsp.sit_mat[i][0]))
+				if (row_n >= 0 && row_n < (p.nO2sets[i]) && col_n >= 0 && col_n < (p.nO2sets[i]))
 				{
 					Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
 					Real amplitude = coefficient_comm * state_eff[hop_op[0][pos] + row_H.bgn()] * state_eff[hop_op[1][pos]];
@@ -134,8 +134,8 @@ VEC<MatReal> DensityMat::find_one_electron_density_matrix(const MatReal& state, 
 					break;
 				}
 				else {
-					row_n -= p.nI2B[i] + scsp.sit_mat[i][0];
-					col_n -= p.nI2B[i] + scsp.sit_mat[i][0];
+					row_n -= p.nO2sets[i];
+					col_n -= p.nO2sets[i];
 				}
 			}
 #ifdef _ASSERTION_
@@ -161,7 +161,7 @@ Real DensityMat::sum_off_diagonal() const{
 	Real sum = 0 ;
 	auto test_dm(dm);
 	for_Int(i, 0, p.norg_sets) if(i%2 == 0) {
-		MatReal test_dm_bath = test_dm[i].truncate(scsp.sit_mat[i][0], scsp.sit_mat[i][0], p.nI2B[i] + scsp.sit_mat[i][0], p.nI2B[i] + scsp.sit_mat[i][0]);
+		MatReal test_dm_bath = test_dm[i].truncate(scsp.sit_mat[i][0], scsp.sit_mat[i][0], p.nO2sets[i], p.nO2sets[i]);
 		for_Int(r, 0, test_dm_bath.nrows()) test_dm_bath[r][r] -= test_dm_bath[r][r];
 		VecReal vectemp(test_dm_bath.vec());
 		// if(mm) WRN(NAV(test_dm_bath));
@@ -203,7 +203,7 @@ void DensityMat::find_density_matrix_by_Crrvec(VEC < MatReal>& D_splited, const 
 			Int check_point(0);
 			for_Int(i, 0, p.nI2B.size()) {
 				check_point = 0;
-				if (row_n >= 0 && row_n < (p.nI2B[i] + scsp.sit_mat[i][0]) && col_n >= 0 && col_n < (p.nI2B[i] + scsp.sit_mat[i][0]))
+				if (row_n >= 0 && row_n < (p.nO2sets[i]) && col_n >= 0 && col_n < (p.nO2sets[i]))
 				{
 					Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
 					for_Int(j, 0, corstate_i.correct_vecs.nrows()){
@@ -216,8 +216,8 @@ void DensityMat::find_density_matrix_by_Crrvec(VEC < MatReal>& D_splited, const 
 					break;
 				}
 				else {
-					row_n -= p.nI2B[i] + scsp.sit_mat[i][0];
-					col_n -= p.nI2B[i] + scsp.sit_mat[i][0];
+					row_n -= p.nO2sets[i];
+					col_n -= p.nO2sets[i];
 				}
 			}
 #ifdef _ASSERTION_
@@ -235,7 +235,7 @@ VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& stat
 
 	VEC<MatReal> D_splited;
 	for_Int(i, 0, p.nI2B.size()) {
-		MatReal temp(p.nI2B[i] + scsp.sit_mat[i][0], p.nI2B[i] + scsp.sit_mat[i][0], 0.);
+		MatReal temp(p.nO2sets[i], p.nO2sets[i], 0.);
 		D_splited.push_back(std::move(temp));
 	}
 	// for the ground state's D.
@@ -248,7 +248,7 @@ VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& stat
 			Int check_point(0);
 			for_Int(i, 0, p.nI2B.size()) {
 				check_point = 0;
-				if (row_n >= 0 && row_n < (p.nI2B[i] + scsp.sit_mat[i][0]) && col_n >= 0 && col_n < (p.nI2B[i] + scsp.sit_mat[i][0]))
+				if (row_n >= 0 && row_n < (p.nO2sets[i]) && col_n >= 0 && col_n < (p.nO2sets[i]))
 				{
 					Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
 					Real amplitude = coefficient_comm * state_eff[hop_op[0][pos] + row_H.bgn()] * state_eff[hop_op[1][pos]];
@@ -257,8 +257,8 @@ VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& stat
 					break;
 				}
 				else {
-					row_n -= p.nI2B[i] + scsp.sit_mat[i][0];
-					col_n -= p.nI2B[i] + scsp.sit_mat[i][0];
+					row_n -= p.nO2sets[i];
+					col_n -= p.nO2sets[i];
 				}
 			}
 #ifdef _ASSERTION_
@@ -297,7 +297,7 @@ VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& stat
 
 	VEC<MatReal> D_splited;
 	for_Int(i, 0, p.nI2B.size()) {
-		MatReal temp(p.nI2B[i] + scsp.sit_mat[i][0], p.nI2B[i] + scsp.sit_mat[i][0], 0.);
+		MatReal temp(p.nO2sets[i], p.nO2sets[i], 0.);
 		D_splited.push_back(std::move(temp));
 	}
 	// for the ground state's D.
@@ -310,7 +310,7 @@ VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& stat
 			Int check_point(0);
 			for_Int(i, 0, p.nI2B.size()) {
 				check_point = 0;
-				if (row_n >= 0 && row_n < (p.nI2B[i] + scsp.sit_mat[i][0]) && col_n >= 0 && col_n < (p.nI2B[i] + scsp.sit_mat[i][0]))
+				if (row_n >= 0 && row_n < (p.nO2sets[i]) && col_n >= 0 && col_n < (p.nO2sets[i]))
 				{
 					Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
 					Real amplitude = coefficient_comm * state_eff[hop_op[0][pos] + row_H.bgn()] * state_eff[hop_op[1][pos]];
@@ -319,8 +319,8 @@ VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& stat
 					break;
 				}
 				else {
-					row_n -= p.nI2B[i] + scsp.sit_mat[i][0];
-					col_n -= p.nI2B[i] + scsp.sit_mat[i][0];
+					row_n -= p.nO2sets[i];
+					col_n -= p.nO2sets[i];
 				}
 			}
 #ifdef _ASSERTION_
@@ -360,7 +360,7 @@ VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& stat
 
 	VEC<MatReal> D_splited;
 	for_Int(i, 0, p.nI2B.size()) {
-		MatReal temp(p.nI2B[i] + scsp.sit_mat[i][0], p.nI2B[i] + scsp.sit_mat[i][0], 0.);
+		MatReal temp(p.nO2sets[i], p.nO2sets[i], 0.);
 		D_splited.push_back(std::move(temp));
 	}
 	// for the ground state's D.
@@ -373,7 +373,7 @@ VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& stat
 			Int check_point(0);
 			for_Int(i, 0, p.nI2B.size()) {
 				check_point = 0;
-				if (row_n >= 0 && row_n < (p.nI2B[i] + scsp.sit_mat[i][0]) && col_n >= 0 && col_n < (p.nI2B[i] + scsp.sit_mat[i][0]))
+				if (row_n >= 0 && row_n < (p.nO2sets[i]) && col_n >= 0 && col_n < (p.nO2sets[i]))
 				{
 					Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
 					Real amplitude = coefficient_comm * state_eff[hop_op[0][pos] + row_H.bgn()] * state_eff[hop_op[1][pos]];
@@ -382,8 +382,8 @@ VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& stat
 					break;
 				}
 				else {
-					row_n -= p.nI2B[i] + scsp.sit_mat[i][0];
-					col_n -= p.nI2B[i] + scsp.sit_mat[i][0];
+					row_n -= p.nO2sets[i];
+					col_n -= p.nO2sets[i];
 				}
 			}
 #ifdef _ASSERTION_

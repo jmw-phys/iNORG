@@ -20,7 +20,7 @@ public:
 	const Prmtr& p;					// parameters
 	Idx ndivs;						// The amount of divisons's number. 
 	MatInt control_divs;			// to set the number of division and the shortcut restratin.
-	VecInt shortcut_countvec;		// the SUM in row for each colum.
+	VecInt orbital_divcnt;		// the SUM in row for each colum.
 	MatInt sit_mat;					// spinless - orbits number in each division.
 	Idx nspa;						// The amount of partical's number.
 	VecInt nppso;					// nppso mean: number of partical per spin orbital.
@@ -71,19 +71,21 @@ private:
 
 	bool check_each_column(const Int& col_pos, const VecInt& div_colsum) const {
 		if (p.if_norg_imp) {
-			if (col_pos < div_colsum.size() / 2 && div_colsum[col_pos] >= shortcut_countvec[col_pos] + control_divs[0][col_pos] && div_colsum[col_pos] <= shortcut_countvec[col_pos]) return true;
+			if (col_pos < div_colsum.size() / 2 && div_colsum[col_pos] >= orbital_divcnt[col_pos] + control_divs[0][col_pos] && div_colsum[col_pos] <= orbital_divcnt[col_pos]) return true;
 			if (col_pos >= div_colsum.size() / 2 && div_colsum[col_pos] >= 0 && div_colsum[col_pos] <= control_divs[0][col_pos]) return true;
 		}
 		else {
 			if (col_pos == div_colsum.size() / 2) return true;
-			if (col_pos < div_colsum.size() / 2 && div_colsum[col_pos] >= shortcut_countvec[col_pos] + control_divs[0][col_pos] && div_colsum[col_pos] <= shortcut_countvec[col_pos]) return true;
+			if (col_pos < div_colsum.size() / 2 && div_colsum[col_pos] >= orbital_divcnt[col_pos] + control_divs[0][col_pos] && div_colsum[col_pos] <= orbital_divcnt[col_pos]) return true;
 			if (col_pos > div_colsum.size() / 2 && div_colsum[col_pos] >= 0 && div_colsum[col_pos] <= control_divs[0][col_pos]) return true;
 		}
 		return false;
 	}
 
 	bool check_correlated_column(const Int& col_pos, const VecInt& div_colsum) const {
-		if (shortcut_countvec[col_pos] - div_colsum[col_pos] + div_colsum[div_colsum.size() - col_pos] <= control_divs[0][div_colsum.size() - col_pos]) return false;
+		// if(mm) WRN(NAV4(col_pos, div_colsum.size() - col_pos - 1, control_divs[0][col_pos],control_divs[0][div_colsum.size() - col_pos - 1]))
+		Int change_nhole = orbital_divcnt[col_pos] - div_colsum[col_pos], change_nelec = div_colsum[div_colsum.size() - col_pos - 1];
+		if (change_nhole + change_nelec <= control_divs[0][div_colsum.size() - col_pos - 1]) return false;
 		else return true;
 	}
 

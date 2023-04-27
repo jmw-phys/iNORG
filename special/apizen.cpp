@@ -34,11 +34,11 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 		// IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
 		// if (ifs_a) for_Int(i, 0, norg.uormat.size()) biread(ifs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
 		norg.up_date_h0_to_solve(imp.impH, 1);
-		if (mm) {
-			OFS ofs_a;
-			ofs_a.open("ru" + norg.scsp.nppso_str() + ".bi");
-			for_Int(i, 0, norg.uormat.size()) biwrite(ofs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
-		}		
+		// if (mm) {
+		// 	OFS ofs_a;
+		// 	ofs_a.open("ru" + norg.scsp.nppso_str() + ".bi");
+		// 	for_Int(i, 0, norg.uormat.size()) biwrite(ofs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
+		// }		
 	}
 	// NORG norg(choose_cauculation_style("ful_pcl_sch", imp));
 	// NORG norg(choose_cauculation_style("one_pcl_test", imp));

@@ -12,7 +12,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const Int& NumberSpa) :
 	mm(mm_i), p(prmtr_i), ndivs(prmtr_i.ndiv), nspa(NumberSpa), sit_mat(p.norg_sets, prmtr_i.ndiv, 0),
 	hopint(nob, nob, 0.),
-	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), shortcut_countvec(prmtr_i.ndiv, 0), dim(0)
+	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), orbital_divcnt(prmtr_i.ndiv, 0), dim(0)
 {
 	set_control();
 	find_combined_number_subspaces();
@@ -23,7 +23,7 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const Int& NumberSpa
 NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const Int& NumberSpa) :
  	mm(mm_i), p(prmtr_i), ndivs(prmtr_i.ndiv), nspa(NumberSpa), sit_mat(p.norg_sets, prmtr_i.ndiv, 0),
 	hopint(nob, nob, 0.), coefficient(int(std::pow(nob,4) + hopint.size() + 1), 0.),
- 	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), shortcut_countvec(prmtr_i.ndiv, 0), dim(0)
+ 	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), orbital_divcnt(prmtr_i.ndiv, 0), dim(0)
 {
  	set_control();
  	find_combined_number_subspaces();
@@ -33,7 +33,7 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const Int& NumberSpa
 NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_i) :
 	mm(mm_i), p(prmtr_i), ndivs(prmtr_i.ndiv), nspa(SUM(nppso_i)), sit_mat(p.norg_sets, prmtr_i.ndiv, 0),
 	hopint(nob, nob, 0.), coefficient(int(std::pow(nob,4) + hopint.size() + 1), 0.), nppso(nppso_i),
-	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), shortcut_countvec(prmtr_i.ndiv, 0), dim(0)
+	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), orbital_divcnt(prmtr_i.ndiv, 0), dim(0)
 {
 	set_control();
 	// find_combined_number_subspaces(1);
@@ -41,6 +41,7 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_
 	// find_all_noc_subspaces_by_row();
 	// find_thought_noc_subspaces();
 	find_all_noc_subspaces();// ! test for the CDMFT version.
+	
 
 	if(mm) PIO("Begin find_combined_number_subspaces()"+ NAV(dim)+"   "+present());
 }
@@ -49,7 +50,7 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_
 NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_i, Str tab_name) :
 	mm(mm_i), p(prmtr_i), ndivs(prmtr_i.ndiv), nspa(SUM(nppso_i)), sit_mat(p.norg_sets, prmtr_i.ndiv, 0),
 	hopint(nob, nob, 0.), coefficient(int(std::pow(nob,4) + hopint.size() + 1), 0.), nppso(nppso_i),
-	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), shortcut_countvec(prmtr_i.ndiv, 0), dim(read_the_Tab(tab_name))
+	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), orbital_divcnt(prmtr_i.ndiv, 0), dim(read_the_Tab(tab_name))
 {
 	set_control();
 	if(mm) WRN("Begin find_combined_number_subspaces()"+ NAV(dim));
@@ -59,7 +60,7 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_
 NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_i, const Tab& tab) :
 	mm(mm_i), p(prmtr_i), ndivs(prmtr_i.ndiv), nspa(SUM(nppso_i)), sit_mat(p.norg_sets, prmtr_i.ndiv, 0),
 	hopint(nob, nob, 0.), coefficient(int(std::pow(nob,4) + hopint.size() + 1), 0.), nppso(nppso_i),
-	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), shortcut_countvec(prmtr_i.ndiv, 0), dim(tab[0].size())
+	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), orbital_divcnt(prmtr_i.ndiv, 0), dim(tab[0].size())
 {
 	set_control();
 	if(mm) WRN("Begin find_combined_number_subspaces()"+ NAV(dim));
@@ -69,7 +70,7 @@ void NocSpace::set_control()
 {
 	control_divs = p.control_divs;
 	sit_mat = control_divs.truncate_row(1, control_divs.nrows());
-	for_Int(j, 0, control_divs.ncols())for_Int(i, 1, control_divs.nrows()) shortcut_countvec[j] += control_divs[i][j];
+	for_Int(j, 0, control_divs.ncols())for_Int(i, 1, control_divs.nrows()) orbital_divcnt[j] += control_divs[i][j];
 	// sit_mat.reset(control_divs.truncate_row(1, control_divs.nrows()));
 }
 
@@ -231,7 +232,8 @@ void NocSpace::find_all_noc_subspaces()
 	VEC<VEC<Int> > a;
 	VEC<VEC<Int> > s;
 
-	find_all_possible_state(a, s);
+
+	find_all_possible_state_by_col(a, s);
 	// if(mm) WRN(NAV(s.size()));
 	for (const auto& x : s) {
 		VecInt spilss_div_v(read_from_col_lable(x,a));
@@ -442,7 +444,7 @@ void NocSpace::find_all_possible_state_by_col(VEC<VEC<Int> >& a, VEC<VEC<Int> >&
 			counter++;
 		}
 		a_lable.push_back(a_lable_i);
-		if(mm) WRN(NAV2( col,a.size()));
+		// if(mm) WRN(NAV2( col,a.size()));
 	}
 
 	s = cart_product_monitor_col(a_lable, a);
@@ -556,10 +558,10 @@ bool NocSpace::ifin_NocSpace(MatInt& spilss_div) const
 		for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) if (spilss_div[i - 1][j] < 0 || spilss_div[i - 1][j] > control_divs[i][j]) return false;
 		VecInt spilsdiv_countvec(ndivs, 0);
 		for_Int(j, 0, spilss_div.ncols())for_Int(i, 0, spilss_div.nrows()) spilsdiv_countvec[j] += spilss_div[i][j];
-		if (spilsdiv_countvec[1] >= shortcut_countvec[1] + control_divs[0][1] && \
-			spilsdiv_countvec[1] <= shortcut_countvec[1] && \
-			spilsdiv_countvec[2] >= shortcut_countvec[2] + control_divs[0][2] && \
-			spilsdiv_countvec[2] <= shortcut_countvec[2] && \
+		if (spilsdiv_countvec[1] >= orbital_divcnt[1] + control_divs[0][1] && \
+			spilsdiv_countvec[1] <= orbital_divcnt[1] && \
+			spilsdiv_countvec[2] >= orbital_divcnt[2] + control_divs[0][2] && \
+			spilsdiv_countvec[2] <= orbital_divcnt[2] && \
 			spilsdiv_countvec[4] >= 0 && \
 			spilsdiv_countvec[4] <= control_divs[0][4] && \
 			spilsdiv_countvec[5] >= 0 && \
@@ -647,18 +649,18 @@ bool NocSpace::ifin_NocSpace_more_strict(MatInt& spilss_div, const VecInt& nppso
 		VecInt spilsdiv_countvec(ndivs, 0);
 		for_Int(j, 0, spilss_div.ncols())for_Int(i, 0, spilss_div.nrows()) spilsdiv_countvec[j] += spilss_div[i][j];
 		/*
-		if (spilsdiv_countvec[1] >= shortcut_countvec[1] + control_divs[0][1] && \
-			spilsdiv_countvec[1] <= shortcut_countvec[1] && \
-			spilsdiv_countvec[2] >= shortcut_countvec[2] + control_divs[0][2] && \
-			spilsdiv_countvec[2] <= shortcut_countvec[2] && \
+		if (spilsdiv_countvec[1] >= orbital_divcnt[1] + control_divs[0][1] && \
+			spilsdiv_countvec[1] <= orbital_divcnt[1] && \
+			spilsdiv_countvec[2] >= orbital_divcnt[2] + control_divs[0][2] && \
+			spilsdiv_countvec[2] <= orbital_divcnt[2] && \
 			spilsdiv_countvec[4] >= 0 && \
 			spilsdiv_countvec[4] <= control_divs[0][4] && \
 			spilsdiv_countvec[5] >= 0 && \
 			spilsdiv_countvec[5] <= control_divs[0][5] && \
-			shortcut_countvec[1] - spilsdiv_countvec[1] + spilsdiv_countvec[5] <= control_divs[0][5]) return true;
+			orbital_divcnt[1] - spilsdiv_countvec[1] + spilsdiv_countvec[5] <= control_divs[0][5]) return true;
 		*/
 		for_Int(i, 1, ndivs) if(check_each_column(i, spilsdiv_countvec)) return false;
-	//  && shortcut_countvec[1] - spilsdiv_countvec[1] + spilsdiv_countvec[5] <= control_divs[0][5]
+	//  && orbital_divcnt[1] - spilsdiv_countvec[1] + spilsdiv_countvec[5] <= control_divs[0][5]
 		return true;
 	}
 	else return false;
@@ -688,11 +690,11 @@ bool NocSpace::if_col_divs_in_restraint(const Int& restraint, const VEC<Int>& di
 {
 	VecInt divcol(divcol_i);	
 	if(p.if_norg_imp){
-		if(col_idx < ndivs / 2 && SUM(divcol) >= (shortcut_countvec[col_idx] + restraint)) return true;
+		if(col_idx < ndivs / 2 && SUM(divcol) >= (orbital_divcnt[col_idx] + restraint)) return true;
 		if(col_idx >= ndivs / 2 && SUM(divcol) <= restraint ) return true;
 	} else {
 		if (col_idx == 0 || col_idx == ndivs / 2) return true;
-		if(col_idx < ndivs / 2 && SUM(divcol) >= (shortcut_countvec[col_idx] + restraint)) return true;
+		if(col_idx < ndivs / 2 && SUM(divcol) >= (orbital_divcnt[col_idx] + restraint)) return true;
 		if(col_idx > ndivs / 2 && SUM(divcol) <= restraint ) return true;
 	}
 	return false;

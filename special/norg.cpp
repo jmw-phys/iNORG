@@ -49,6 +49,8 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	
 	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 
+	// if (mm) WRN(NAV2(oneedm.dm[0], uormat[0]));
+
 	oneedm.update(); final_ground_state = oneedm.ground_state;
 	// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 	groune_lst = oneedm.groundstate_energy;
@@ -57,6 +59,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 		// write_norg_info(iter_norg_cnt);
 		// write_state_info(iter_norg_cnt);
 	}
+	if (mm) WRN(NAV2(oneedm.dm[0], uormat[0]));
 	
 	while (iter_norg_cnt < p.iter_max_norg && !converged()) {
 		iter_norg_cnt++;
@@ -66,7 +69,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 			// if(mm) WRN(NAV(see_MatReal(uormat_new)));
 			for_Int(i, 0, uormat.size()) uormat[i] = uormat_new[i] * uormat[i];
 		}
-		// if (mm) WRN(NAV2(oneedm.dm[0], uormat[0]));
+		if (mm) WRN(NAV2(oneedm.dm[0], uormat[0]));
 		set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 		// if (mm)PIO("ground_state size" + NAV(oneedm.ground_state.size()));
 		groune_pre = groune_lst;	occnum_pre = occnum_lst;
