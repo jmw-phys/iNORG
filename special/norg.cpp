@@ -45,11 +45,8 @@ NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, Str tab_name) :
 void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	// oneedm.write_the_multiTab("0.25-");
 	if(mm) std::cout << std::endl;						// blank line
-	// if (mm) WRN(NAV2(impH_i.first,scsp.dim));
 	impH = impH_i;
-	// if (mm) WRN(NAV(uormat[0]));
 	
-	// scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);
 	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 
 	oneedm.update(); final_ground_state = oneedm.ground_state;
@@ -61,7 +58,6 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 		// write_state_info(iter_norg_cnt);
 	}
 	
-	// while (1) {
 	while (iter_norg_cnt < p.iter_max_norg && !converged()) {
 		iter_norg_cnt++;
 		if (mm) PIO("The iteration counting: " + NAV2(iter_norg_cnt, norg_stab_cnt));
@@ -71,7 +67,6 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 			for_Int(i, 0, uormat.size()) uormat[i] = uormat_new[i] * uormat[i];
 		}
 		// if (mm) WRN(NAV2(oneedm.dm[0], uormat[0]));
-		// scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);	//if (mm) scsp.print();
 		set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 		// if (mm)PIO("ground_state size" + NAV(oneedm.ground_state.size()));
 		groune_pre = groune_lst;	occnum_pre = occnum_lst;
@@ -463,14 +458,15 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 
 	//! share memory mode.  TESTED :)
 	if (p.if_norg_imp) {
+		Int n3(n * n * n);
 		MatReal t_m; VecReal ijkl(impH_i.second), t_v;
 		VecReal& ijkL(ijkl),IjkL(ijkl),kLIj(ijkl),KLIj(ijkl),KLIJ(ijkl),IJKL(ijkl);
 		// The tensor rotation as follows:
-		ijkL = t_v.sm(t_m.sm(n * n * n, n, ijkl) * full_uormat.ct());
-		IjkL = t_v.sm(full_uormat * t_m.sm(n, n * n * n, ijkL));
+		ijkL = t_v.sm(t_m.sm(n3, n, ijkl) * full_uormat.ct());
+		IjkL = t_v.sm(full_uormat * t_m.sm(n, n3, ijkL));
 		kLIj = t_v.sm(t_m.sm(n * n, n * n, IjkL).tr());
-		KLIj = t_v.sm(full_uormat * t_m.sm(n, n * n * n, kLIj));
-		KLIJ = t_v.sm(t_m.sm(n * n * n, n, KLIj) * full_uormat.ct());
+		KLIj = t_v.sm(full_uormat * t_m.sm(n, n3, kLIj));
+		KLIJ = t_v.sm(t_m.sm(n3, n, KLIj) * full_uormat.ct());
 		IJKL = t_v.sm(t_m.sm(n * n, n * n, KLIJ).tr());
 		
 		oper_i = concat(concat(VecReal{ 0. }, t_v.sm(hopint)), IJKL);

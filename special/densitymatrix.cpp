@@ -27,6 +27,81 @@ MatReal DensityMat::one_electron_density_matrix(Int wish_nev)
 }
 */
 
+//----------------------------- basic function -----------------------------
+
+VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
+{
+	VEC<MatReal> rotaionU;
+	if(p.if_norg_imp){
+		rotaionU = dm;
+		VEC<VecReal> evalue;
+		for_Int(i, 0, p.norg_sets) {
+			VecReal evalu_i(rotaionU[i].nrows(), 0.);
+			heevr(rotaionU[i], evalu_i); rotaionU[i] = rotaionU[i].tr(); evalue.push_back(std::move(evalu_i));
+			for_Int(j, 0, (p.nO2sets[i] / 2.)) {
+				SWAP(rotaionU[i][j], rotaionU[i][p.nO2sets[i] - j - 1]);
+				SWAP(evalue[i][j], evalue[i][p.nO2sets[i] - j - 1]);
+			}
+			/*
+			VEC<MatReal> rotaionU_temp = rotaionU; VEC<VecReal> evalue_temp = evalue;
+			for_Int(j, 0, p.nO2sets[i]) {
+				Int nimp = p.nO2sets[i] - p.nI2B[i];
+				if (j < nimp) {
+					rotaionU[i][j] = rotaionU_temp[i][j + SUM_0toX(scsp.sit_mat[i], p.ndiv / 2) - scsp.sit_mat[i][0]];
+					evalue[i][j] = evalue_temp[i][j + SUM_0toX(scsp.sit_mat[i], p.ndiv / 2) - scsp.sit_mat[i][0]];
+				} else {
+					if (p.nI2B[i] % 2 != 0 && j - nimp < p.nI2B[i] / 2. - 1) {
+						rotaionU[i][j] = rotaionU_temp[i][j - nimp];
+						evalue[i][j] = evalue_temp[i][j - nimp];
+					}
+					if (p.nI2B[i] % 2 == 0 && j - nimp < p.nI2B[i] / 2.) {
+						rotaionU[i][j] = rotaionU_temp[i][j - nimp];
+						evalue[i][j] = evalue_temp[i][j - nimp];
+					}
+				}
+			}
+			// if(mm && i == 0) WRN(NAV4(rotaionU_temp[0], rotaionU[0], evalue_temp[0], evalue[0]));
+			*/
+			// if(mm) WRN(NAV(evalu_i));
+		}
+		for_Int(i, 0, rotaionU.size()) rotaionU[i] = rotaionU[i - (i%2)]; //! using the spin inversion symmetry
+		occupationnumber = evalue;
+	} else {
+		VEC<MatReal> rotaionU_bath;
+		for_Int(i, 0, p.norg_sets) {
+			Int nimp = p.nO2sets[i] - p.nI2B[i];
+			rotaionU_bath.push_back(dm[i].truncate(nimp, nimp, p.nO2sets[i], p.nO2sets[i]));
+			// if(mm) WRN(NAV(dm[i][0][0]))
+			if(mm) std::cout << "The "<<i<<"-th impurity occupation number: "<<iofmt()<<dm[i][0][0]<< std::endl;
+		}
+		// if (mm) WRN(NAV3(dm[0], dm[1], dm[2]));
+
+		VEC<VecReal> evalue;
+		for_Int(i, 0, p.norg_sets) {
+			VecReal evalu_i(rotaionU_bath[i].nrows(), 0.);
+			// if(mm) WRN("New dm for bath" + NAV3(i, rotaionU_bath[i], rotaionU_bath.size()));
+			heevr(rotaionU_bath[i], evalu_i); rotaionU_bath[i] = rotaionU_bath[i].tr(); evalue.push_back(std::move(evalu_i));
+			// if(mm) WRN("New U for bath" + NAV2(rotaionU_bath[i], evalue[i]));
+			for_Int(j, 0, (p.nI2B[i] / 2.)) {
+				SWAP(rotaionU_bath[i][j], rotaionU_bath[i][p.nI2B[i] - j - 1]);
+				SWAP(evalue[i][j], evalue[i][p.nI2B[i] - j - 1]);
+			}
+			//DBG("New uorm111" + NAV3(i, rotaionU_bath[i], evalue[i]));
+		}
+		// if(mm) WRN(NAV3(evalue[0].mat(1,p.nI2B[0]), evalue[1].mat(1,p.nI2B[1]), evalue[2].mat(1,p.nI2B[2])));
+		for_Int(i, 0, rotaionU_bath.size()) rotaionU_bath[i] = rotaionU_bath[i - (i%2)]; //! using the spin inversion symmetry(suit for SC).
+
+		occupationnumber = evalue;
+		for_Int(i, 0, p.nO2sets.size()) {
+			MatReal temp(dmat(p.nO2sets[i], 1.));
+			Int gap(p.nO2sets[i] - p.nI2B[i]);
+			for_Int(j, 0, p.nI2B[i]) for_Int(k, 0, p.nI2B[i]) temp[j + gap][k + gap] = rotaionU_bath[i][j][k];
+			rotaionU.push_back(temp);
+		}
+	}
+	return rotaionU;
+}
+
 VEC<MatReal> DensityMat::find_one_electron_density_matrix(const MatReal& state, const Tab& table_i) 
 {
 	// if (mm) WRN("find_one_electron_density_matrix BEGIN: ");
@@ -78,6 +153,78 @@ VEC<MatReal> DensityMat::find_one_electron_density_matrix(const MatReal& state, 
 		if (d.if_symmetric() == false)ERR("The one_electron_density_matrix is not hermitian!!");
 #endif
 	return std::move(D);
+}
+
+//----------------------------- append function -----------------------------
+
+Real DensityMat::sum_off_diagonal() const{
+	Real sum = 0 ;
+	auto test_dm(dm);
+	for_Int(i, 0, p.norg_sets) if(i%2 == 0) {
+		MatReal test_dm_bath = test_dm[i].truncate(scsp.sit_mat[i][0], scsp.sit_mat[i][0], p.nI2B[i] + scsp.sit_mat[i][0], p.nI2B[i] + scsp.sit_mat[i][0]);
+		for_Int(r, 0, test_dm_bath.nrows()) test_dm_bath[r][r] -= test_dm_bath[r][r];
+		VecReal vectemp(test_dm_bath.vec());
+		// if(mm) WRN(NAV(test_dm_bath));
+		sum += SQRT(vectemp.norm_sqr() / (vectemp.size() - test_dm_bath.nrows()));
+	}
+	return sum/(p.norg_sets / 2);
+}
+
+VEC<VecReal> DensityMat::check_dm_get_occupation_number() const{
+	auto test_dm(dm);
+	VEC<VecReal> occupation_nubmer;
+	for_Int(i, 0, p.norg_sets) {
+		VecReal evalu_i(test_dm[i].nrows(), 0.);
+		heevr(test_dm[i], evalu_i); test_dm[i] = test_dm[i].tr();
+		if(mm) WRN(NAV3(i,evalu_i,SUM(evalu_i)));
+		if (i % 2 == 0) occupation_nubmer.push_back(evalu_i);
+	}
+	return occupation_nubmer;
+}
+
+//----------------------------- correction function -----------------------------
+
+void DensityMat::find_density_matrix_by_Crrvec(VEC < MatReal>& D_splited, const Crrvec& corstate_i)
+{
+	VecPartition row_H(mm.np(), mm.id(), corstate_i.opr.scsp.dim);
+	MatReal corrvec_real = real(corstate_i.correct_vecs); for_Int(i, 0, corrvec_real.nrows()) corrvec_real[i].normalize();
+	MatReal corrvec_imag = imag(corstate_i.correct_vecs); for_Int(i, 0, corrvec_imag.nrows()) corrvec_imag[i].normalize();
+	VecReal oneparticalex = corstate_i.ex_state; oneparticalex.normalize();
+	// Real d_weight_y    = 0.8; 	//4times
+	Real d_weight_y = 1.; 		//2times
+	// Real d_weight_y = (8./7.); 	//1times
+
+	const Tab& hop_op(corstate_i.opr.table);
+	for_Idx(pos, 0, hop_op[2].size())
+	{
+		if (abs(hop_op[2][pos]) <= corstate_i.opr.scsp.hopint.size())
+		{
+			Int row_n((abs(hop_op[2][pos]) - 1) / p.norbit), col_n((abs(hop_op[2][pos]) - 1) % p.norbit); // "1" mean the real_length = abs(hop_op[2][pos]) - 1, since to distinguish the minus sign.
+			Int check_point(0);
+			for_Int(i, 0, p.nI2B.size()) {
+				check_point = 0;
+				if (row_n >= 0 && row_n < (p.nI2B[i] + scsp.sit_mat[i][0]) && col_n >= 0 && col_n < (p.nI2B[i] + scsp.sit_mat[i][0]))
+				{
+					Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
+					for_Int(j, 0, corstate_i.correct_vecs.nrows()){
+						Real amplitude = coefficient_comm * corrvec_real[j][hop_op[0][pos] + row_H.bgn()] * corrvec_real[j][hop_op[1][pos]];
+							amplitude += coefficient_comm * corrvec_imag[j][hop_op[0][pos] + row_H.bgn()] * corrvec_imag[j][hop_op[1][pos]];
+							amplitude += coefficient_comm * oneparticalex[hop_op[0][pos] + row_H.bgn()] * oneparticalex[hop_op[1][pos]];
+						D_splited[i][row_n][col_n] += d_weight_y * 0.25 * amplitude * INV(corstate_i.correct_vecs.nrows() * 2.);// fist 2: G^gatter, G^lesser; second 2: Rell and imag part.
+					}
+					check_point++;
+					break;
+				}
+				else {
+					row_n -= p.nI2B[i] + scsp.sit_mat[i][0];
+					col_n -= p.nI2B[i] + scsp.sit_mat[i][0];
+				}
+			}
+#ifdef _ASSERTION_
+			if (check_point == 0)ERR("Not in the hopint but you save this bases(Many body base), why? For D mapping");
+#endif
+		}
+	}
 }
 
 VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& state, Crrvec& corstate_p, Crrvec& corstate_m, const VecReal& omega_point)
@@ -181,7 +328,6 @@ VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& stat
 #endif
 		}
 	}
-
 	
 	// for the corstate_p's D.
 	find_density_matrix_by_Crrvec(D_splited, corstate1_p);
@@ -202,7 +348,6 @@ VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& stat
 #endif
 	return std::move(D);
 }
-
 
 VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& state, const Crrvec& corstate_p, const Crrvec& corstate_m)
 {
@@ -265,146 +410,8 @@ VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& stat
 	return std::move(D);
 }
 
-void DensityMat::find_density_matrix_by_Crrvec(VEC < MatReal>& D_splited, const Crrvec& corstate_i)
-{
-	VecPartition row_H(mm.np(), mm.id(), corstate_i.opr.scsp.dim);
-	MatReal corrvec_real = real(corstate_i.correct_vecs); for_Int(i, 0, corrvec_real.nrows()) corrvec_real[i].normalize();
-	MatReal corrvec_imag = imag(corstate_i.correct_vecs); for_Int(i, 0, corrvec_imag.nrows()) corrvec_imag[i].normalize();
-	VecReal oneparticalex = corstate_i.ex_state; oneparticalex.normalize();
-	// Real d_weight_y    = 0.8; 	//4times
-	Real d_weight_y = 1.; 		//2times
-	// Real d_weight_y = (8./7.); 	//1times
 
-	const Tab& hop_op(corstate_i.opr.table);
-	for_Idx(pos, 0, hop_op[2].size())
-	{
-		if (abs(hop_op[2][pos]) <= corstate_i.opr.scsp.hopint.size())
-		{
-			Int row_n((abs(hop_op[2][pos]) - 1) / p.norbit), col_n((abs(hop_op[2][pos]) - 1) % p.norbit); // "1" mean the real_length = abs(hop_op[2][pos]) - 1, since to distinguish the minus sign.
-			Int check_point(0);
-			for_Int(i, 0, p.nI2B.size()) {
-				check_point = 0;
-				if (row_n >= 0 && row_n < (p.nI2B[i] + scsp.sit_mat[i][0]) && col_n >= 0 && col_n < (p.nI2B[i] + scsp.sit_mat[i][0]))
-				{
-					Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
-					for_Int(j, 0, corstate_i.correct_vecs.nrows()){
-						Real amplitude = coefficient_comm * corrvec_real[j][hop_op[0][pos] + row_H.bgn()] * corrvec_real[j][hop_op[1][pos]];
-							amplitude += coefficient_comm * corrvec_imag[j][hop_op[0][pos] + row_H.bgn()] * corrvec_imag[j][hop_op[1][pos]];
-							amplitude += coefficient_comm * oneparticalex[hop_op[0][pos] + row_H.bgn()] * oneparticalex[hop_op[1][pos]];
-						D_splited[i][row_n][col_n] += d_weight_y * 0.25 * amplitude * INV(corstate_i.correct_vecs.nrows() * 2.);// fist 2: G^gatter, G^lesser; second 2: Rell and imag part.
-					}
-					check_point++;
-					break;
-				}
-				else {
-					row_n -= p.nI2B[i] + scsp.sit_mat[i][0];
-					col_n -= p.nI2B[i] + scsp.sit_mat[i][0];
-				}
-			}
-#ifdef _ASSERTION_
-			if (check_point == 0)ERR("Not in the hopint but you save this bases(Many body base), why? For D mapping");
-#endif
-		}
-	}
-}
-
-Real DensityMat::sum_off_diagonal() const{
-	Real sum = 0 ;
-	auto test_dm(dm);
-	for_Int(i, 0, p.norg_sets) if(i%2 == 0) {
-		MatReal test_dm_bath = test_dm[i].truncate(scsp.sit_mat[i][0], scsp.sit_mat[i][0], p.nI2B[i] + scsp.sit_mat[i][0], p.nI2B[i] + scsp.sit_mat[i][0]);
-		for_Int(r, 0, test_dm_bath.nrows()) test_dm_bath[r][r] -= test_dm_bath[r][r];
-		VecReal vectemp(test_dm_bath.vec());
-		// if(mm) WRN(NAV(test_dm_bath));
-		sum += SQRT(vectemp.norm_sqr() / (vectemp.size() - test_dm_bath.nrows()));
-	}
-	return sum/(p.norg_sets / 2);
-}
-
-VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
-{
-	VEC<MatReal> rotaionU;
-	if(p.if_norg_imp){
-		rotaionU = dm;
-		VEC<VecReal> evalue;
-		for_Int(i, 0, p.norg_sets) {
-			VecReal evalu_i(rotaionU[i].nrows(), 0.);
-			heevr(rotaionU[i], evalu_i); rotaionU[i] = rotaionU[i].tr(); evalue.push_back(std::move(evalu_i));
-			for_Int(j, 0, (p.nO2sets[i] / 2.)) {
-				SWAP(rotaionU[i][j], rotaionU[i][p.nO2sets[i] - j - 1]);
-				SWAP(evalue[i][j], evalue[i][p.nO2sets[i] - j - 1]);
-			}
-			/*
-			VEC<MatReal> rotaionU_temp = rotaionU; VEC<VecReal> evalue_temp = evalue;
-			for_Int(j, 0, p.nO2sets[i]) {
-				Int nimp = p.nO2sets[i] - p.nI2B[i];
-				if (j < nimp) {
-					rotaionU[i][j] = rotaionU_temp[i][j + SUM_0toX(scsp.sit_mat[i], p.ndiv / 2) - scsp.sit_mat[i][0]];
-					evalue[i][j] = evalue_temp[i][j + SUM_0toX(scsp.sit_mat[i], p.ndiv / 2) - scsp.sit_mat[i][0]];
-				} else {
-					if (p.nI2B[i] % 2 != 0 && j - nimp < p.nI2B[i] / 2. - 1) {
-						rotaionU[i][j] = rotaionU_temp[i][j - nimp];
-						evalue[i][j] = evalue_temp[i][j - nimp];
-					}
-					if (p.nI2B[i] % 2 == 0 && j - nimp < p.nI2B[i] / 2.) {
-						rotaionU[i][j] = rotaionU_temp[i][j - nimp];
-						evalue[i][j] = evalue_temp[i][j - nimp];
-					}
-				}
-			}
-			// if(mm && i == 0) WRN(NAV4(rotaionU_temp[0], rotaionU[0], evalue_temp[0], evalue[0]));
-			*/
-			// if(mm) WRN(NAV(evalu_i));
-		}
-		for_Int(i, 0, rotaionU.size()) rotaionU[i] = rotaionU[i - (i%2)]; //! using the spin inversion symmetry
-		occupationnumber = evalue;
-	} else {
-		VEC<MatReal> rotaionU_bath;
-		for_Int(i, 0, p.norg_sets) {
-			Int nimp = p.nO2sets[i] - p.nI2B[i];
-			rotaionU_bath.push_back(dm[i].truncate(nimp, nimp, p.nO2sets[i], p.nO2sets[i]));
-			// if(mm) WRN(NAV(dm[i][0][0]))
-			if(mm) std::cout << "The "<<i<<"-th impurity occupation number: "<<iofmt()<<dm[i][0][0]<< std::endl;
-		}
-		// if (mm) WRN(NAV3(dm[0], dm[1], dm[2]));
-
-		VEC<VecReal> evalue;
-		for_Int(i, 0, p.norg_sets) {
-			VecReal evalu_i(rotaionU_bath[i].nrows(), 0.);
-			// if(mm) WRN("New dm for bath" + NAV3(i, rotaionU_bath[i], rotaionU_bath.size()));
-			heevr(rotaionU_bath[i], evalu_i); rotaionU_bath[i] = rotaionU_bath[i].tr(); evalue.push_back(std::move(evalu_i));
-			// if(mm) WRN("New U for bath" + NAV2(rotaionU_bath[i], evalue[i]));
-			for_Int(j, 0, (p.nI2B[i] / 2.)) {
-				SWAP(rotaionU_bath[i][j], rotaionU_bath[i][p.nI2B[i] - j - 1]);
-				SWAP(evalue[i][j], evalue[i][p.nI2B[i] - j - 1]);
-			}
-			//DBG("New uorm111" + NAV3(i, rotaionU_bath[i], evalue[i]));
-		}
-		// if(mm) WRN(NAV3(evalue[0].mat(1,p.nI2B[0]), evalue[1].mat(1,p.nI2B[1]), evalue[2].mat(1,p.nI2B[2])));
-		for_Int(i, 0, rotaionU_bath.size()) rotaionU_bath[i] = rotaionU_bath[i - (i%2)]; //! using the spin inversion symmetry(suit for SC).
-
-		occupationnumber = evalue;
-		for_Int(i, 0, p.nO2sets.size()) {
-			MatReal temp(dmat(p.nO2sets[i], 1.));
-			Int gap(p.nO2sets[i] - p.nI2B[i]);
-			for_Int(j, 0, p.nI2B[i]) for_Int(k, 0, p.nI2B[i]) temp[j + gap][k + gap] = rotaionU_bath[i][j][k];
-			rotaionU.push_back(temp);
-		}
-	}
-	return rotaionU;
-}
-
-VEC<VecReal> DensityMat::check_dm_get_occupation_number() const{
-	auto test_dm(dm);
-	VEC<VecReal> occupation_nubmer;
-	for_Int(i, 0, p.norg_sets) {
-		VecReal evalu_i(test_dm[i].nrows(), 0.);
-		heevr(test_dm[i], evalu_i); test_dm[i] = test_dm[i].tr();
-		if(mm) WRN(NAV3(i,evalu_i,SUM(evalu_i)));
-		if (i % 2 == 0) occupation_nubmer.push_back(evalu_i);
-	}
-	return occupation_nubmer;
-}
+//----------------------------- deprecated function -----------------------------
 
 /*
 //! (Deactivate) In Here the state a row is a state, and the number of row means degeneracy
@@ -450,7 +457,6 @@ MatReal DensityMat::find_one_electron_density_matrix(const MatReal& state)
 // #endif
 	return D;
 }
-*/
 
 // (Deactivate) for the OrthonormalityRecover.
 MatReal DensityMat::OrthonormalityRecover(const MatReal& mat_i)
@@ -464,3 +470,4 @@ MatReal DensityMat::OrthonormalityRecover(const MatReal& mat_i)
 	}
 	return mat.tr();
 }
+*/
