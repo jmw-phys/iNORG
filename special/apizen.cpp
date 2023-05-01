@@ -28,7 +28,7 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 
 	// NocSpace scsp(mm_i, prmtr_i, prmtr_i.npartical);
 	// DensityMat oneedm(mm, prmtr_i, scsp);
-// /*
+/*
 	NORG norg(mm, prmtr_i);		// for test
 	{// for test:
 		// IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
@@ -40,12 +40,12 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 		// 	for_Int(i, 0, norg.uormat.size()) biwrite(ofs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
 		// }		
 	}
-	// NORG norg(choose_cauculation_style("ful_pcl_sch", imp));
+*/
+	NORG norg(choose_cauculation_style("ful_pcl_sch", imp));
 	// NORG norg(choose_cauculation_style("one_pcl_test", imp));
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);									if (mm)	g0imp.write_zen("g0imp");
 	ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));	if (mm) gfimp.write_zen("gfimp");
 	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();			if (mm) seimp.write_zen("seimp");
-// */
 
  /*
 	{
@@ -249,7 +249,8 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		VecInt ordeg(concat(or_deg_idx.truncate(0,nband),or_deg_idx.truncate(0,nband)).mat(2,nband).tr().vec()), nppso;
 		Vec<VecInt> controler(MAX(or_deg_idx) + 1, VecInt(p.ndiv, 0));
 		MatReal occnum, occweight;
-		controler[0] = {0, -1, p.control_divs[0][2], 0, p.control_divs[0][4], 1};
+		// controler[0] = {0, -1, p.control_divs[0][2], 0, p.control_divs[0][4], 1};
+		controler[0] = p.control_divs[0];
 		// if(mm) WRN(NAV(controler[0]));
 		{
 			// p.if_norg_imp = false; p.after_modify_prmtr(); 
@@ -267,7 +268,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 			for_Int(j, 0, o) 							if(occweight[orb_rep][j] < 1e-7) freze_o++;
 			for_Int(j, nppso[orb_rep], p.nI2B[orb_rep])	if(occweight[orb_rep][j] < 1e-7) freze_e++;
 			nooc_o = o - freze_o; nooc_e = e - freze_e;
-			controler[i+1] = VecInt{1, freze_o, nooc_o, 1, nooc_e, freze_e };
+			controler[i+1] = p.if_norg_imp ?  VecInt{freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{1, freze_o, nooc_o, 1, nooc_e, freze_e };
 		}
 
 		// p.if_norg_imp = true; p.after_modify_prmtr(); 

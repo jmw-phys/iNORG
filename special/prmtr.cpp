@@ -105,18 +105,33 @@ void Prmtr::according_nppso(const VecInt& nppsos) const
     for_Int(i, 0, norg_sets) {
         if (if_norg_imp) {
             control_divs[i + 1] = templet_control;
-            
+            control_divs[i + 1][0] = nppsos[i] - SUM(control_divs[i + 1].truncate(1, Int(ndiv / 2)));
+            control_divs[i + 1][ndiv - 1] = (nO2sets[i] - nppsos[i]) - SUM(control_divs[i + 1].truncate(Int(ndiv / 2), ndiv - 1));
+            // WRN(NAV2(control_divs, templet_control));
+            for_Int(j, 0, ndiv / 2.) {
+                if (control_divs[i + 1][j] < 0) {
+                    int t = -control_divs[i + 1][j]; control_divs[i + 1][ndiv - j - 1] += t;
+                    control_divs[i + 1][j + 1] -= t; control_divs[i + 1][j] = 0;
+                }
+                if (control_divs[i + 1][ndiv - j - 1] < 0) {
+                    int t = -control_divs[i + 1][ndiv - j - 1]; control_divs[i + 1][j] += t;
+                    control_divs[i + 1][ndiv - j - 2] -= t; control_divs[i + 1][ndiv - j - 1] = 0;
+                }
+            }
         } else {
             control_divs[i + 1] = templet_control;
             control_divs[i + 1][1] = nppsos[i] - ((control_divs[i + 1][0] + control_divs[i + 1][ndiv / 2]) / 2) \
                 - SUM(control_divs[i + 1].truncate(2, Int(ndiv / 2)));
-            control_divs[i + 1][ndiv - 1] = (nI2B[i] + control_divs[i + 1][0] - nppsos[i])\
-                - Int_ROUND((control_divs[i + 1][0] + control_divs[i + 1][ndiv / 2]) / 2.) - SUM(control_divs[i + 1].truncate(2, Int(ndiv / 2)));
+            control_divs[i + 1][ndiv - 1] = (nO2sets[i] - nppsos[i])\
+                - (control_divs[i + 1][0] + control_divs[i + 1][ndiv / 2]) / 2. - SUM(control_divs[i + 1].truncate(Int(ndiv / 2), ndiv));
 
-            if (control_divs[i + 1][1] < 0 && control_divs[i + 1][2] > 0) {
-                int t = -control_divs[i + 1][1];
-                control_divs[i + 1][2] -= t; control_divs[i + 1][ndiv - 2] += t;
-                control_divs[i + 1][ndiv - 1] += -t; control_divs[i + 1][1] = 0;
+            for_Int(j, 1, ndiv / 2.) if (control_divs[i + 1][j] < 0) {
+                int t = -control_divs[i + 1][j];
+                control_divs[i + 1][j + 1] -= t; control_divs[i + 1][j] = 0;
+            }
+            for_Int(j, 0, (ndiv / 2.) - 1) if (control_divs[i + 1][ndiv - j - 1] < 0) {
+                int t = -control_divs[i + 1][ndiv - j - 1];
+                control_divs[i + 1][ndiv - j - 2] -= t; control_divs[i + 1][ndiv - j - 1] = 0;
             }
         }
     }

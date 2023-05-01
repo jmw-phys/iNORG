@@ -97,16 +97,10 @@ void Impurity::update(Str mode) {
     // if(mm) WRN(NAV(h0));
 }
 
-
-// ! not finished.
-// void Impurity::update(VecInt or_deg) {
-//     for_Int()
-
-//     set_factor();
-// }
-
-void Impurity::write_H0info(const Bath &b, Int ndeg) const {
-    OFS ofs;    ofs.open("h0.txt");
+void Impurity::write_H0info(const Bath &b, Int ndeg, Int iter_cnt) const {
+    OFS ofs;
+    if(iter_cnt < 0) ofs.open("h0.txt");
+    if(iter_cnt > 0) ofs.open("zic" + prefill0(iter_cnt, 3) +"h0.txt");
     using namespace std;
     if(ndeg > 0) for_Int(i, 0, ndeg)	{
         ofs << "The impurity for "<< i+1 << "-th degeneracy: " << "nmin: " << b.info[i][0] << " err: " << b.info[i][1] << " err_crv: " << b.info[i][2] << " err_reg: " << b.info[i][3] << " norm: " << b.info[i][4]<< "  " << endl;

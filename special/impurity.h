@@ -51,7 +51,7 @@ public:
 	
 
 	// void write_H0info(const Bath &b) const;
-	void write_H0info(const Bath &b, Int ndeg = -1) const;
+	void write_H0info(const Bath &b, Int ndeg = -1, Int iter_cnt = -1) const;
 
 	// void save() const;
 

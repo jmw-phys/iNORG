@@ -69,7 +69,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 			// if(mm) WRN(NAV(see_MatReal(uormat_new)));
 			for_Int(i, 0, uormat.size()) uormat[i] = uormat_new[i] * uormat[i];
 		}
-		if (mm) WRN(NAV2(oneedm.dm[0], uormat[0]));
+		// if (mm) WRN(NAV2(oneedm.dm[0], uormat[0]));
 		set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 		// if (mm)PIO("ground_state size" + NAV(oneedm.ground_state.size()));
 		groune_pre = groune_lst;	occnum_pre = occnum_lst;
@@ -123,7 +123,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 		// write_state_info(iter_norg_cnt);
 	}
 
-	if(sub_energy.size() != 0 && MIN(sub_energy) < groune_lst * (1 + 2e-3) )  {
+	if(!p.if_norg_imp && sub_energy.size() != 0 && MIN(sub_energy) < groune_lst * (1 + 2e-5) )  {
 		if(mm) std::cout <<iofmt("def")<< "The energy level is so hight, "<< NAV(groune_lst) << ".\nWhich reach to " \
 		<<100*MIN(sub_energy)/groune_lst<<"%, so, the Ground state mustn't in this sub-space, and calc. will be stoped." <<"\n"<< std::endl;
 		return ;}
