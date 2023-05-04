@@ -15,13 +15,14 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
 #include "bath.h"
 #include "impurity.h"
 #include "norg.h"
+#include "occler.h"
 
 // the bethe lattice model to study the multi-orbital DMFT calculation.
 
 class DMFT {
 // ------------------------------- since the 2023.04.15 -------------------------------
 	const MyMpi& mm;
-	const Prmtr& p;
+	Prmtr& p;
 
 // bethe lattice part:
 	Real bethe_u;				// intra-orbital coupling U
@@ -36,8 +37,7 @@ public:
 	Int iter_cnt;
 	VecReal gloc_err;
 	
-	Real n_1;				// number of electrons on d orbital
-	Real n_2;				// number of electrons on p orbital
+	VecReal n_eles;				// number of electrons on d orbital
 
 	// The iteration variable.
 	ImGreen g_loc;			// if in mode = 0, the DMFT iteration on G (default).
@@ -45,6 +45,8 @@ public:
 	bool imp_backup;		// to tell if you has the impurity model's back up.
 
 private:
+	NORG choose_cauculation_style(Str mode, Impurity &imp);
+
 	bool converged() const {
 		const Real dev = DEV(gloc_err);
 		if(gloc_err[gloc_err.size()-2]<1.E-5 && gloc_err[gloc_err.size()-2]<gloc_err[gloc_err.size()-1]) return true;
@@ -69,12 +71,13 @@ private:
 	void print_log(const Str& lbl, std::ostream& os = std::cout) const {
 		using namespace std;
 		os << iofmt("sci");
-		os << setw(4) << iter_cnt
-			<< "  " << setw(w_Real) << gloc_err[gloc_err.size() - 1]
-			<< "  " << setw(w_Real) << n_1
-			<< "  " << setw(w_Real) << n_2
-			<< "  " << present()
-			<< "  " << lbl << endl;
+		os << setw(4) << iter_cnt;
+		os << "  " << setw(w_Real) << gloc_err[gloc_err.size() - 1];
+			for_Int(i, 0, n_eles.size()) {
+				os << "  " << setw(w_Real) << n_eles[i];
+			}
+		os << "  " << present();
+		os << "  " << lbl << endl;
 	}
 
 	void log(const Str& lbl) {
@@ -91,12 +94,12 @@ private:
 
 	bool check_gloc(const Str& file);
 	bool check_seloc(const Str& file);
-	void save_the_backup(Bath& bth, NORG& solver, Int iter_cnt = 999);
-	void do_you_also_have_these_backup(Bath& bth, NORG& solver, bool if_backuped=false);
+	// void save_the_backup(Bath& bth, NORG& solver, Int iter_cnt = 999);
+	// void do_you_also_have_these_backup(Bath& bth, NORG& solver, bool if_backuped=false);
 
 	ImGreen find_gloc_by_se(const ImGreen& se_i) const;
 	ImGreen find_hb_by_se(const ImGreen& se_i) const;
 public:
 	// For mode = 1, DMFT iteration by self-energy, for mode = 0, DMFT iteration by g_imp.
-	DMFT(const MyMpi& mm_i, const Prmtr& prmtr_i, const Int mode);
+	DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode);
 };

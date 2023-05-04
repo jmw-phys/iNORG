@@ -15,7 +15,7 @@ date 2021-02-25
 // the lower 16 bits represent a spin-down configuration
 // the higher 16 bits represent a spin-up configuration
 
-// tensor V_{iljk} = i * n^3 + l * n^2 + j * n + k
+// tensor V_{ijkl} = i * n^3 + j * n^2 + k * n + l
 typedef std::pair<MatReal, VecReal> Impdata;
 class Impurity {
 private:

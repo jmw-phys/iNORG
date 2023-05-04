@@ -756,6 +756,8 @@ void NocSpace::print(std::ostream& os) const {
 	nocspace_print(p.U, "The Hubbard term U.");
 	nocspace_print(p.Uprm, "The U^' term");
 	nocspace_print(p.jz, "The hund coupling");
+    nocspace_print(p.fit_max_omg, "The fitting max omg");
+    nocspace_print(p.fit_num_omg, "The max number of fitting points.");
 	// u_hbd, p.U12, p.U12, p.U12
 
 	os << "// prmtr print end  " << present() << endl;

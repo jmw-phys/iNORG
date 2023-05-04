@@ -209,31 +209,31 @@ MatReal Bath::find_hop() const
 
 void Bath::write_ose_hop(Int iter_cnt) const {
 	using namespace std;
-	// OFS ofs_app_ose(p.ofx + ".ose.txt", std::ios::app);
-	// OFS ofs_ose;ofs_ose.open("ose.txt");
-	OFS ofs;ofs.open("ose_hop");
+    OFS ofs;
+	if(iter_cnt < 0) ofs.open("ose_hop");
+    if(iter_cnt > 0) ofs.open(iox + "zic" + prefill0(iter_cnt, 3) +".ose_hop.txt");
 	for_Int(band_i, 0, p.nband)	{
 		ofs << iofmt("sci");
-		ofs << setw(4) << iter_cnt << setw(4) << band_i;
+		ofs << setw(4) << band_i;
 		for_Int(i, 0, p.nI2B[2 * band_i]) { ofs << "\t" << setw(w_Real) << vec_ose[band_i][i]; }
 		ofs << endl;
 	}
 	for_Int(band_i, 0, p.nband)	{
 		ofs << iofmt("sci");
-		ofs << setw(4) << iter_cnt << setw(4) << band_i;
+		ofs << setw(4) << band_i;
 		for_Int(i, 0, p.nI2B[2 * band_i]) { ofs << "\t" << setw(w_Real) << vec_hop[band_i][i]; }
 		ofs << endl;
 	}
 	ofs << endl;ofs << endl;
 }
 
-void Bath::read_ose_hop(Int iter_cnt) {
+void Bath::read_ose_hop() {
 	using namespace std;
 	// IFS ifs_ose;ifs_ose.open("ose.txt");
 	IFS ifs("ose_hop");
 	Str strr;
 	if(ifs)for_Int(band_i, 0, p.nband)	{
-		ifs >> strr; ifs >> strr;
+		ifs >> strr;
 		VecReal ose_t(p.nI2B[2 * band_i], 0);
 		for_Int(i, 0, p.nI2B[2 * band_i]) { ifs >> ose_t[i]; }
 		// vec_ose.push_back(ose_t);
@@ -241,7 +241,7 @@ void Bath::read_ose_hop(Int iter_cnt) {
 		// if(mm) WRN(NAV(ose_t));
 	}		
 	if(ifs)for_Int(band_i, 0, p.nband)	{
-		ifs >> strr; ifs >> strr;
+		ifs >> strr;
 		VecReal hop_t(p.nI2B[2 * band_i], 0);
 		for_Int(i, 0, p.nI2B[2 * band_i]) { ifs >> hop_t[i]; }
 		// vec_hop.push_back(hop_t);

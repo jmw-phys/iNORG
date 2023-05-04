@@ -37,11 +37,12 @@ void Prmtr::set_inert_values()
 
 void Prmtr::set_values() {
     //model related
-    U = 4.;
-    jz = 0.7;
-    Uprm = U - 2 * jz;
+    jz = 0.0;
+    U = 2.;
+    Uprm = 2.;
     mu = 0.;
-    bandw = 50.;
+    bandw = 50.;            //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
+    eimp = VecReal(norbs, 0.);
 
 
     // fitting related
@@ -49,11 +50,10 @@ void Prmtr::set_values() {
     fit_rsd = 2; // default value: 2.
 
     // NORG parameter.
-    if_norg_imp = true;
+    if_norg_imp = false;
     imp_backup = false;
-    templet_restrain = !if_norg_imp ? VecInt{0, -1, -4,  0,  4,  1} : VecInt{-1, -2, -3,  3,  2,  1};
-    // templet_restrain = {0, -1, -1,  0,  1,  1};
-    templet_control =  {1,  3,  0,  1,  0,  3};
+    templet_restrain = !if_norg_imp ? VecInt{0, -1, -2,  0,  2,  1} : VecInt{-1, -4, -4,  4,  4,  1};
+    templet_control  = !if_norg_imp ? VecInt{1,  2,  2,  1,  2,  2} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
     nI2B = SUM(templet_control) - 1;                    // default value:
@@ -63,6 +63,7 @@ void Prmtr::set_values() {
     // nooc_mode = STR("cpnooc");
     // nooc_mode = STR("cnooc");
     after_modify_prmtr();
+    recalc_partical_number();
     // npartical.reset(norg_sets, 0);
     // for_Int(i, 0, norg_sets) npartical[i] = SUM(control_divs[i + 1])/2 - 1;
     // stage2_restrain = {0, -0, -3,  0,  3,  0};

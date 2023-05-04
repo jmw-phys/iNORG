@@ -18,7 +18,7 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 	ImGreen hb(nband, p);
 	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)  hb.g[j][i][i] = - imfrq_hybrid_function[i][j];
 	hb.write_zen("hb_zen", "Read");
-	Bath bth(mm, p); bth.read_ose_hop();// bth.bath_fit(hb, or_deg_idx.truncate(0,nband)); if(mm) bth.write_ose_hop(dmft_cnt);
+	Bath bth(mm, p); bth.read_ose_hop(); bth.bath_fit(hb, or_deg_idx.truncate(0,nband)); if(mm) bth.write_ose_hop(dmft_cnt);
 
 	if (mm) std::cout << std::endl;						// blank line
 

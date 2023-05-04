@@ -19,8 +19,8 @@ int main(int argc, char* argv[])
 	if (mm) TIME_BGN("program", t_program_bgn);
 	Prmtr prmtr(mm);
 
-	APIzen norg(mm, prmtr, "solver", 0);
-	// DMFT dmft(mm, prmtr, 0);
+	// APIzen norg(mm, prmtr, "solver", 0);
+	DMFT dmft(mm, prmtr, 0);
 	
     if (mm)	TIME_END("program", t_program_bgn);
     MPI_Finalize();

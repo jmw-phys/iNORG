@@ -12,6 +12,7 @@ NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i) :
 	scsp(mm_i, prmtr_i, prmtr_i.npartical), oneedm(mm, prmtr_i, scsp),norg_stab_cnt(0)
 {
 	show_the_nozero_number_of_tabel();
+	if(mm) scsp.print();
 }
 
 // NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, VecInt nparticals) :
@@ -47,6 +48,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	if(mm) std::cout << std::endl;						// blank line
 	impH = impH_i;
 	
+	// if (mm) WRN(NAV2(impH.first,scsp.dim));
 	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 
 	// if (mm) WRN(NAV2(oneedm.dm[0], uormat[0]));
@@ -55,11 +57,11 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 	groune_lst = oneedm.groundstate_energy;
 	if (mm)	{
-		scsp.print();
+		// scsp.print();
 		// write_norg_info(iter_norg_cnt);
 		// write_state_info(iter_norg_cnt);
 	}
-	if (mm) WRN(NAV2(oneedm.dm[0], uormat[0]));
+	// if (mm) WRN(NAV2(oneedm.dm[0], uormat[0]));
 	
 	while (iter_norg_cnt < p.iter_max_norg && !converged()) {
 		iter_norg_cnt++;
@@ -99,7 +101,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	if(mm) std::cout << "---------- THE NORG CONVERGED ----------" << std::endl;;
 	PIO_occweight(occnum);
 	p.rotationU = uormat;
-	write_impurtiy_occupation();
+	// write_impurtiy_occupation();
 
 	if(mm) {
 		std::cout << "\nnorg ground state energy: " << groune_lst << "  " << present() << std::endl;
@@ -118,7 +120,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 	// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 	groune_lst = oneedm.groundstate_energy;
 	if (mm)	{
-		scsp.print();
+		// scsp.print();
 		// write_norg_info(iter_norg_cnt);
 		// write_state_info(iter_norg_cnt);
 	}
@@ -170,7 +172,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 	// if (mm) WRN(NAV4(p.if_norg_imp, nppso, occnum, occweight));
 	PIO_occweight(occnum);
 	p.rotationU = uormat;
-	write_impurtiy_occupation();
+	// write_impurtiy_occupation();
 
 
 	// Finish the NORGiteration.
@@ -564,16 +566,18 @@ void NORG::write_state_info(Int iter_cnt) const {
 	ofs_app_state.close();
 }
 
-void NORG::write_impurtiy_occupation() const {
+VecReal NORG::write_impurtiy_occupation(Int iter_cnt) const {
 	using namespace std;
+	VecReal particals(p.norg_sets, 0);
 	if (mm) {
+		OFS ofs;
+		if(iter_cnt < 0) ofs.open("nmat.txt");
+		if(iter_cnt > 0) ofs.open(iox + "zic" + prefill0(iter_cnt, 3) +".nmat.txt");
 		if (p.if_norg_imp) {
-			OFS ofs;
-			ofs.open("nmat.txt");
 			VecReal counter(3);
 			MatReal dm_origional = see_MatReal(uormat).ct() * see_MatReal(oneedm.dm) * see_MatReal(uormat);
 			// WRN(NAV(dm_origional));
-			VecReal particals(dm_origional.diagonal().mat(p.norg_sets, p.nO2sets[0]).tr()[0]);
+			particals = dm_origional.diagonal().mat(p.norg_sets, p.nO2sets[0]).tr()[0];
 
 			ofs << "#   < n_i >   data:" << endl;
 			for_Int(orb_i, 0, p.norbs) {
@@ -590,14 +594,14 @@ void NORG::write_impurtiy_occupation() const {
 			ofs << setw(6) << "sum" << setw(p_Real) << counter[2];
 			ofs.close();
 		} else {
-			OFS ofs; ofs.open("nmat.txt");
 			VEC<MatReal> dmtemp(oneedm.dm);
 			VecReal counter(3);
 			ofs << "#   < n_i >   data:" << endl;
 			for_Int(orb_i, 0, p.norbs) {
 				ofs << iofmt();
 				std::string temp = (orb_i % 2) == 0 ? STR(Int(orb_i / 2) + 1) + "up" : STR(Int(orb_i / 2) + 1) + "dn";
-				ofs << setw(6) << temp << setw(p_Real) << dmtemp[orb_i][0][0] << endl;
+				particals[orb_i] = dmtemp[orb_i][0][0];
+				ofs << setw(6) << temp << setw(p_Real) << particals[orb_i] << endl;
 				(orb_i % 2) == 0 ? counter[0] += dmtemp[orb_i][0][0] : counter[1] += dmtemp[orb_i][0][0];
 			}
 			counter[2] = counter[0] + counter[1];
@@ -607,7 +611,7 @@ void NORG::write_impurtiy_occupation() const {
 			ofs.close();
 		}
 	}
-
+	return particals;
 }
 
 

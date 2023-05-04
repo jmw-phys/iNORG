@@ -211,3 +211,8 @@ Version: v1.1.05 @ 2023.05.01
     finished: modify the according_nppso() function in prmtr.cpp for the no-half-filling case. 
     next do : 1.update the bethe lattice model.
     thinking: (same as prev)
+
+Version: v1.1.06 @ 2023.05.04
+    finished: 1.BUG fixed: crrltfun.cpp; 2. add the "dmft_bethe" calc function for multi-band system.
+    next do : going to add the no-half-filling case for the bethe lattice model.
+    thinking: What's the physical for the calc of the no-half-filling case?<!--! (Read A.Koga2004prl) --> 

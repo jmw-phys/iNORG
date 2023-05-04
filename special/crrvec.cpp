@@ -486,7 +486,7 @@ VecReal Crrvec::project_uplwer_parical_space(const VecReal& initial_vector, cons
         if (new_nosp.ifin_NocSpace(new_nospdiv, new_nosp.nppso)) {
             const ComDivs group(h_i - old_nosp.idx_div[subnosp], (old_nosp.div[subnosp]), (old_nosp.sit_mat), true);
             VecOnb exd_cf = group.cf;
-            if (if_in_this_orbital(exd_cf, crtann, norg_set, orbit_pos_in_div)) {
+            if (if_in_this_orbital(exd_cf, crtann, norg_set  * new_nosp.ndivs, orbit_pos_in_div)) {
                 if (crtann == -1) exd_cf[norg_set * new_nosp.ndivs] = exd_cf[norg_set * new_nosp.ndivs].ann(orbit_pos_in_div);
                 if (crtann == +1) exd_cf[norg_set * new_nosp.ndivs] = exd_cf[norg_set * new_nosp.ndivs].crt(orbit_pos_in_div);
                 const ComDivs b(exd_cf, new_nospdiv, old_nosp.sit_mat);

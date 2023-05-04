@@ -2,6 +2,7 @@ archive/
 *.d
 *.o
 bi/
+io/
 console/
 * calc/
 tools/test_list/

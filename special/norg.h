@@ -42,11 +42,8 @@ public:
 
 	mutable NocSpace scsp;					// The main space.
 	mutable DensityMat oneedm;				// The main space's density matrix.
-
-	// mutable NocSpace scsp_1mone, scsp_1pone;
-	// mutable Operator n1mone, n1pone;
-	// const Tab& table_n1mone, table_n1pone;
-
+	
+	VecReal nparticle;						// The impurity's particle number.
 private:
 	/*// ! abandon
 	// It assume that we already have the hopint from the Impurity class, but still have not rotated it yet.
@@ -172,7 +169,7 @@ public:
 		return transform_uormat;
 	}
 
-	void write_impurtiy_occupation() const;
+	VecReal write_impurtiy_occupation(Int iter_cnt = -1) const;
 
 	void PIO_occweight(VecReal occnum_lst) const {
 		MatReal occnum, occweight;
