@@ -48,7 +48,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	if(mm) std::cout << std::endl;						// blank line
 	impH = impH_i;
 	
-	// if (mm) WRN(NAV2(impH.first,scsp.dim));
+	if (mm) WRN(NAV2(impH.first,scsp.dim));
 	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 
 	// if (mm) WRN(NAV2(oneedm.dm[0], uormat[0]));
@@ -480,6 +480,16 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 		oper_i = concat(concat(VecReal{ 0. }, t_v.sm(hopint)), impH_i.second);
 	}
 	// if(mm) WRN(NAV(full_uormat));
+}
+
+// From U(n_up n_dn) to the U(n_up - 0.5)(n_dw - 0.5) + U'(n_up - 0.5)(n_dw - 0.5)
+void NORG::modify_Impdata_for_half_fill(Impdata& impH_i) const {
+	//! modify the non-interacting part of impurity Hamiltonian
+	MatReal& h0 = impH_i.first;
+	Int norb2set = p.nO2sets[0];
+	for_Int(i, 0, p.norg_sets) {
+		h0[i * norb2set][i * norb2set] -= p.U * 0.5 + p.Uprm;
+	}
 }
 
 

@@ -12,6 +12,7 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 		read_ZEN(file);	p.U = Uc; p.mu = mu; p.jz = Jz; p.nband = nband; p.norg_sets = p.norbs = norbs;
 		p.templet_restrain = restrain; p.templet_control = distribute; p.project = NAV(nband)+"KVSb";
 		p.after_modify_prmtr(); p.recalc_partical_number();
+		p.Uprm = p.U - 2 * p.jz;
 		if(mm) p.print();
 	}
 

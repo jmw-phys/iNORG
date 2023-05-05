@@ -13,7 +13,7 @@ void DMFT::set_parameter() {
 	bethe_u = p.U;
 	bethe_u12 = p.Uprm;
 	p.jz = 0.;
-	p.bandw = SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(bethe_t * bethe_t));
+	p.bandw = 2 * SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(bethe_t * bethe_t));
 	p.derive_ImGreen();
 }
 
@@ -38,7 +38,7 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 		bth.bath_fit(hb,VecInt{1,2});											if (mm) bth.write_ose_hop(iter_cnt);
 		imp.update();															if (mm) imp.write_H0info(bth, -1, iter_cnt);
 		ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 					if (mm) hb_imp.write("hb_imp", iter_cnt);
-		ImGreen g0_imp(p.nband, p);   	imp.find_g0(g0_imp); 					if (mm) g0_imp.write("g0_imp", iter_cnt);
+		norg.modify_Impdata_for_half_fill(imp.impH);
 		norg.up_date_h0_to_solve(imp.impH, 1);									n_eles = norg.write_impurtiy_occupation(iter_cnt);
 		ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);							if (mm)	g0imp.write("g0imp", iter_cnt);
 		ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp);						if (mm) gfimp.write("gfimp", iter_cnt);

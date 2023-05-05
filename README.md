@@ -216,3 +216,8 @@ Version: v1.1.06 @ 2023.05.04
     finished: 1.BUG fixed: crrltfun.cpp; 2. add the "dmft_bethe" calc function for multi-band system.
     next do : going to add the no-half-filling case for the bethe lattice model.
     thinking: What's the physical for the calc of the no-half-filling case?<!--! (Read A.Koga2004prl) --> 
+
+Version: v1.1.07 @ 2023.05.05
+    finished: 1.Find the bug for using U(ni-1/2)(nj-1/2) symmetry; 
+    next do : 1.testing the half-filling case for the bethe lattice model. with u3d0.3; 2. add the no-half-filling case for the bethe lattice model.
+    thinking: (same as prev)
