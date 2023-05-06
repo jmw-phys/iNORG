@@ -23,25 +23,30 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 {
 	// make random seed output together
 	{ mm.barrier(); SLEEP(1); }
+	IFS fitdata("ose_hop"), mbgfdata("mb.gfimp");
 	log("initial");	set_parameter();
 	Bath bth(mm, p); bth.read_ose_hop();
 	Impurity imp(mm, p, bth);
 
 	NORG norg(mm, p);
 	// NORG norg(choose_cauculation_style("ful_pcl_sch", imp));
-
-	g_loc = g0_loc();										if (mm) g_loc.write("g_0loc", iter_cnt);
-	while (iter_cnt < p.iter_max && !converged()) {
+	if(mbgfdata) {g_loc = ImGreen(p.nband, p, "mb.gfimp");	if (mm) g_loc.write("g_loc", iter_cnt);}
+	else {g_loc = g0_loc();									if (mm) g_loc.write("g_0loc", iter_cnt);}
+	while (iter_cnt < p.iter_max && !converged()) 
+	{
 		++iter_cnt;ImGreen hb(p.nband, p);
-		if(mode == 1) {hb = find_hb_by_se(se);									if (mm) hb.write("hb", iter_cnt);}
-		if(mode == 0) {hb = find_hb(g_loc);										if (mm) hb.write("hb", iter_cnt);}
-		bth.bath_fit(hb,VecInt{1,2});											if (mm) bth.write_ose_hop(iter_cnt);
+		if(fitdata){
+			if(mode == 1) {hb = find_hb_by_se(se);					if (mm) hb.write("hb", iter_cnt);}
+			if(mode == 0) {hb = find_hb(g_loc);						if (mm) hb.write("hb", iter_cnt);}
+			if(iter_cnt == 1) {bth.bath_fit(hb, VecInt{1,2});		if (mm) bth.write_ose_hop(iter_cnt);}
+		}
 		imp.update();															if (mm) imp.write_H0info(bth, -1, iter_cnt);
-		ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 					if (mm) hb_imp.write("hb_imp", iter_cnt);
+		ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 					if (mm) hb_imp.write("hb-fit", iter_cnt);
 		norg.modify_Impdata_for_half_fill(imp.impH);
 		norg.up_date_h0_to_solve(imp.impH, 1);									n_eles = norg.write_impurtiy_occupation(iter_cnt);
 		ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);							if (mm)	g0imp.write("g0imp", iter_cnt);
 		ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp);						if (mm) gfimp.write("gfimp", iter_cnt);
+		// for_Int(n, 0, gfimp.nomgs) gfimp[n] -= cmplx(real(gfimp[n]));
 		ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();	if (mm) seimp.write("seimp", iter_cnt);
 
 		if (mode == 0) {
@@ -57,9 +62,11 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 
 		// imp_backup = false;											if (mm) save_the_backup(bth, norg, iter_cnt);
 	}
-		ReGreen g0_imp_re(p.nband, p);imp.find_g0(g0_imp_re);		if (mm) g0_imp_re.write("g0_imp_re");
+		ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp);			if (mm) gfimp.write("gfimp", iter_cnt);
+		ReGreen g0_imp_re(p.nband, p);imp.find_g0(g0_imp_re);		if (mm) g0_imp_re.write("g0fimp");
 		ReGreen gfimp_re(p.nband, p);	norg.get_gimp(gfimp_re);	if (mm) gfimp_re.write("gfimp");
-		ReGreen se = g0_imp_re.inverse() - gfimp_re.inverse();		if (mm) se.write("se_loc_re");
+		ReGreen se = g0_imp_re.inverse() - gfimp_re.inverse();		if (mm) se.write("se_loc");
+		// if (mm) bth.write_ose_hop();
 		// ReGreen g_loc(p.nband, p);find_gloc_by_se(g_loc,se);		if (mm) g_loc.write("g_loc_re");
 }
 
@@ -96,11 +103,16 @@ ImGreen DMFT::find_hb(const ImGreen& g_loc) const
 ImGreen DMFT::find_hb_by_se(const ImGreen& se_i) const
 {
 	ImGreen hb(p.nband, p);
-	for_Int(i,0,p.nband){
-		for_Int(n, 0, g_loc.nomgs){
-			Cmplx z = g_loc.z(n) + bethe_mu - se_i[n][i][i];
-			hb[n][i][i]= -z + g_loc.inverse()[n][i][i];
-		}
+	// for_Int(i,0,p.nband){
+	// 	for_Int(n, 0, g_loc.nomgs){
+	// 		Cmplx z = g_loc.z(n) + bethe_mu - se_i[n][i][i];
+	// 		hb[n][i][i]= -z + g_loc.inverse()[n][i][i];
+	// 	}
+	// }
+	for_Int(n, 0, g_loc.nomgs){
+		MatCmplx z(p.nband, p.nband, 0.);
+		for_Int(i, 0, p.nband) { z[i][i] = g_loc.z(n) + bethe_mu - se_i[n][i][i]; }
+		hb[n] = g_loc.inverse()[n] - z;
 	}
 	return hb;
 }

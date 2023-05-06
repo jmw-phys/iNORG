@@ -100,7 +100,7 @@ void Green::write(const Str& green_name, Int iter_cnt) const
     // if (iter_cnt == 999) { ofs.open(iox + green_name + ".txt"); }
     if (iter_cnt == 999) { ofs.open(green_name + ".txt"); }
     else { ofs.open(iox + "zic" + prefill0(iter_cnt, 3) + ".mb." + green_name + ".txt"); }
-    Str iter_str = iter_cnt == 999 ? "" : STR(iter_cnt)+"_";
+    Str iter_str = iter_cnt == 999 ? "" : STR(green_name,iter_cnt)+"_";
     // OFS ofs(iox + "zic" + prefill0(iter_cnt, 3) + ".mb." + green_name + ".txt");
     ofs << iofmt("sci");
     // real part of green
@@ -277,7 +277,7 @@ void Green::write_zen(const Str& green_name, const Str& rowname, Int nspin, Int 
     }
 }
 
-
+// /*
 Real ImGreen::error(const ImGreen& b, Real omg_rsd) const
 {
 	VecReal wght(nomgs);
@@ -307,7 +307,39 @@ Real ImGreen::error(const ImGreen& b, Real omg_rsd) const
 	}
 	return SQRT(sum);
 }
+// */
 
+/*
+Real ImGreen::error(const ImGreen& b, Real omg_rsd) const // only consider the imag part.
+{
+	VecReal wght(nomgs);
+	for_Int(n, 0, nomgs) {
+		wght[n] = INV(SQR(omg(n) + omg_rsd));
+	}
+	wght *= INV(SUM(wght) * (2 * norbs * norbs));
+
+	// MatReal mag_real(norbs, norbs, 0.);
+	MatReal mag_imag(norbs, norbs, 0.);
+	for_Int(n, 0, nomgs) {
+		// mag_real += SQR(real(g[n])) + SQR(real(b.g[n]));
+		mag_imag += SQR(imag(g[n])) + SQR(imag(b.g[n]));
+	}
+	// // mag_real = SQRT(mag_real * INV(nomgs * 2));
+	mag_imag = SQRT(mag_imag * INV(nomgs * 2));
+	// const Real mag = MAX(1.e-2, MAX(MAX(mag_real), MAX(mag_imag)));
+	const Real mag = MAX(1.e-2, MAX(mag_imag));
+
+	Real sum = 0.;
+	for_Int(n, 0, nomgs) {
+		for_Int(i, 0, norbs) for_Int(j, 0, norbs) {
+			// Cmplx diff = b.g[n][i][j] - g[n][i][j];
+			Real diff = imag(b.g[n][i][j]) - imag(g[n][i][j]);
+			sum += wght[n] * (norm(diff) / SQR(mag));
+		}
+	}
+	return SQRT(sum);
+}
+*/
 
 //w_n=(2n+1)*unit_omg 
 //sum_n :e/(w_n^2+e^2)   =pi*tanh(e*pi/(2*unit_omg))/4*unit_omg
