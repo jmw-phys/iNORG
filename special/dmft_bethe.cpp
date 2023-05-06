@@ -35,7 +35,7 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 	while (iter_cnt < p.iter_max && !converged()) 
 	{
 		++iter_cnt;ImGreen hb(p.nband, p);
-		if(fitdata){
+		if(!(fitdata && iter_cnt == 1)){
 			if(mode == 1) {hb = find_hb_by_se(se);					if (mm) hb.write("hb", iter_cnt);}
 			if(mode == 0) {hb = find_hb(g_loc);						if (mm) hb.write("hb", iter_cnt);}
 			if(iter_cnt == 1) {bth.bath_fit(hb, VecInt{1,2});		if (mm) bth.write_ose_hop(iter_cnt);}
