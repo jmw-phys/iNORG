@@ -221,7 +221,7 @@ Version: v1.1.07 @ 2023.05.05
     finished: 1.Find the bug for using U(ni-1/2)(nj-1/2) symmetry; 
     next do : 1.testing the half-filling case for the bethe lattice model. with u3d0.3; 2. add the no-half-filling case for the bethe lattice model.
     thinking: (same as prev)
-    
+
 Version: v1.1.08 @ 2023.05.06
     finished: 1.finish the benchmark with p3v26.1;
     next do : 1.testing the code in BSCC-T6; 2. add the no-half-filling case for the bethe lattice model.
