@@ -49,6 +49,8 @@ public:
 
 	void update(Str mode = empty_str);
 	
+	// From U(n_up n_dn) to the U(n_up - 0.5)(n_dw - 0.5)	@23.04.19
+	void modify_Impdata_for_half_fill(Impdata& impH_i);
 
 	// void write_H0info(const Bath &b) const;
 	void write_H0info(const Bath &b, Int ndeg = -1, Int iter_cnt = -1) const;

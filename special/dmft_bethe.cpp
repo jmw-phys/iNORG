@@ -23,35 +23,34 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 {
 	// make random seed output together
 	{ mm.barrier(); SLEEP(1); }
-	IFS fitdata("ose_hop"), mbgfdata("mb.gfimp");
+	IFS fitdata(prefill0(p.nI2B[0], 2) + ".ose_hop"), mbgfdata("mb.gfimp");
 	log("initial");	set_parameter();
-	Bath bth(mm, p); bth.read_ose_hop();
+	Bath bth(mm, p); 
 	Impurity imp(mm, p, bth);
-
-	NORG norg(mm, p);
-	// NORG norg(choose_cauculation_style("ful_pcl_sch", imp));
+	if(fitdata) {bth.read_ose_hop();		imp.update();	if (mm) imp.write_H0info(bth, -1, iter_cnt);}
 	if(mbgfdata) {g_loc = ImGreen(p.nband, p, "mb.gfimp");	if (mm) g_loc.write("g_loc", iter_cnt);}
 	else {g_loc = g0_loc();									if (mm) g_loc.write("g_0loc", iter_cnt);}
+	
+    VEC<MatReal> norg_tempU;
 	while (iter_cnt < p.iter_max && !converged()) 
 	{
 		++iter_cnt;ImGreen hb(p.nband, p);
 		if(!(fitdata && iter_cnt == 1)){
 			if(mode == 1) {hb = find_hb_by_se(se);					if (mm) hb.write("hb", iter_cnt);}
 			if(mode == 0) {hb = find_hb(g_loc);						if (mm) hb.write("hb", iter_cnt);}
-			if(iter_cnt == 1) {bth.bath_fit(hb, VecInt{1,2});		if (mm) bth.write_ose_hop(iter_cnt);}
+			bth.bath_fit(hb, VecInt{1,2});							if (mm) bth.write_ose_hop(iter_cnt);
 		}
-		imp.update();															if (mm) imp.write_H0info(bth, -1, iter_cnt);
 		ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 					if (mm) hb_imp.write("hb-fit", iter_cnt);
-		norg.modify_Impdata_for_half_fill(imp.impH);
-		norg.up_date_h0_to_solve(imp.impH, 1);									n_eles = norg.write_impurtiy_occupation(iter_cnt);
+		imp.update();															if (mm) imp.write_H0info(bth, -1, iter_cnt);
+		auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
+		norg.up_date_h0_to_solve(imp.impH, 1);	n_eles = norg.write_impurtiy_occupation(iter_cnt);
 		ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);							if (mm)	g0imp.write("g0imp", iter_cnt);
 		ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp);						if (mm) gfimp.write("gfimp", iter_cnt);
-		// for_Int(n, 0, gfimp.nomgs) gfimp[n] -= cmplx(real(gfimp[n]));
 		ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();	if (mm) seimp.write("seimp", iter_cnt);
 
 		if (mode == 0) {
 			append_gloc_err(gfimp.error(g_loc));				log("gerr_update");
-			g_loc = gfimp;
+			g_loc = 0.3 * g_loc + 0.7 * gfimp;
 		}
 
 		// obtain se from impurity model.
@@ -59,15 +58,19 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 			append_gloc_err(se.error(seimp));					log("gerr_update");
 			se = seimp;	g_loc = find_gloc_by_se(se);
 		}
-
-		// imp_backup = false;											if (mm) save_the_backup(bth, norg, iter_cnt);
+		norg_tempU = norg.uormat;
 	}
-		ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp);			if (mm) gfimp.write("gfimp", iter_cnt);
-		ReGreen g0_imp_re(p.nband, p);imp.find_g0(g0_imp_re);		if (mm) g0_imp_re.write("g0fimp");
-		ReGreen gfimp_re(p.nband, p);	norg.get_gimp(gfimp_re);	if (mm) gfimp_re.write("gfimp");
-		ReGreen se = g0_imp_re.inverse() - gfimp_re.inverse();		if (mm) se.write("se_loc");
-		// if (mm) bth.write_ose_hop();
-		// ReGreen g_loc(p.nband, p);find_gloc_by_se(g_loc,se);		if (mm) g_loc.write("g_loc_re");
+
+	// ! auto_nooc("for_green_calc", imp); // in here we can change the nooc space once, last chance.
+	NORG finalrg(mm, p); 		finalrg.uormat = norg_tempU;	finalrg.up_date_h0_to_solve(imp.impH, 1);
+	ImGreen gfimp(p.nband, p);	finalrg.get_gimp(gfimp);		if (mm) gfimp.write("gfimp", iter_cnt);
+	ReGreen g0_imp_re(p.nband, p);imp.find_g0(g0_imp_re);		if (mm) g0_imp_re.write("g0fimp");
+	ReGreen gfimp_re(p.nband, p);	finalrg.get_gimp(gfimp_re);	if (mm) gfimp_re.write("gfimp");
+	ReGreen se = g0_imp_re.inverse() - gfimp_re.inverse();		if (mm) se.write("se_loc");
+
+		
+	// if (mm) bth.write_ose_hop();
+	// ReGreen g_loc(p.nband, p);find_gloc_by_se(g_loc,se);		if (mm) g_loc.write("g_loc_re");
 }
 
 
@@ -163,18 +166,15 @@ ImGreen DMFT::g0_loc() const {
 	return g0_loc;
 }
 
-NORG DMFT::choose_cauculation_style(Str mode, Impurity &imp){
+void DMFT::auto_nooc(Str mode, const Impurity& imp) {
 	if(mode == "ful_pcl_sch"){
 		Occler opcler(mm, p);
 		VEC<MatReal> uormat;
 		VecInt ordeg = VecInt{ 1, 1, 2, 2 }, nppso;
 		Vec<VecInt> controler(MAX(ordeg) + 1, VecInt(p.ndiv, 0));
 		MatReal occnum, occweight;
-		// controler[0] = {0, -1, p.control_divs[0][2], 0, p.control_divs[0][4], 1};
 		controler[0] = p.control_divs[0];
-		// if(mm) WRN(NAV(controler[0]));
 		{
-			// p.if_norg_imp = false; p.after_modify_prmtr(); 
 			NORG norg(opcler.find_ground_state_partical(imp.impH, VecInt{1, 2}));
 			uormat = norg.uormat;
 			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb / p.norg_sets);occweight = occnum;
@@ -194,20 +194,5 @@ NORG DMFT::choose_cauculation_style(Str mode, Impurity &imp){
 
 		// p.if_norg_imp = true; p.after_modify_prmtr(); 
 		p.according_controler(controler, ordeg);
-		// {// WRN
-		// 	MatInt m_controler(MAX(or_deg_idx) + 1, p.ndiv);
-		// 	for_Int(i, 0, controler.size()) m_controler[i] = controler[i];
-		// 	if(mm) WRN(NAV3(ordeg,m_controler, p.control_divs));
-		// }
-		NORG frezeorb(mm, p);
-		IFS ifs_a("ru" + frezeorb.scsp.nppso_str() + ".bi"); frezeorb.uormat = uormat;
-		if (ifs_a) for_Int(i, 0, frezeorb.uormat.size()) biread(ifs_a, CharP(frezeorb.uormat[i].p()), frezeorb.uormat[i].szof());
-		frezeorb.up_date_h0_to_solve(imp.impH, 1);
-		if (mm)	{
-			OFS ofs_a;
-			ofs_a.open("ru" + frezeorb.scsp.nppso_str() + ".bi");
-			for_Int(i, 0, frezeorb.uormat.size()) biwrite(ofs_a, CharP(frezeorb.uormat[i].p()), frezeorb.uormat[i].szof());
-		}
-		return frezeorb;
 	}
 }

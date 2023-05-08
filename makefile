@@ -74,7 +74,7 @@ clean:
 
 clear:
 
-	-rm -rf bi/*.txt
+	-rm -rf bi/*.txt $(norg)
 	-rm -rf io/output.*
 	-rm -rf io/*.txt
 	# -rm -rf tso/*

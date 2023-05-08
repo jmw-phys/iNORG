@@ -51,8 +51,6 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	if (mm) WRN(NAV2(impH.first,scsp.dim));
 	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 
-	// if (mm) WRN(NAV2(oneedm.dm[0], uormat[0]));
-
 	oneedm.update(); final_ground_state = oneedm.ground_state;
 	// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 	groune_lst = oneedm.groundstate_energy;
@@ -102,6 +100,8 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	PIO_occweight(occnum);
 	p.rotationU = uormat;
 	// write_impurtiy_occupation();
+
+	// if (mm) WRN(NAV4(oneedm.dm[0], uormat[0],oneedm.dm[2], uormat[2]));
 
 	if(mm) {
 		std::cout << "\nnorg ground state energy: " << groune_lst << "  " << present() << std::endl;
@@ -481,17 +481,6 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 	}
 	// if(mm) WRN(NAV(full_uormat));
 }
-
-// From U(n_up n_dn) to the U(n_up - 0.5)(n_dw - 0.5) + U'(n_up - 0.5)(n_dw - 0.5)
-void NORG::modify_Impdata_for_half_fill(Impdata& impH_i) const {
-	//! modify the non-interacting part of impurity Hamiltonian
-	MatReal& h0 = impH_i.first;
-	Int norb2set = p.nO2sets[0];
-	for_Int(i, 0, p.norg_sets) {
-		h0[i * norb2set][i * norb2set] -= p.U * 0.5 + p.Uprm;
-	}
-}
-
 
 //------------------------------------------------------------------ io ------------------------------------------------------------------
 

@@ -98,9 +98,6 @@ public:
 	NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, Str tab_name);
 
 	// NORG(const MyMpi& mm_i, const Impurity& imp_i, const Prmtr& prmtr_i);
-
-	// From U(n_up n_dn) to the U(n_up - 0.5)(n_dw - 0.5)	@23.04.19
-	void modify_Impdata_for_half_fill(Impdata& impH_i) const;
 	
 	// for multi-number space.
 	void up_date_h0_to_solve(const Impdata& impH, const VecReal sub_energy = Vec<Real>()); 

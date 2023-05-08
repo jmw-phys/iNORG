@@ -42,7 +42,7 @@ void Prmtr::set_values() {
     Uprm = 2.7;
     // U = 0.;
     // Uprm = 0.;
-    mu = 0.;
+    mu = 1.;
     bandw = 50.;            //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
     eimp = VecReal(norbs, 0.);
 
@@ -55,7 +55,7 @@ void Prmtr::set_values() {
     if_norg_imp = false;
     imp_backup = false;
     templet_restrain = !if_norg_imp ? VecInt{0, -1, -2,  0,  2,  1} : VecInt{-1, -4, -4,  4,  4,  1};
-    templet_control  = !if_norg_imp ? VecInt{1,  5,  0,  1,  0,  5} : VecInt{ 0,  1,  1,  1,  1,  0};
+    templet_control  = !if_norg_imp ? VecInt{1,  2,  0,  1,  0,  2} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
     nI2B = SUM(templet_control) - 1;                    // default value:
@@ -110,6 +110,8 @@ void Prmtr::according_nppso(const VecInt& nppsos) const
             control_divs[i + 1] = templet_control;
             control_divs[i + 1][0] = nppsos[i] - SUM(control_divs[i + 1].truncate(1, Int(ndiv / 2)));
             control_divs[i + 1][ndiv - 1] = (nO2sets[i] - nppsos[i]) - SUM(control_divs[i + 1].truncate(Int(ndiv / 2), ndiv - 1));
+            // control_divs[i + 1][0] = nppsos[i] != SUM(control_divs[i + 1]) ? nppsos[i] - SUM(control_divs[i + 1].truncate(1, Int(ndiv / 2)))       : SUM(control_divs[i + 1]) - control_divs[i + 1][0];
+            // control_divs[i + 1][ndiv - 1] = nppsos[i] != 0 ? (nO2sets[i] - nppsos[i]) - SUM(control_divs[i + 1].truncate(Int(ndiv / 2), ndiv - 1)) : SUM(control_divs[i + 1]) - control_divs[i + 1][0];
             // WRN(NAV2(control_divs, templet_control));
             for_Int(j, 0, ndiv / 2.) {
                 if (control_divs[i + 1][j] < 0) {
@@ -126,15 +128,17 @@ void Prmtr::according_nppso(const VecInt& nppsos) const
             control_divs[i + 1][1] = nppsos[i] - ((control_divs[i + 1][0] + control_divs[i + 1][ndiv / 2]) / 2) \
                 - SUM(control_divs[i + 1].truncate(2, Int(ndiv / 2)));
             control_divs[i + 1][ndiv - 1] = (nO2sets[i] - nppsos[i])\
-                - (control_divs[i + 1][0] + control_divs[i + 1][ndiv / 2]) / 2. - SUM(control_divs[i + 1].truncate(Int(ndiv / 2), ndiv));
+                - (control_divs[i + 1][0] + control_divs[i + 1][ndiv / 2]) / 2. - SUM(control_divs[i + 1].truncate(Int(ndiv / 2) + 1, ndiv - 1));
 
-            for_Int(j, 1, ndiv / 2.) if (control_divs[i + 1][j] < 0) {
-                int t = -control_divs[i + 1][j];
-                control_divs[i + 1][j + 1] -= t; control_divs[i + 1][j] = 0;
-            }
-            for_Int(j, 0, (ndiv / 2.) - 1) if (control_divs[i + 1][ndiv - j - 1] < 0) {
-                int t = -control_divs[i + 1][ndiv - j - 1];
-                control_divs[i + 1][ndiv - j - 2] -= t; control_divs[i + 1][ndiv - j - 1] = 0;
+            for_Int(j, 1, ndiv / 2.) {
+                if (control_divs[i + 1][j] < 0) {
+                    int t = -control_divs[i + 1][j]; control_divs[i + 1][ndiv - j] += t;
+                    control_divs[i + 1][j + 1] -= t; control_divs[i + 1][j] = 0;
+                }
+                if (control_divs[i + 1][ndiv - j] < 0) {
+                    int t = -control_divs[i + 1][ndiv - j]; control_divs[i + 1][j] += t;
+                    control_divs[i + 1][ndiv - j - 1] -= t; control_divs[i + 1][ndiv - j] = 0;
+                }
             }
         }
     }

@@ -45,7 +45,7 @@ public:
 	bool imp_backup;		// to tell if you has the impurity model's back up.
 
 private:
-	NORG choose_cauculation_style(Str mode, Impurity &imp);
+	void auto_nooc(Str mode, const Impurity &imp);
 
 	bool converged() const {
 		const Real dev = DEV(gloc_err);

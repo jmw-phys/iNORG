@@ -88,11 +88,13 @@ void Impurity::update(Str mode) {
     if (mode.empty()) {
         set_factor();
         impH = std::make_pair(h0, set_interaction());
+        modify_Impdata_for_half_fill(impH);
     }
     else if (mode == "behte") {
         p.jz = 0.;
         set_factor();
         impH = std::make_pair(h0, set_interaction());
+        modify_Impdata_for_half_fill(impH);
     }
     // if(mm) WRN(NAV(h0));
 }
@@ -185,4 +187,13 @@ VecReal Impurity::set_interaction() {
     }
     // if (mm) WRN(NAV5(p.U, p.Uprm ,p.nO2sets, interaction.size(), SUM(interaction[0][0])));
     return interaction;
+}
+
+void Impurity::modify_Impdata_for_half_fill(Impdata& impH_i){
+    //! modify the non-interacting part of impurity Hamiltonian
+	MatReal& h0 = impH_i.first;
+	Int norb2set = p.nO2sets[0];
+	for_Int(i, 0, p.norg_sets) {
+		h0[i * norb2set][i * norb2set] -= p.U * 0.5 + p.Uprm * 0.5 + (p.Uprm - p.jz) * 0.5;
+	}
 }

@@ -72,6 +72,7 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_
             VEC<VecInt> nppsos = list_all_posible_nppsos(nparticals, or_deg);
             sub_energy.reset(nppsos.size(),0.); sub_energy = 0.;
         for(const auto& nppso: nppsos) {
+            if(MIN(nppso)==0 || MAX(nppso)==p.nO2sets[0]) break;
             if (mm) std::cout << "The " << ++counter_norg << "-th NORG begin" << std::endl; // norg counter
 
             p.according_nppso(nparticals = nppso);
@@ -106,6 +107,42 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_
             // if(mm) WRN(NAV2(sub_energy.idx_min(),nppsos[sub_energy.idx_min()].mat(1,10)));
             nparticals = nppsos[sub_energy.idx_min()];
             // break;
+        }
+    }
+}
+
+
+VecInt Occler::find_gs_nppso(const Impdata &impH_i, const VecInt& or_deg)
+{
+    Int counter_norg(0);
+    VEC<MatReal> u_temp;
+    while(1){
+            Int counter(0);
+            VEC<VecInt> nppsos = list_all_posible_nppsos(nparticals, or_deg);
+            sub_energy.reset(nppsos.size(),0.); sub_energy = 0.;
+        for(const auto& nppso: nppsos) {
+            if(MIN(nppso)==0 || MAX(nppso)==p.nO2sets[0]) break;
+            if (mm) std::cout << "The " << ++counter_norg << "-th NORG begin" << std::endl; // norg counter
+
+            p.according_nppso(nparticals = nppso);
+            NORG a(mm, p);
+            // IFS ifs_a("ru" + nppso_str(a.scsp.nppso) + ".bi");
+            // if (ifs_a) for_Int(i, 0, a.uormat.size()) biread(ifs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());
+            a.up_date_h0_to_solve(impH_i, sub_energy.truncate(0, counter)); sub_energy[counter] = a.groune_lst;
+            if (mm) {
+                // OFS ofs_a;
+                // ofs_a.open("ru" + nppso_str(a.scsp.nppso) + ".bi"); 
+                // for_Int(i, 0, a.uormat.size()) biwrite(ofs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());
+            }
+            // if(mm) WRN(NAV4(counter_norg, counter, a.groune_lst, a.scsp.nppso.mat(1,nppsos[0].size())));
+            counter++;
+        }
+
+        if (sub_energy.idx_min() == 0) {
+            return nppsos[0];
+        }
+        else {
+            nparticals = nppsos[sub_energy.idx_min()];
         }
     }
 }
