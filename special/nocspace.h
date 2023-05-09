@@ -135,7 +135,7 @@ private:
 	}
 	
 	Str nppso_str(const VecInt &nppso_i) const	{
-		Str temp; for_Int(i, 0, nppso_i.size()) if (i % 2 == 0) temp += "-" + STR(nppso_i[i]);	return temp;
+		Str temp; for_Int(i, 0, nppso_i.size()) { if (i == 0) temp += STR(nppso_i[i]); else if (i % 2 == 0) temp += "-" + STR(nppso_i[i]); }	return temp;
 	}
 public:
 
@@ -162,7 +162,7 @@ public:
 	void print(std::ostream& os = std::cout) const;
 
 	Str nppso_str() const	{
-		Str temp; for_Int(i, 0, nppso.size()) if (i % 2 == 0) temp += "-" + STR(nppso[i]);	return temp;
+		Str temp; for_Int(i, 0, p.npartical.size()) { if (i == 0) temp += STR(p.npartical[i]); else if (i % 2 == 0) temp += "-" + STR(p.npartical[i]); }	return temp;
 	}
 
 	VecInt free_div_base_decode(Int idx, VEC<VEC<Int> > v) const;

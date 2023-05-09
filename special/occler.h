@@ -31,9 +31,7 @@ private:
 	VEC<VecInt> list_all_posible_nppsos(const VecInt& nppso_i, const VecInt& or_deg) const ;
 
     Str nppso_str(const VecInt& nppso_i) const{
-		Str temp;
-		for_Int(i, 0, nppso_i.size()) if(i%2==0) temp += "-" + STR(nppso_i[i]);
-		return temp;
+		Str temp; for_Int(i, 0, nppso_i.size()) { if (i == 0) temp += STR(nppso_i[i]); else if (i % 2 == 0) temp += "-" + STR(nppso_i[i]); }	return temp;
 	}
 
 	VEC<VEC<Int>> cart_product(const VEC<VEC<Int>> &v) const

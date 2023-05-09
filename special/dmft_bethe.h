@@ -70,12 +70,15 @@ private:
 
 	void print_log(const Str& lbl, std::ostream& os = std::cout) const {
 		using namespace std;
+		Str temp; for_Int(i, 0, p.npartical.size()) {if (i == 0) temp += STR(p.npartical[i]); else if (i % 2 == 0) temp += "-" + STR(p.npartical[i]);}
+
 		os << iofmt("sci");
 		os << setw(4) << iter_cnt;
 		os << "  " << setw(w_Real) << gloc_err[gloc_err.size() - 1];
-			for_Int(i, 0, n_eles.size()) {
-				os << "  " << setw(w_Real) << n_eles[i];
-			}
+		os << setw(4) << temp;
+		for_Int(i, 0, n_eles.size()) {
+			os << "  " << setw(w_Real) << n_eles[i];
+		}
 		os << "  " << present();
 		os << "  " << lbl << endl;
 	}
