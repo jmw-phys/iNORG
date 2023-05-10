@@ -236,3 +236,8 @@ Version: v1.1.10 @ 2023.05.10
     finished: 1.fix the code for calc the 1 band Hubbard model.
     next do : testing 1-band the code in BSCC-T6;
     thinking: (same as prev)
+
+Version: v1.1.11 @ 2023.05.10
+    finished: 1.add the degenerate ground state calc.
+    next do : testing 1-band the code in BSCC-T6;
+    thinking: (same as prev)

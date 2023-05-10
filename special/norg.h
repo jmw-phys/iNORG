@@ -145,6 +145,9 @@ public:
 	void get_g_by_CF(Green& imp_i);
 
 	void get_gimp(Green& imp_i);
+
+	void get_gimp_eigpairs(Green& imp_i);
+
 	void get_gimp(Green& imp_i, VecInt or_deg);
 
 	void find_g0(Green& imp_i);

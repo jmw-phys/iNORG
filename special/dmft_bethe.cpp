@@ -47,7 +47,7 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 		auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
 		if (iter_cnt > 1) norg.uormat = norg_tempU;	norg.up_date_h0_to_solve(imp.impH, 1);	n_eles = norg.write_impurtiy_occupation(iter_cnt);
 		ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);										if (mm)	g0imp.write("g0imp", iter_cnt);
-		ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp);									if (mm) gfimp.write("gfimp", iter_cnt);
+		ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
 		ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();				if (mm) seimp.write("seimp", iter_cnt);
 
 		if (mode == 0) {
@@ -195,7 +195,7 @@ void DMFT::auto_nooc(Str mode, const Impurity& imp) {
 			nooc_o = o - freze_o; nooc_e = e - freze_e;
 			controler[i+1] = p.if_norg_imp ?  VecInt{freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{1, freze_o, nooc_o, 1, nooc_e, freze_e };
 		}
-		if(mm) WRN(NAV(controler));
+		// if(mm) WRN(NAV(controler));
 		// p.if_norg_imp = true; p.after_modify_prmtr(); 
 		p.according_controler(controler, ordeg);
 	}

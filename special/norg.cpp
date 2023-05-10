@@ -257,6 +257,36 @@ void NORG::get_gimp(Green& imp_i)
 	}
 }
 
+void NORG::get_gimp_eigpairs(Green& imp_i)
+{
+	for_Int(i, 0, p.nband) {
+		StdVecInt difference = {(i+1), -(i+1)};
+		for(const auto ii: difference)
+		{
+			NocSpace scsp_sub(mm, p, nppso(p.npartical, ii));
+			Operator opr_sub(mm, p, scsp_sub);
+			set_row_primeter_byimpH(uormat, impH, opr_sub.oper_value);
+			MatReal egses(oneedm.lowest_eigpairs(scsp.dim, false, 1));
+			for_Int(egs_idx, 0, egses.nrows()){
+				CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, egses[egs_idx], i * 2);
+				if(imp_i.type_info() == STR("ImGreen")) {
+					ImGreen green_function(1, p);
+					if(ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
+					if(ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
+					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0];
+				}
+				if(imp_i.type_info() == STR("ReGreen")) {
+					ReGreen green_function(1, p);
+					if(ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
+					if(ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
+					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0];
+				}
+			}
+		}
+		if (mm) PIO("finished the " + STR(i) + " find_g_norg   " + present());
+	}
+}
+
 void NORG::get_gimp(Green& imp_i, VecInt or_deg)
 {
 	VecInt idx(MAX(or_deg),0); Int cter(0);
