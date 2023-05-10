@@ -231,3 +231,8 @@ Version: v1.1.09 @ 2023.05.08
     finished: 1.adding the no-half-filling case for the bethe lattice model.
     next do : testing the code in BSCC-T6;
     thinking: (same as prev)
+
+Version: v1.1.10 @ 2023.05.10
+    finished: 1.fix the code for calc the 1 band Hubbard model.
+    next do : testing 1-band the code in BSCC-T6;
+    thinking: (same as prev)

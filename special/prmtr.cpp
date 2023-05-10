@@ -11,12 +11,12 @@ Prmtr::Prmtr(const MyMpi &mm) : np(mm.np())
     derive();
     // if (mm) print();
     // if (mm) { OFS ofs(iox + "log.parameters.txt", std::ios::app);  print(ofs); }
-    if (mm) { OFS ofss("log.parameters.txt", std::ios::app);  print(ofss); }
+    // if (mm) { OFS ofss("log.parameters.txt", std::ios::app);  print(ofss); }
 }
 
 void Prmtr::set_inert_values()
 {
-    nband = 2;         
+    nband = 1;         
     norbs = nband * 2;
     project = "2band_KH";
     
@@ -38,11 +38,11 @@ void Prmtr::set_inert_values()
 void Prmtr::set_values() {
     //model related
     jz = 0.0;
-    U = 3.;
+    U = 0.;
     Uprm = 2.7;
     // U = 0.;
     // Uprm = 0.;
-    mu = 1.;
+    mu = 0.;
     bandw = 50.;            //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
     eimp = VecReal(norbs, 0.);
 
@@ -55,7 +55,7 @@ void Prmtr::set_values() {
     if_norg_imp = false;
     imp_backup = false;
     templet_restrain = !if_norg_imp ? VecInt{0, -1, -4,  0,  4,  1} : VecInt{-1, -4, -4,  4,  4,  1};
-    templet_control  = !if_norg_imp ? VecInt{1, 14,  0,  1,  0, 14} : VecInt{ 0,  1,  1,  1,  1,  0};
+    templet_control  = !if_norg_imp ? VecInt{1,  4,  0,  1,  0,  4} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
     nI2B = SUM(templet_control) - 1;                    // default value:

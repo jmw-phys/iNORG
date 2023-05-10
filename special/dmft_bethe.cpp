@@ -9,12 +9,14 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
 
 void DMFT::set_parameter() {
 	bethe_mu = p.mu;
-	bethe_t.reset(Vec{0.5, 0.25});
+	bethe_t.reset(p.nband, 0.5);
+	if (p.nband > 1) for_Int(i, 0, p.nband - 1) bethe_t[i + 1] = 0.5 * bethe_t[i];
 	bethe_u = p.U;
 	bethe_u12 = p.Uprm;
 	p.jz = 0.;
 	p.bandw = 2 * SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(bethe_t * bethe_t));
 	p.derive_ImGreen();
+	if (mm) { OFS ofss("log.parameters.txt", std::ios::app);  p.print(ofss); }
 }
 
 DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
@@ -27,8 +29,8 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 	log("initial");	set_parameter();
 	Bath bth(mm, p); 
 	Impurity imp(mm, p, bth);
-	if(fitdata) {bth.read_ose_hop();		imp.update();									if (mm) imp.write_H0info(bth, -1, iter_cnt);}
-	if(mbgfdata) {g_loc = ImGreen(p.nband, p, "mb.gfimp");									if (mm) g_loc.write("g_loc", iter_cnt);}
+	if (fitdata) bth.read_ose_hop();
+	if (mbgfdata) { g_loc = ImGreen(p.nband, p, "mb.gfimp");								if (mm) g_loc.write("g_loc", iter_cnt); }
 	else {g_loc = g0_loc();																	if (mm) g_loc.write("g_0loc", iter_cnt);}
 	
     VEC<MatReal> norg_tempU;
@@ -38,10 +40,10 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 		if (!(fitdata && iter_cnt == 1)) {
 			if(mode == 1) {hb = find_hb_by_se(se);											if (mm) hb.write("hb", iter_cnt);}
 			if(mode == 0) {hb = find_hb(g_loc);												if (mm) hb.write("hb", iter_cnt);}
-			bth.bath_fit(hb, VecInt{1,2});													if (mm) bth.write_ose_hop(iter_cnt);
+			bth.bath_fit(hb,iter_cnt);														if (mm) bth.write_ose_hop(iter_cnt);
 		}
-		ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 								if (mm) hb_imp.write("hb-fit", iter_cnt);
 		imp.update();																		if (mm) imp.write_H0info(bth, -1, iter_cnt);
+		ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 								if (mm) hb_imp.write("hb-fit", iter_cnt);
 		auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
 		if (iter_cnt > 1) norg.uormat = norg_tempU;	norg.up_date_h0_to_solve(imp.impH, 1);	n_eles = norg.write_impurtiy_occupation(iter_cnt);
 		ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);										if (mm)	g0imp.write("g0imp", iter_cnt);
@@ -171,19 +173,20 @@ void DMFT::auto_nooc(Str mode, const Impurity& imp) {
 	if(mode == "ful_pcl_sch"){
 		Occler opcler(mm, p);
 		VEC<MatReal> uormat;
-		VecInt ordeg = VecInt{ 1, 1, 2, 2 }, nppso;
+		VecInt ordeg(p.norbs, 0), nppso;
+		for_Int(i, 0, p.nband) for_Int(j, 0, 2) ordeg[i * 2 + j] = i + 1;
 		Vec<VecInt> controler(MAX(ordeg) + 1, VecInt(p.ndiv, 0));
 		MatReal occnum, occweight;
 		controler[0] = p.control_divs[0];
 		{
-			NORG norg(opcler.find_ground_state_partical(imp.impH, VecInt{1, 2}));
+			NORG norg(opcler.find_ground_state_partical(imp.impH, VecInt{1}));
 			uormat = norg.uormat;
 			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb / p.norg_sets);occweight = occnum;
 			nppso = norg.scsp.nppso;
 		}
 		for_Int(i, 0, p.norg_sets) for_Int(j, 0, p.n_rot_orb/p.norg_sets) occweight[i][j] = occnum[i][j] > 0.5 ? (1 - occnum[i][j]) : occnum[i][j];
 
-		for_Int(i, 0, MAX(VecInt{1, 2})){
+		for_Int(i, 0, MAX(ordeg)){
 			Int o(0), freze_o(0), e(0), freze_e(0), orb_rep(0), nooc_o(0), nooc_e(0);
 			for_Int(j, 0, p.norg_sets) {orb_rep = j; if(ordeg[j] == i + 1) break;}
 			o = nppso[orb_rep] - 1; e = p.nI2B[orb_rep] - nppso[orb_rep];
@@ -192,7 +195,7 @@ void DMFT::auto_nooc(Str mode, const Impurity& imp) {
 			nooc_o = o - freze_o; nooc_e = e - freze_e;
 			controler[i+1] = p.if_norg_imp ?  VecInt{freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{1, freze_o, nooc_o, 1, nooc_e, freze_e };
 		}
-
+		if(mm) WRN(NAV(controler));
 		// p.if_norg_imp = true; p.after_modify_prmtr(); 
 		p.according_controler(controler, ordeg);
 	}

@@ -26,9 +26,8 @@ void Bath::bath_fit(const ImGreen& hb_i, Int iter)
 		ose = a.truncate(0, nb);
 		hop = a.truncate(nb, nb + nb);
 		regularize_ose_hop();
-		if(!ifs) {vec_ose.push_back(ose);vec_hop.push_back(hop);}
-		else {vec_ose[band_i] = ose; vec_hop[band_i] = hop;}
-		// if(mm) WRN(NAV2(vec_ose.size(),vec_hop.size()));
+		vec_ose[band_i] = ose; vec_hop[band_i] = hop;
+		// if(mm) WRN(NAV2(vec_ose[0],vec_hop[0]));
 		if (mm) {
 			const HybErr hyberr(p, hb, nb);
 			const VecReal a = concat(ose, hop);
