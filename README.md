@@ -241,3 +241,8 @@ Version: v1.1.11 @ 2023.05.10
     finished: 1.add the degenerate ground state calc.
     next do : testing 1-band the code in BSCC-T6;
     thinking: (same as prev)
+
+Version: v1.1.11 @ 2023.05.11
+    finished: Using the sgm iteration for the behte lattice iteration.
+    next do : testing 1- or 2-band calc in BSCC-T6;
+    thinking: (same as prev)

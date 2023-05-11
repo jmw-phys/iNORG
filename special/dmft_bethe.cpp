@@ -25,11 +25,12 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 {
 	// make random seed output together
 	{ mm.barrier(); SLEEP(1); }
-	IFS fitdata(prefill0(p.nI2B[0], 2) + ".ose_hop"), mbgfdata("mb.gfimp");
+	IFS fitdata(prefill0(p.nI2B[0], 2) + ".ose_hop"), mbgfdata("mb.gfimp"), mbsedata("mb.seimp");
 	log("initial");	set_parameter();
-	Bath bth(mm, p); 
-	Impurity imp(mm, p, bth);
+	Bath bth(mm, p); 	Impurity imp(mm, p, bth);
+	NORG norg(mm, p);
 	if (fitdata) bth.read_ose_hop();
+	if (mbsedata) { se	   = ImGreen(p.nband, p, "mb.seimp");								if (mm) se.write("se", iter_cnt); }
 	if (mbgfdata) { g_loc = ImGreen(p.nband, p, "mb.gfimp");								if (mm) g_loc.write("g_loc", iter_cnt); }
 	else {g_loc = g0_loc();																	if (mm) g_loc.write("g_0loc", iter_cnt);}
 	
@@ -38,34 +39,33 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 	{
 		++iter_cnt;ImGreen hb(p.nband, p);
 		if (!(fitdata && iter_cnt == 1)) {
-			if(mode == 1) {hb = find_hb_by_se(se);											if (mm) hb.write("hb", iter_cnt);}
-			if(mode == 0) {hb = find_hb(g_loc);												if (mm) hb.write("hb", iter_cnt);}
+			hb = (mode == 1) ? find_hb_by_se(se):find_hb(g_loc);							if (mm) hb.write("hb", iter_cnt);
 			bth.bath_fit(hb,iter_cnt);														if (mm) bth.write_ose_hop(iter_cnt);
 		}
 		imp.update();																		if (mm) imp.write_H0info(bth, -1, iter_cnt);
 		ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 								if (mm) hb_imp.write("hb-fit", iter_cnt);
-		auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
+		// auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
 		if (iter_cnt > 1) norg.uormat = norg_tempU;	norg.up_date_h0_to_solve(imp.impH, 1);	n_eles = norg.write_impurtiy_occupation(iter_cnt);
 		ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);										if (mm)	g0imp.write("g0imp", iter_cnt);
 		ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
 		ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();				if (mm) seimp.write("seimp", iter_cnt);
 
 		if (mode == 0) {
-			append_gloc_err(gfimp.error(g_loc));				log("gerr_update");
+			append_gloc_err(gfimp.error(g_loc));											log("gerr_update");
 			// g_loc = 0.3 * g_loc + 0.7 * gfimp;
 			g_loc = gfimp;
 		}
 
 		// obtain se from impurity model.
 		if (mode == 1) {
-			append_gloc_err(se.error(seimp));					log("gerr_update");
+			append_gloc_err(se.error(seimp));												log("gerr_update");
 			se = seimp;	g_loc = find_gloc_by_se(se);
 		}
 		norg_tempU = norg.uormat;
 	}
 
 	// ! auto_nooc("for_green_calc", imp); // in here we can change the nooc space once, last chance.
-	NORG finalrg(mm, p); 		finalrg.uormat = norg_tempU;								finalrg.up_date_h0_to_solve(imp.impH, 0);
+	NORG finalrg(mm, p); 		finalrg.uormat = norg_tempU;								finalrg.up_date_h0_to_solve(imp.impH, 1);
 	ImGreen gfimp(p.nband, p);	finalrg.get_gimp(gfimp);									if (mm) gfimp.write("gfimp", iter_cnt);
 	ReGreen g0_imp_re(p.nband, p);imp.find_g0(g0_imp_re);									if (mm) g0_imp_re.write("g0fimp");
 	ReGreen gfimp_re(p.nband, p);	finalrg.get_gimp(gfimp_re);								if (mm) gfimp_re.write("gfimp");

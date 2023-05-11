@@ -38,7 +38,7 @@ void Prmtr::set_inert_values()
 void Prmtr::set_values() {
     //model related
     jz = 0.0;
-    U = 4.;
+    U = 2.;
     Uprm = 0.;
     // U = 0.;
     // Uprm = 0.;
@@ -54,8 +54,8 @@ void Prmtr::set_values() {
     // NORG parameter.
     if_norg_imp = false;
     imp_backup = false;
-    templet_restrain = !if_norg_imp ? VecInt{0, -8, -8,  0,  8,  8} : VecInt{-1, -4, -4,  4,  4,  1};
-    templet_control  = !if_norg_imp ? VecInt{1,  4,  0,  1,  0,  4} : VecInt{ 0,  1,  1,  1,  1,  0};
+    templet_restrain = !if_norg_imp ? VecInt{0, -1, -2,  0,  2,  1} : VecInt{-1, -4, -4,  4,  4,  1};
+    templet_control  = !if_norg_imp ? VecInt{1,  3,  2,  1,  2,  3} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
     nI2B = SUM(templet_control) - 1;                    // default value:
@@ -66,10 +66,6 @@ void Prmtr::set_values() {
     // nooc_mode = STR("cnooc");
     after_modify_prmtr();
     recalc_partical_number();
-    // npartical.reset(norg_sets, 0);
-    // for_Int(i, 0, norg_sets) npartical[i] = SUM(control_divs[i + 1])/2 - 1;
-    // stage2_restrain = {0, -0, -3,  0,  3,  0};
-    // stage2_control =  {8, 20,  8,  8,  8, 20};
 }
 
 // we set first divison as impurity. The maximum number of cavity("-"); mean electron("+").
