@@ -273,13 +273,13 @@ void NORG::get_gimp_eigpairs(Green& imp_i)
 					ImGreen green_function(1, p);
 					if(ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
 					if(ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
-					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0];
+					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / Cmplx(egses.nrows());
 				}
 				if(imp_i.type_info() == STR("ReGreen")) {
 					ReGreen green_function(1, p);
 					if(ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
 					if(ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
-					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0];
+					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / Cmplx(egses.nrows());
 				}
 			}
 		}

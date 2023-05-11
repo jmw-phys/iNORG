@@ -246,3 +246,8 @@ Version: v1.1.11 @ 2023.05.11
     finished: Using the sgm iteration for the behte lattice iteration.
     next do : testing 1- or 2-band calc in BSCC-T6;
     thinking: (same as prev)
+
+Version: v1.1.12 @ 2023.05.11
+    finished: bug fix for mb.gfimp calc.
+    next do : testing 1- or 2-band calc in BSCC-T6;
+    thinking: (same as prev)
