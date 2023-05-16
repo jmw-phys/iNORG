@@ -54,7 +54,8 @@ public:
 	VEC<MatReal> find_unitary_orbital_rotation_matrix();
 
 	// To update calculate density matrix.
-	void update() { dm = find_one_electron_density_matrix(lowest_eigpairs(scsp.dim), table); }
+	// model = 0: one ground state; model = 1: all the degeneration ground state;
+	void update(Int mode = 0);
 
 	// To update density matrix by corrstate.
 	void update(const Crrvec& corstate_p, const Crrvec& corstate_m) { dm = correct_one_electron_density_matrix(ground_state, corstate_p, corstate_m); }
@@ -81,4 +82,14 @@ public:
 	MatReal OrthonormalityRecover(const MatReal &mat);
 
 	VEC<VecReal> check_dm_get_occupation_number() const;
+private:
+	VEC<MatReal> dm_initialize() {
+		VEC<MatReal> dm_i;
+
+		for_Int(i, 0, p.nO2sets.size()) {
+			MatReal temp(dmat(p.nO2sets[i], 0.));
+			dm_i.push_back(std::move(temp));
+		}
+		return std::move(dm_i);
+	}
 };

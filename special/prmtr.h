@@ -21,6 +21,7 @@ public:
 	mutable Real jz;				// hund interaction Jz
 	mutable Real Uprm;				// U^' as U - 2 * Jz
 	Real mu;						// chemical potential
+	mutable Real degel;				// Degenerate energy levels
 	VecReal	eimp;					// the impurity energy 
 	// VecReal t;					// The  hopping for sites,t[0] is (on-site energy-mu)
 	//ReGreen

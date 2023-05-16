@@ -51,7 +51,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	if (mm) WRN(NAV2(impH.first,scsp.dim));
 	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 
-	oneedm.update(); final_ground_state = oneedm.ground_state;
+	oneedm.update(1); final_ground_state = oneedm.ground_state;
 	// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 	groune_lst = oneedm.groundstate_energy;
 	if (mm)	{
@@ -73,7 +73,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 		set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 		// if (mm)PIO("ground_state size" + NAV(oneedm.ground_state.size()));
 		groune_pre = groune_lst;	occnum_pre = occnum_lst;
-		oneedm.update(); final_ground_state = oneedm.ground_state;
+		oneedm.update(1); final_ground_state = oneedm.ground_state;
 		// if (mm) PIO(NAV(see_MatReal(oneedm.dm)));
 		// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 		occnum_lst = VECVectoVec(oneedm.occupationnumber);				PIO_occweight(occnum_lst);
@@ -266,20 +266,20 @@ void NORG::get_gimp_eigpairs(Green& imp_i)
 			NocSpace scsp_sub(mm, p, nppso(p.npartical, ii));
 			Operator opr_sub(mm, p, scsp_sub);
 			set_row_primeter_byimpH(uormat, impH, opr_sub.oper_value);
-			MatReal egses(oneedm.lowest_eigpairs(scsp.dim, false, 1));
-			for_Int(egs_idx, 0, egses.nrows()){
+			MatReal egses(oneedm.lowest_eigpairs(scsp.dim, false, p.degel));
+			for_Int(egs_idx, 0, p.degel){
 				CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, egses[egs_idx], i * 2);
 				if(imp_i.type_info() == STR("ImGreen")) {
 					ImGreen green_function(1, p);
 					if(ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
 					if(ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
-					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / Cmplx(egses.nrows());
+					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
 				}
 				if(imp_i.type_info() == STR("ReGreen")) {
 					ReGreen green_function(1, p);
 					if(ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
 					if(ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
-					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / Cmplx(egses.nrows());
+					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
 				}
 			}
 		}

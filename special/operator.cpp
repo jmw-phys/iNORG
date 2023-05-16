@@ -371,6 +371,7 @@ MatReal Operator::lowest_eigpairs(const Idx n, bool if_need_fast, Int wish_nev)
 	if(mm) {cout <<"PIO: krylov_space_size = "; for_Int(i, 0, krylov_space_size.size()) cout << krylov_space_size[i] << "; "; cout << std::endl;}
 	// if(mm) std::cout << "The eigenvalue" << iofmt("sci") << eval << std::endl;
 	groundstate_energy = eval[0];
+	if(ev_dgcy[0] > p.degel) {p.degel = ev_dgcy[0]; if(mm) WRN(NAV(p.degel))}
 	// MatReal eigenvec(eigenvec_i.size(),n);
 	// for_Int(i, 0, eigenvec_i.size()) eigenvec[i] = eigenvec_i[i];
 	ground_state = eigenvec_i[0];

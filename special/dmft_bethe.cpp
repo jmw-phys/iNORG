@@ -66,9 +66,9 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 
 	// ! auto_nooc("for_green_calc", imp); // in here we can change the nooc space once, last chance.
 	NORG finalrg(mm, p); 		finalrg.uormat = norg_tempU;								finalrg.up_date_h0_to_solve(imp.impH, 1);
-	ImGreen gfimp(p.nband, p);	finalrg.get_gimp(gfimp);									if (mm) gfimp.write("gfimp", iter_cnt);
+	ImGreen gfimp(p.nband, p);	finalrg.get_gimp_eigpairs(gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
 	ReGreen g0_imp_re(p.nband, p);imp.find_g0(g0_imp_re);									if (mm) g0_imp_re.write("g0fimp");
-	ReGreen gfimp_re(p.nband, p);	finalrg.get_gimp(gfimp_re);								if (mm) gfimp_re.write("gfimp");
+	ReGreen gfimp_re(p.nband, p);	finalrg.get_gimp_eigpairs(gfimp_re);					if (mm) gfimp_re.write("gfimp");
 	ReGreen se = g0_imp_re.inverse() - gfimp_re.inverse();									if (mm) se.write("se_loc");
 
 		

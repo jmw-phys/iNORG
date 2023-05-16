@@ -6,14 +6,17 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 using namespace std;
 
 DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, bool imp_rotation) :Operator(mm_i, prmtr_i, scsp_i)
+	,dm(dm_initialize())
 {
 }
 
 DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, Str tab_name, bool imp_rotation) :Operator(mm_i, prmtr_i, scsp_i, tab_name)
+	,dm(dm_initialize())
 {
 }
 
 DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, const Tab& tab, bool imp_rotation) :Operator(mm_i, prmtr_i, tab, scsp_i.coefficient)
+	,dm(dm_initialize())
 {
 }
 /*
@@ -102,6 +105,20 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 	return rotaionU;
 }
 
+void DensityMat::update(Int mode) {
+	dm = dm_initialize();
+	MatReal egses(lowest_eigpairs(scsp.dim, false, p.degel));
+	if (mode == 1) {
+		for_Int(egs_idx, 0, p.degel) {
+			VEC<MatReal> temp_dm;
+			temp_dm = find_one_electron_density_matrix(egses[egs_idx].mat(1, scsp.dim), table);
+			if(mm) WRN(NAV(temp_dm[0]));
+			for_Int(dm_i, 0, dm.size()) dm[dm_i] += temp_dm[dm_i] * Real(1 / p.degel);
+		}
+	}
+	else dm = find_one_electron_density_matrix(lowest_eigpairs(scsp.dim), table);
+}
+
 VEC<MatReal> DensityMat::find_one_electron_density_matrix(const MatReal& state, const Tab& table_i) 
 {
 	// if (mm) WRN("find_one_electron_density_matrix BEGIN: ");
@@ -146,13 +163,13 @@ VEC<MatReal> DensityMat::find_one_electron_density_matrix(const MatReal& state, 
 	VEC<MatReal> D;
 	for_Int(i, 0, p.norg_sets) {
 		MatReal D_i(mm.Allreduce(D_splited[i]));
-		D.push_back(std::move(D_i));
+		D.push_back(D_i);
 	}
 #ifdef _ASSERTION_
 	for (const auto& d : D)
 		if (d.if_symmetric() == false)ERR("The one_electron_density_matrix is not hermitian!!");
 #endif
-	return std::move(D);
+	return D;
 }
 
 //----------------------------- append function -----------------------------

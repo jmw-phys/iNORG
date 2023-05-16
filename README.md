@@ -251,3 +251,8 @@ Version: v1.1.12 @ 2023.05.11
     finished: bug fix for mb.gfimp calc.
     next do : testing 1- or 2-band calc in BSCC-T6;
     thinking: (same as prev)
+
+Version: v1.1.13 @ 2023.05.16
+    finished: 1. add the 1-band Degenerate energy levels test. 2. also can auto judge the degenerate energy levels.
+    next do : testing 1- or 2-band calc in BSCC-T6;
+    thinking: (same as prev)
