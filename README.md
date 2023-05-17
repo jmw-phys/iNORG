@@ -256,3 +256,8 @@ Version: v1.1.13 @ 2023.05.16
     finished: 1. add the 1-band Degenerate energy levels test. 2. also can auto judge the degenerate energy levels.
     next do : testing 1- or 2-band calc in BSCC-T6;
     thinking: (same as prev)
+
+Version: v1.1.14 @ 2023.05.17
+    finished: 1. add the norg.lock rule for sleep the NORG program for APIzen class.
+    next do : (same as prev)
+    thinking: (same as prev)

@@ -51,7 +51,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	if (mm) WRN(NAV2(impH.first,scsp.dim));
 	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 
-	oneedm.update(1); final_ground_state = oneedm.ground_state;
+	oneedm.update(int(p.degel)); final_ground_state = oneedm.ground_state;
 	// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 	groune_lst = oneedm.groundstate_energy;
 	if (mm)	{
@@ -73,7 +73,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 		set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 		// if (mm)PIO("ground_state size" + NAV(oneedm.ground_state.size()));
 		groune_pre = groune_lst;	occnum_pre = occnum_lst;
-		oneedm.update(1); final_ground_state = oneedm.ground_state;
+		oneedm.update(int(p.degel)); final_ground_state = oneedm.ground_state;
 		// if (mm) PIO(NAV(see_MatReal(oneedm.dm)));
 		// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 		occnum_lst = VECVectoVec(oneedm.occupationnumber);				PIO_occweight(occnum_lst);

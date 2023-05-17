@@ -16,9 +16,9 @@ Prmtr::Prmtr(const MyMpi &mm) : np(mm.np())
 
 void Prmtr::set_inert_values()
 {
-    nband = 1;         
+    nband = 2;         
     norbs = nband * 2;
-    project = "1band_KH";
+    project = "2band_KH";
     
 	gauss_n_max = 512;		        // default value: 2048
 	gauss_n_min = 64;		        // default value: 64
@@ -39,13 +39,13 @@ void Prmtr::set_values() {
     //model related
     jz = 0.0;
     U = 4.;
-    Uprm = 0.;
+    Uprm = 3.7;
     // U = 0.;
     // Uprm = 0.;
     mu = 0.;
     bandw = 50.;            //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
     eimp = VecReal(norbs, 0.);
-    degel = 1.;             // Degenerate energy levels
+    degel = 0.;             // Degenerate energy levels. for real material default value: 0.
 
 
     // fitting related
@@ -236,6 +236,8 @@ void Prmtr::print(std::ostream &os) const {
     // prmtr_print(ofx, "output filename prefix");
 
     os << "// prmtr print end  " << present() << endl;
+
+    os << "\n";															// blank line
 
 #undef prmtr_print
 }

@@ -4,49 +4,42 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 
 #include "apizen.h"
 
-APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int test_mode_i) :
+APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 	mm(mm_i), p(prmtr_i),num_omg(prmtr_i.num_omg),
-	num_nondegenerate(-1), test_mode(test_mode_i), dmft_cnt(0)
+	num_nondegenerate(-1), dmft_cnt(0)
 {
-	{// modify the parameters from ZEN.in
-		read_ZEN(file);	p.U = Uc; p.mu = mu; p.jz = Jz; p.nband = nband; p.norg_sets = p.norbs = norbs;
-		p.templet_restrain = restrain; p.templet_control = distribute; p.project = NAV(nband)+"KVSb";
-		p.after_modify_prmtr(); p.recalc_partical_number();
-		p.Uprm = p.U - 2 * p.jz;
-		if(mm) p.print();
-	}
+	update(file);
+	Bath bth(mm, p);
+	Impurity imp(mm, p, bth, or_deg_idx.truncate(0, nband));
+	NORG norg(mm, prmtr_i);		// for test, not search the whole particle space.
 
-	ImGreen hb(nband, p);
-	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)  hb.g[j][i][i] = - imfrq_hybrid_function[i][j];
-	hb.write_zen("hb_zen", "Read");
-	Bath bth(mm, p); bth.read_ose_hop(); bth.bath_fit(hb, or_deg_idx.truncate(0,nband)); if(mm) bth.write_ose_hop(dmft_cnt);
-
-	if (mm) std::cout << std::endl;						// blank line
-
-	Impurity imp(mm, p, bth, or_deg_idx.truncate(0,nband));			imp.update();
-	ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 	if (mm) hb_imp.write_zen("hb_imp", "Fit");
-	if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
-
-	// NocSpace scsp(mm_i, prmtr_i, prmtr_i.npartical);
-	// DensityMat oneedm(mm, prmtr_i, scsp);
-/*
-	NORG norg(mm, prmtr_i);		// for test
-	{// for test:
-		// IFS ifs_a("ru" + norg.scsp.nppso_str() + ".bi");
-		// if (ifs_a) for_Int(i, 0, norg.uormat.size()) biread(ifs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
-		norg.up_date_h0_to_solve(imp.impH, 1);
-		// if (mm) {
-		// 	OFS ofs_a;
-		// 	ofs_a.open("ru" + norg.scsp.nppso_str() + ".bi");
-		// 	for_Int(i, 0, norg.uormat.size()) biwrite(ofs_a, CharP(norg.uormat[i].p()), norg.uormat[i].szof());
-		// }		
-	}
-*/
-	NORG norg(choose_cauculation_style("ful_pcl_sch", imp));
+	
 	// NORG norg(choose_cauculation_style("one_pcl_test", imp));
-	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);									if (mm)	g0imp.write_zen("g0imp");
-	ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));	if (mm) gfimp.write_zen("gfimp");
-	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();			if (mm) seimp.write_zen("seimp");
+
+
+	while(true) {
+		if(if_lock("norg")) {
+	// if(mode == "table_mode") while(true) if(if_lock("norg")) {
+		dmft_cnt++; update(file);
+		ImGreen hb(nband, p);	
+		for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)	hb.g[j][i][i] = -imfrq_hybrid_function[i][j];	if (mm) hb.write_zen("hb_zen", "Read");
+		bth.read_ose_hop(); //bth.bath_fit(hb, or_deg_idx.truncate(0, nband));							if (mm) bth.write_ose_hop();
+		imp.update();																					if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
+		ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_zen("hb_imp", "Fit");
+		// NORG norg(choose_cauculation_style("ful_pcl_sch", imp));
+		norg.up_date_h0_to_solve(imp.impH, 1);															if (mm) norg.write_impurtiy_occupation();
+		ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_zen("g0imp");
+		ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));					if (mm) gfimp.write_zen("gfimp");
+		ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();							if (mm) seimp.write_zen("seimp");
+		}
+	}
+
+	if(mode == "realf_mode"){
+		ReGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_zen("Re_g0imp");
+		ReGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));					if (mm) gfimp.write_zen("Re_gfimp");
+		ReGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();							if (mm) seimp.write_zen("Re_seimp");
+	}
+
 
  /*
 	{
@@ -67,7 +60,6 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file, const Int tes
 		if (mm) g_asnci.write_zen("g_asnci");
 	}
 */
-	// ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp);				if (mm) gfimp.write_zen("gfimp");
 
 	// if(mm) gfimp.write_occupation_info();
 	// if(mm) WRN(NAV(gfimp.particle_number().diagonal()));
@@ -103,7 +95,7 @@ void APIzen::read_ZEN(const Str& file)
 		}
 		else {
 			Str strr;
-			while (test_mode == 0){
+			while (1){
 				ifs >> strr;
 				if(strr == "nband") { ifs >> strr; ifs >> nband; }
 				if(strr == "norbs") { ifs >> strr; ifs >> norbs; }
@@ -127,28 +119,26 @@ void APIzen::read_ZEN(const Str& file)
 						ifs >> l2;	ifs >> l1; ifs >> strr; ifs >> r1; ifs >> r2;
 						restrain = { 0, l2, l1, 0, r1, r2 };
 					}
-					if (mm) PIO("Finish the restrain input:" + NAV(restrain.mat(1,restrain.size())));
+					// if (mm) PIO("Finish the restrain input:" + NAV(restrain.mat(1,restrain.size())));
 				}
 				if (strr == "distribute") {
 					Int m0, l2, l1, m1, r1, r2;
 					ifs >> strr; ifs >> m0;
 					ifs >> l2;	ifs >> l1; ifs >> m1; ifs >> r1; ifs >> r2;
 					distribute = { m0, l2, l1, m1, r1, r2 };
-					if (mm) PIO("Finish the division distribute input:" + NAV(distribute.mat(1,distribute.size())));
+					// if (mm) PIO("Finish the division distribute input:" + NAV(distribute.mat(1,distribute.size())));
 				}
-				if (strr == "norm_mode") {
-					ifs >> strr; ifs >> norm_mode;
-					if (mm) if (norm_mode) WRN("Dear cutomer,you are now in the test mode PLEASE modify the console file manually.");
+
+				if (strr == "mode") { ifs >> strr; ifs >> mode;
+					if (mm) {
+						if (mode == "norm_mode") {		PIO("Dear customer, you are now in the normal mode. PLEASE modify the console file manually.");}
+						else if (mode == "test_mode") {	PIO("Dear customer, you are now in the test mode. PLEASE modify the console file manually.");}
+						else if (mode == "fast_mode") {	ERR("Sorry, the fast mode will be coming soon...");}
+						else {mode = "norm_mode";		WRN("Dear customer, you are now in the normal mode. PLEASE modify the console file manually.");}
+					}
 				}
-				if (strr == "test_mode") {
-					ifs >> strr; ifs >> test_mode;
-					if (mm) if (test_mode) WRN("Dear cutomer,you are now in the test mode PLEASE modify the console file manually.");
-				}
-				if (strr == "fast_mode") {
-					ifs >> strr; ifs >> fast_mode;
-					if (fast_mode)ERR("Sorry, the fast mode will coming Soon...");
-				}				
-				if (test_mode == 1 && strr == "bathose") {
+
+				if (mode == "test_mode" && strr == "bathose") {
 					bathose.reset(SUM(distribute) - 1);
 					Real input;
 					ifs >> strr;
@@ -157,7 +147,7 @@ void APIzen::read_ZEN(const Str& file)
 						bathose[i] = input;
 					}
 				}
-				if (test_mode == 1 && strr == "bathhop") {
+				if (mode == "test_mode" && strr == "bathhop") {
 					bathhop.reset(SUM(distribute) - 1);
 					Real input;
 					ifs >> strr;
@@ -344,6 +334,8 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 	}
 }
 
+
+/*
 ImGreen APIzen::fix_se(const ImGreen& se) const{
   using namespace std;
     ImGreen se_fix(se);
@@ -404,4 +396,44 @@ ImGreen APIzen::fix_se(const ImGreen& se) const{
     //     ofs.close();
     // }
     return se_fix;
+}
+*/
+
+
+//---------------------------------------------- private ----------------------------------------------
+
+// to up date the whole date for the impurity system
+void APIzen::update(const Str& file) {
+	{// modify the parameters from ZEN.in
+		read_ZEN(file);	p.U = Uc; p.mu = mu; p.jz = Jz; p.nband = nband; p.norg_sets = p.norbs = norbs;
+		p.templet_restrain = restrain; p.templet_control = distribute; p.project = NAV(nband) + "KVSb";
+		p.after_modify_prmtr(); p.recalc_partical_number();
+		p.Uprm = p.U - 2 * p.jz;
+		p.degel = 0;
+		// if (mm) p.print();
+	}
+
+	// if (mm) std::cout << std::endl;						// blank line
+}
+
+bool APIzen::if_lock(const Str file) const {
+	Str lock_file = file + ".lock";
+
+	IFS ifs(lock_file);
+	{ mm.barrier(); SLEEP(1); }
+	if(ifs) {
+		if(mm) {
+			const char* filename = lock_file.c_str();
+			int result = std::remove(filename);
+
+			if (result == 0) printf("norg.lock file was removed!\n");
+			else printf("norg.lock file NOT removed!\n");
+		}
+
+		{ mm.barrier(); SLEEP(1); }
+		return true;
+	} else {
+		{ mm.barrier(); SLEEP(5000); }
+		return false;
+	}
 }

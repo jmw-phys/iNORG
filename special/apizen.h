@@ -14,6 +14,10 @@ date 2022 - 2023
 // #include "asnci.h"
 #include "occler.h"
 
+#include <chrono>
+#include <thread>
+#include <cstdio>
+
 
 
 // A class for transform the data of ZEN.
@@ -38,7 +42,7 @@ class APIzen{
 
 	
 	// NORG coding console
-	Int norm_mode, test_mode, fast_mode;
+	Str mode;
 	VecInt restrain, distribute;
 
 	// NORG test part
@@ -51,15 +55,21 @@ public:
 	VecReal muvec;
 	Int dmft_cnt;
 private:
+	void update(const Str& file);
+
+	bool if_lock(const Str file) const;
+
 	void read_ZEN(const Str& file);
 
 	NORG choose_cauculation_style(Str mode, Impurity &imp);
 	// void fitting();
 
 	void test_for_fitting(const Bath& bth, const ImGreen& hby_i, Int num = 666);
-
+/*
 	ImGreen fix_se(const ImGreen& se) const;
+*/
+
 public:
-	APIzen(const MyMpi& mm_i, Prmtr& p, const Str& file = empty_str, const Int mode = 0);
+	APIzen(const MyMpi& mm_i, Prmtr& p, const Str& file = empty_str);
 
 };
