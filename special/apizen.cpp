@@ -12,12 +12,13 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 	Bath bth(mm, p);
 	Impurity imp(mm, p, bth, or_deg_idx.truncate(0, nband));
 	NORG norg(mm, prmtr_i);		// for test, not search the whole particle space.
-
+	OFS ofs("norg.lock");
 	
 	// NORG norg(choose_cauculation_style("one_pcl_test", imp));
 
 
 	while(true) {
+		if(IFS("norg.stop"))  break;
 		if(if_lock("norg")) {
 	// if(mode == "table_mode") while(true) if(if_lock("norg")) {
 		dmft_cnt++; update(file);
@@ -31,6 +32,8 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 		ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_zen("g0imp");
 		ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));					if (mm) gfimp.write_zen("gfimp");
 		ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();							if (mm) seimp.write_zen("seimp");
+		if(mm)	std::remove("norg.lock");
+		{ mm.barrier(); SLEEP(1); }
 		}
 	}
 
@@ -422,15 +425,6 @@ bool APIzen::if_lock(const Str file) const {
 	IFS ifs(lock_file);
 	{ mm.barrier(); SLEEP(1); }
 	if(ifs) {
-		if(mm) {
-			const char* filename = lock_file.c_str();
-			int result = std::remove(filename);
-
-			if (result == 0) printf("norg.lock file was removed!\n");
-			else printf("norg.lock file NOT removed!\n");
-		}
-
-		{ mm.barrier(); SLEEP(1); }
 		return true;
 	} else {
 		{ mm.barrier(); SLEEP(5000); }
