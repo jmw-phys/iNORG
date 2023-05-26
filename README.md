@@ -256,3 +256,8 @@ Version: v1.1.13 @ 2023.05.16
     finished: 1. add the 1-band Degenerate energy levels test. 2. also can auto judge the degenerate energy levels.
     next do : testing 1- or 2-band calc in BSCC-T6;
     thinking: (same as prev)
+
+beta-Version: 1.1.13.1 @ 2023.05.16
+    finished: 1.add the find_gloc_by_se for finding the gloc by the self-energy in bethe lattice; 2. cancel the pre-judge system in different partical sub space; 3.modify some calculation in lanczos.h; 4. modify some print out.
+    next do : modify the fitting.
+    thinking: To get smooth DOS did we need to move the fitting on retarded green function?

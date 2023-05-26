@@ -125,10 +125,10 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 		// write_state_info(iter_norg_cnt);
 	}
 
-	if(!p.if_norg_imp && sub_energy.size() != 0 && MIN(sub_energy) < groune_lst * (1 + 2e-5) )  {
-		if(mm) std::cout <<iofmt("def")<< "The energy level is so hight, "<< NAV(groune_lst) << ".\nWhich reach to " \
-		<<100*MIN(sub_energy)/groune_lst<<"%, so, the Ground state mustn't in this sub-space, and calc. will be stoped." <<"\n"<< std::endl;
-		return ;}
+	// if(!p.if_norg_imp && sub_energy.size() != 0 && MIN(sub_energy) < groune_lst * (1/* + 2e-5*/) )  {
+	// 	if(mm) std::cout <<iofmt("def")<< "The energy level is so hight, "<< NAV(groune_lst) << ".\nWhich reach to " \
+	// 	<<100*MIN(sub_energy)/groune_lst<<"%, so, the Ground state mustn't in this sub-space, and calc. will be stoped." <<"\n"<< std::endl;
+	// 	return ;}
 	
 	while (iter_norg_cnt < p.iter_max_norg && !converged()) {
 		iter_norg_cnt++;

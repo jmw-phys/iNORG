@@ -101,6 +101,8 @@ private:
 	// void do_you_also_have_these_backup(Bath& bth, NORG& solver, bool if_backuped=false);
 
 	ImGreen find_gloc_by_se(const ImGreen& se_i) const;
+	ReGreen find_gloc_by_se(const ReGreen& se_i) const;
+
 	ImGreen find_hb_by_se(const ImGreen& se_i) const;
 public:
 	// For mode = 1, DMFT iteration by self-energy, for mode = 0, DMFT iteration by g_imp.

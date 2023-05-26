@@ -35,7 +35,7 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 	else {g_loc = g0_loc();																	if (mm) g_loc.write("g_0loc", iter_cnt);}
 	
     VEC<MatReal> norg_tempU;
-	while (iter_cnt < p.iter_max && !converged()) 
+	// while (iter_cnt < p.iter_max && !converged()) 
 	{
 		++iter_cnt;ImGreen hb(p.nband, p);
 		if (!(fitdata && iter_cnt == 1)) {
@@ -69,11 +69,12 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 	ImGreen gfimp(p.nband, p);	finalrg.get_gimp_eigpairs(gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
 	ReGreen g0_imp_re(p.nband, p);imp.find_g0(g0_imp_re);									if (mm) g0_imp_re.write("g0fimp");
 	ReGreen gfimp_re(p.nband, p);	finalrg.get_gimp_eigpairs(gfimp_re);					if (mm) gfimp_re.write("gfimp");
-	ReGreen se = g0_imp_re.inverse() - gfimp_re.inverse();									if (mm) se.write("se_loc");
+	ReGreen se_re = g0_imp_re.inverse() - gfimp_re.inverse();								if (mm) se_re.write("se_loc");
+
+	ReGreen g_loc_re(p.nband, p); g_loc_re = find_gloc_by_se(se_re);						if (mm) g_loc_re.write("g_loc_re");
 
 		
 	// if (mm) bth.write_ose_hop();
-	// ReGreen g_loc(p.nband, p);find_gloc_by_se(g_loc,se);		if (mm) g_loc.write("g_loc_re");
 }
 
 
@@ -88,6 +89,20 @@ ImGreen DMFT::find_gloc_by_se(const ImGreen& se_i) const
 			Cmplx temp = SQRT(SQR(z) - 4 * SQR(bethe_t[i]));
 			if(imag(temp) < 0) temp *= -1;
 			// temp = real(temp) + I * ABS(imag(temp));
+			gloc_temp[n][i][i] = (z - temp)/ (2 * SQR(bethe_t[i]));
+		}
+	}
+	return gloc_temp;
+}
+
+ReGreen DMFT::find_gloc_by_se(const ReGreen& se_i) const
+{
+	ReGreen gloc_temp(g_loc.norbs, p);
+	for_Int(n, 0, gloc_temp.nomgs) {
+		for_Int(i,0,p.nband){
+			Cmplx z = gloc_temp.z(n) + bethe_mu - se_i[n][i][i];
+			Cmplx temp = SQRT(SQR(z) - 4 * SQR(bethe_t[i]));
+			if(imag(temp) < 0) temp *= -1;
 			gloc_temp[n][i][i] = (z - temp)/ (2 * SQR(bethe_t[i]));
 		}
 	}

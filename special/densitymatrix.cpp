@@ -112,7 +112,7 @@ void DensityMat::update(Int mode) {
 		for_Int(egs_idx, 0, p.degel) {
 			VEC<MatReal> temp_dm;
 			temp_dm = find_one_electron_density_matrix(egses[egs_idx].mat(1, scsp.dim), table);
-			if(mm) WRN(NAV(temp_dm[0]));
+			// if(mm) WRN(NAV(temp_dm[0]));
 			for_Int(dm_i, 0, dm.size()) dm[dm_i] += temp_dm[dm_i] * Real(1 / p.degel);
 		}
 	}
