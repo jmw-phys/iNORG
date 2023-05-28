@@ -27,8 +27,10 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i) :
 		mag_imag = SQRT(1 + mag_imag / nw);
 		wght *= INV(SUM(wght));
 		for_Int(n, 0, nw) {
-			sig[n] = mag_real / SQRT(wght[n]);
 			sig[nw + n] = mag_imag / SQRT(wght[nw + n]);
+			// sig[n] = mag_real / SQRT(wght[n]);
+			// sig[n] = MAX(mag_real / SQRT(wght[n]), (mag_imag / SQRT(wght[nw + n])) * 1e-3);
+			sig[n] = 1e-3 * mag_real / SQRT(wght[n]);
 		}
 	}
 	// the part of ose regularization

@@ -35,13 +35,13 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 	else {g_loc = g0_loc();																	if (mm) g_loc.write("g_0loc", iter_cnt);}
 	
     VEC<MatReal> norg_tempU;
-	// while (iter_cnt < p.iter_max && !converged()) 
+	while (iter_cnt < p.iter_max && !converged()) 
 	{
 		++iter_cnt;ImGreen hb(p.nband, p);
-		if (!(fitdata && iter_cnt == 1)) {
+		// if (!(fitdata && iter_cnt == 1)) {
 			hb = (mode == 1) ? find_hb_by_se(se):find_hb(g_loc);							if (mm) hb.write("hb", iter_cnt);
 			bth.bath_fit(hb,iter_cnt);														if (mm) bth.write_ose_hop(iter_cnt);
-		}
+		// }
 		imp.update();																		if (mm) imp.write_H0info(bth, -1, iter_cnt);
 		ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 								if (mm) hb_imp.write("hb-fit", iter_cnt);
 		// auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);

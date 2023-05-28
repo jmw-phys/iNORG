@@ -25,7 +25,7 @@ void Prmtr::set_inert_values()
     iter_max = 999;                 // default value: 999
 
     dlt_freq = 0.005;               
-    eta_freq = 0.01;             
+    eta_freq = 0.1;             
     freq_upp = 5.;                      
     freq_low = -5.;
 
@@ -38,14 +38,14 @@ void Prmtr::set_inert_values()
 void Prmtr::set_values() {
     //model related
     jz = 0.0;
-    U = 4.;
+    U = 3.;
     Uprm = 0.;
     // U = 0.;
     // Uprm = 0.;
     mu = 0.;
     bandw = 50.;            //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
     eimp = VecReal(norbs, 0.);
-    degel = 1.;             // Degenerate energy levels
+    degel = 1;             // Degenerate energy levels
 
 
     // fitting related
@@ -56,15 +56,15 @@ void Prmtr::set_values() {
     if_norg_imp = false;
     imp_backup = false;
     templet_restrain = !if_norg_imp ? VecInt{0, -1, -2,  0,  2,  1} : VecInt{-1, -4, -4,  4,  4,  1};
-    templet_control  = !if_norg_imp ? VecInt{1,  3,  0,  1,  0,  3} : VecInt{ 0,  1,  1,  1,  1,  0};
+    templet_control  = !if_norg_imp ? VecInt{1,  1,  2,  1,  2,  1} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
     nI2B = SUM(templet_control) - 1;                    // default value:
     nO2sets = SUM(templet_control);                     // default value:
     iter_max_norg = 99;                                 // default
-    nooc_mode = STR("nooc");
+    // nooc_mode = STR("nooc");
     // nooc_mode = STR("cpnooc");
-    // nooc_mode = STR("cnooc");
+    nooc_mode = STR("cnooc");
     after_modify_prmtr();
     recalc_partical_number();
 }
@@ -199,7 +199,7 @@ void Prmtr::derive_ImGreen() const {
     Im_z.reset(num_omg);
 	for_Int(n, 0, num_omg) Im_z[n] = Cmplx(0., (2 * n + 1) * unit_omg);
 
-    fit_max_omg = bandw/ 2. ;
+    fit_max_omg = bandw * 2. ;
     fit_num_omg = Int_ROUND(fit_max_omg / unit_omg / 2); // The default value: Int_ROUND(fit_max_omg / unit_omg / 2) change for speed reason.
 }
 
