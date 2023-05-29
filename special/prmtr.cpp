@@ -199,7 +199,7 @@ void Prmtr::derive_ImGreen() const {
     Im_z.reset(num_omg);
 	for_Int(n, 0, num_omg) Im_z[n] = Cmplx(0., (2 * n + 1) * unit_omg);
 
-    fit_max_omg = bandw * 2. ;
+    fit_max_omg = bandw / 2. ;
     fit_num_omg = Int_ROUND(fit_max_omg / unit_omg / 2); // The default value: Int_ROUND(fit_max_omg / unit_omg / 2) change for speed reason.
 }
 

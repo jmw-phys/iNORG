@@ -35,7 +35,7 @@ private:
 	std::tuple<Real, VecReal, Int> bath_fit_contest(const VecReal& a0);
 	VecReal next_initial_fitting_parameters(const VecReal& a0, const Int& ntry_fine, Int& itry);
 	void perturb(VecReal& a, Real amplitude, Real exponent) {
-		for_Int(i, a.size()/2, a.size()) {
+		for_Int(i, 0, a.size()) {
 			Real ra = uur() - 0.5;
 			Real re = uur() - 0.5;
 			a[i] = a[i] * (1. + amplitude * ra) + SIGN(std::pow(10., (8 * ABS(re) - exponent)), a[i]);

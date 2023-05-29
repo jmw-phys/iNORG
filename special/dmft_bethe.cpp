@@ -62,6 +62,8 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 			se = seimp;	g_loc = find_gloc_by_se(se);
 		}
 		norg_tempU = norg.uormat;
+		{ mm.barrier(); SLEEP(1); }
+		if(IFS("norg.stop"))  break;
 	}
 
 	// ! auto_nooc("for_green_calc", imp); // in here we can change the nooc space once, last chance.

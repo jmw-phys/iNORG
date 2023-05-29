@@ -266,3 +266,8 @@ beta-Version: 1.1.13.2 @ 2023.05.28
     realized: In put the ose prameter and not change ose.
     next do : using the partical-hole symmetry to fit.
     thinking: what if we cann't use partical-hole symmetry.
+
+beta-Version: 1.1.13.3 @ 2023.05.29
+    realized: change back for change the ose parmeter.
+    next do : using the bath sum rule.
+    thinking: (same as prev)
