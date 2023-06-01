@@ -20,6 +20,8 @@ public:
 	VecReal sig;
 public:
 	HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i);
+	HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i, Int orb_i);
+	
 	// return y = f(x; a);
 	Real operator()(const Int x, const VecReal& a) const {
 		VecReal temp;

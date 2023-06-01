@@ -271,3 +271,8 @@ beta-Version: 1.1.13.3 @ 2023.05.29
     realized: change back for change the ose parmeter.
     next do : using the bath sum rule.
     thinking: (same as prev)
+
+beta-Version: 1.1.13.4 @ 2023.05.29
+    realized: adding the bath sum rule in the fitting coding
+    next do : try to add the hoping regularization for the fitting code.
+    thinking: how to enlarge the bath number without the thought fitting.

@@ -16,7 +16,7 @@ Prmtr::Prmtr(const MyMpi &mm) : np(mm.np())
 
 void Prmtr::set_inert_values()
 {
-    nband = 1;         
+    nband = 2;         
     norbs = nband * 2;
     project = "1band_KH";
     
@@ -39,14 +39,14 @@ void Prmtr::set_values() {
     //model related
     jz = 0.0;
     U = 3.;
-    Uprm = 0.;
-    // U = 0.;
-    // Uprm = 0.;
+    Uprm = 2.7;
     mu = 0.;
-    bandw = 50.;            //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
+    bandw = 50.;                    //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
     eimp = VecReal(norbs, 0.);
-    degel = 1;             // Degenerate energy levels
-
+    degel = 1;                      // Degenerate energy levels
+    bethe_t.reset(nband, 0.5);
+	if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] = 0.5 * bethe_t[i];
+    bsr = bethe_t * bethe_t;    // the vector of bath sum rule.
 
     // fitting related
     fit_pow = 2.; // default value: 2.

@@ -9,8 +9,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
 
 void DMFT::set_parameter() {
 	bethe_mu = p.mu;
-	bethe_t.reset(p.nband, 0.5);
-	if (p.nband > 1) for_Int(i, 0, p.nband - 1) bethe_t[i + 1] = 0.5 * bethe_t[i];
+	bethe_t = p.bethe_t;
 	bethe_u = p.U;
 	bethe_u12 = p.Uprm;
 	p.jz = 0.;
@@ -38,10 +37,10 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 	while (iter_cnt < p.iter_max && !converged()) 
 	{
 		++iter_cnt;ImGreen hb(p.nband, p);
-		// if (!(fitdata && iter_cnt == 1)) {
+		if (!(fitdata && iter_cnt == 1)) {
 			hb = (mode == 1) ? find_hb_by_se(se):find_hb(g_loc);							if (mm) hb.write("hb", iter_cnt);
 			bth.bath_fit(hb,iter_cnt);														if (mm) bth.write_ose_hop(iter_cnt);
-		// }
+		}
 		imp.update();																		if (mm) imp.write_H0info(bth, -1, iter_cnt);
 		ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 								if (mm) hb_imp.write("hb-fit", iter_cnt);
 		// auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);

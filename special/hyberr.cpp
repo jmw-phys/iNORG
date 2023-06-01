@@ -47,8 +47,55 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i) :
 	// if (x.size() >= 2 * nw + 2) {
 	// 	x[2 * nw + 1]	= 2 * nw + 1;
 	// 	y[2 * nw + 1]	= 0.;
-	// 	sig[2 * nw] = 0.1 * (1 + ABS(p.bsr));  //Change to the part of ose regularization
+	// 	sig[2 * nw] = 0.1 * (1 + ABS(p.bsr));  
 	// }
+}
+
+
+HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i, Int orb_i) :
+	p(p_i), hb(hb_i), nw(p.fit_num_omg), nb(nb_i),
+	x(2 * nw + 2), y(2 * nw + 2), sig(2 * nw + 2)
+{
+	// curve
+	{	
+		Real mag_real = 0.;
+		Real mag_imag = 0.;
+		VecReal wght(2 * nw);
+		for_Int(n, 0, nw) {
+			x[n] = n;
+			y[n] = real(hb[n][0][0]);
+			mag_real += SQR(y[n]);
+			x[nw + n] = nw + n;
+			y[nw + n] = imag(hb[n][0][0]);
+			mag_imag += SQR(y[nw + n]);
+			wght[n] = wght[nw + n] = std::pow(p.Imomg(n) + p.fit_rsd, -p.fit_pow);
+			// wght[n] = wght[nw + n] = 1;
+		}
+		mag_real = SQRT(mag_real / nw);
+		mag_imag = SQRT(mag_imag / nw);
+		mag_real = MAX(mag_real, 1.e-3 * mag_imag);
+		wght *= INV(SUM(wght));
+		for_Int(n, 0, nw) {
+			sig[nw + n] = mag_imag / SQRT(wght[nw + n]);
+			sig[n] = mag_real / SQRT(wght[n]);
+		}
+	}
+	
+	// the part of ose regularization
+	if(x.size()>= 2 * nw + 1){
+		x[2 * nw + 0]	= 2 * nw;
+		y[2 * nw + 0]	= 0.;
+		// // old
+		sig[2 * nw + 0] = nb * std::pow(8 * p.fit_max_omg, 4);
+	}
+	// the part of bath sum rule
+	if (x.size() >= 2 * nw + 2) {
+		x[2 * nw + 1]	= 2 * nw + 1;
+		y[2 * nw + 1]	= p.bsr[orb_i];
+		sig[2 * nw + 1] = 0.1 * (1 + p.bsr[orb_i]);
+		// WRN(NAV5(2 * nw + 1,x.size(),y.size(),x[2 * nw + 1],y[2 * nw + 1]));
+	}
+    
 }
 
 /*

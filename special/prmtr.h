@@ -23,7 +23,8 @@ public:
 	Real mu;						// chemical potential
 	mutable Real degel;				// Degenerate energy levels
 	VecReal	eimp;					// the impurity energy 
-	// VecReal t;					// The  hopping for sites,t[0] is (on-site energy-mu)
+	VecReal	bsr;					// the vector of bath sum rule.
+	VecReal bethe_t;				// hopping strength t for bethe lattice
 	//ReGreen
 	Real freq_upp;					// upper bound of real frequency, 1.5 * (band upper bound) suggested
 	Real freq_low;					// lower bound of real frequency, 1.5 * (band lower bound) suggested

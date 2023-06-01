@@ -33,6 +33,8 @@ private:
 		regularize_ose_hop();
 	}
 	std::tuple<Real, VecReal, Int> bath_fit_contest(const VecReal& a0);
+	std::tuple<Real, VecReal, Int> bath_fit_bsr(const VecReal& a0, const Int& orb_i);
+
 	VecReal next_initial_fitting_parameters(const VecReal& a0, const Int& ntry_fine, Int& itry);
 	void perturb(VecReal& a, Real amplitude, Real exponent) {
 		for_Int(i, 0, a.size()) {
