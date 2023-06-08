@@ -18,6 +18,8 @@ public:
 	VecInt x;
 	VecReal y;
 	VecReal sig;
+	Real expect_err;
+	Real regV_b;
 public:
 	HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i);
 	HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i, Int orb_i);
@@ -37,10 +39,17 @@ public:
 		}
 		else if (x == 2 * nw + 0) {
 			const VecReal E = temp.sm(nb, a.p());
-			const VecReal E2 = E * E;
-			return DOT(E2, E2);
+			const VecReal E3 = E * E * E;
+			const Real coefficient = expect_err * std::pow(p.bandw, -6);
+			return coefficient * DOT(E3, E3);
 		}
 		else if (x == 2 * nw + 1) {
+			const VecReal V = temp.sm(nb, a.p() + nb);
+			const VecReal V2 = V * V;
+			const Real coefficient = expect_err * std::pow(regV_b, 3);
+			return coefficient * DOT(INV(V2), INV(V));
+		}
+		else if (x == 2 * nw + 2) {
 			const VecReal V = temp.sm(nb, a.p() + nb);
 			const VecReal Vco = V.co();
 			Real hyb = DOT(Vco, Vco);
@@ -65,20 +74,26 @@ public:
 			fx[i] = (*this)(x[i], a);
 		}
 		fx[2 * nw] = y[2 * nw];
-		//fx[2 * nw + 1] = y[2 * nw + 1];
 		VecReal relative_dev = (fx - y) * INV(sig);
 		return SQRT(DOT(relative_dev, relative_dev));
 	}
 	// return relative_err = SQRT(the part of ose regularization)
-	Real err_reg(const VecReal& a) const {
+	Real err_regE(const VecReal& a) const {
 		const Int i = 2 * nw + 0;
+		Real fx = (*this)(x[i], a);
+		Real relative_dev = (fx - y[i]) * INV(sig[i]);
+		return SQRT(relative_dev * relative_dev);
+	}
+	// return relative_err = SQRT(the part of hop regularization)
+	Real err_regV(const VecReal& a) const {
+		const Int i = 2 * nw + 1;
 		Real fx = (*this)(x[i], a);
 		Real relative_dev = (fx - y[i]) * INV(sig[i]);
 		return SQRT(relative_dev * relative_dev);
 	}
 	// return relative_err = SQRT(the part of bath sum rule)
 	Real err_bsr(const VecReal& a) const {
-		const Int i = 2 * nw + 1;
+		const Int i = 2 * nw + 2;
 		Real fx = (*this)(x[i], a);
 		Real relative_dev = (fx - y[i]) * INV(sig[i]);
 		return SQRT(relative_dev * relative_dev);

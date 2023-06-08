@@ -40,7 +40,7 @@ void Prmtr::set_values() {
     jz = 0.0;
     U = 3.;
     Uprm = 2.7;
-    mu = 0.;
+    mu = 0.1;
     bandw = 50.;                    //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
     eimp = VecReal(norbs, 0.);
     degel = 1;                      // Degenerate energy levels
@@ -56,7 +56,7 @@ void Prmtr::set_values() {
     if_norg_imp = false;
     imp_backup = false;
     templet_restrain = !if_norg_imp ? VecInt{0, -1, -2,  0,  2,  1} : VecInt{-1, -4, -4,  4,  4,  1};
-    templet_control  = !if_norg_imp ? VecInt{1,  1,  2,  1,  2,  1} : VecInt{ 0,  1,  1,  1,  1,  0};
+    templet_control  = !if_norg_imp ? VecInt{1,  4,  0,  1,  0,  4} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
     nI2B = SUM(templet_control) - 1;                    // default value:
@@ -66,6 +66,10 @@ void Prmtr::set_values() {
     // nooc_mode = STR("cpnooc");
     nooc_mode = STR("cnooc");
     after_modify_prmtr();
+    control_divs[1] = {1,  2,  2,  1,  2,  2};
+    control_divs[2] = {1,  2,  2,  1,  2,  2};
+    control_divs[3] = {1,  3,  1,  1,  1,  3};
+    control_divs[4] = {1,  3,  1,  1,  1,  3};
     recalc_partical_number();
 }
 
@@ -184,7 +188,7 @@ void Prmtr::derive() {
     Im_z.reset(num_omg);
 	for_Int(n, 0, num_omg) Im_z[n] = Cmplx(0., (2 * n + 1) * unit_omg);
 
-    fit_max_omg = bandw/ 2. ;
+    fit_max_omg = bandw / 4. ;
     fit_num_omg = Int_ROUND(fit_max_omg / unit_omg / 2); // The default value: Int_ROUND(fit_max_omg / unit_omg / 2) change for speed reason.
 
     Str key_prmtr_val = STR("prmtr");
@@ -199,7 +203,7 @@ void Prmtr::derive_ImGreen() const {
     Im_z.reset(num_omg);
 	for_Int(n, 0, num_omg) Im_z[n] = Cmplx(0., (2 * n + 1) * unit_omg);
 
-    fit_max_omg = bandw / 2. ;
+    fit_max_omg = bandw / 4. ;
     fit_num_omg = Int_ROUND(fit_max_omg / unit_omg / 2); // The default value: Int_ROUND(fit_max_omg / unit_omg / 2) change for speed reason.
 }
 

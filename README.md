@@ -276,3 +276,8 @@ beta-Version: 1.1.13.4 @ 2023.05.29
     realized: adding the bath sum rule in the fitting coding
     next do : try to add the hoping regularization for the fitting code.
     thinking: how to enlarge the bath number without the thought fitting.
+
+beta-Version: 1.1.13.5 @ 2023.06.05
+    realized: adding the regE and regV in the fitting.
+    next do : try to add the partical-hole symmary in fitting.
+    thinking: What's the physical for the calc of the no-half-filling case?

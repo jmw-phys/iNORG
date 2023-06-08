@@ -5,9 +5,12 @@ modify	by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 #include "hyberr.h"
 
 HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i) :
-	p(p_i), hb(hb_i), nw(p.fit_num_omg), nb(nb_i),
+	p(p_i), hb(hb_i), nw(p.fit_num_omg), nb(nb_i), regV_b(1E-10),
 	x(2 * nw + 1), y(2 * nw + 1), sig(2 * nw + 1)
 {
+	// set the curve expected:
+	expect_err = std::pow(10, -(nb - 1) / 2);
+
 	// curve
 	{
 		Real mag_real = 0.;
@@ -40,8 +43,6 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i) :
 		sig[2 * nw + 0] = nb * std::pow(8 * p.fit_max_omg, 4);
 		// x*e^(0.5*(x/bw)^2)		// old
 		// x*e^(0.5*(x/(bw/8.))^2) 	// new
-		// sig[2 * nw + 0] = nb * 1E3 * p.fit_max_omg * EXP(0.5 * SQR(p.fit_max_omg / p.bandw)); // V.1
-		// sig[2 * nw + 0] = p.fit_max_omg * EXP(0.5 * SQR(p.fit_max_omg / (p.bandw/8.)));
 	}
 	// // the part of bath sum rule
 	// if (x.size() >= 2 * nw + 2) {
@@ -53,9 +54,13 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i) :
 
 
 HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i, Int orb_i) :
-	p(p_i), hb(hb_i), nw(p.fit_num_omg), nb(nb_i),
-	x(2 * nw + 2), y(2 * nw + 2), sig(2 * nw + 2)
+	p(p_i), hb(hb_i), nw(p.fit_num_omg), nb(nb_i), regV_b(1E-10),
+	x(2 * nw + 3), y(2 * nw + 3), sig(2 * nw + 3)
 {
+	// set the curve expected:
+	expect_err = std::pow(10, -(nb - 1) / 2);
+
+
 	// curve
 	{	
 		Real mag_real = 0.;
@@ -86,14 +91,23 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i, Int orb_i)
 		x[2 * nw + 0]	= 2 * nw;
 		y[2 * nw + 0]	= 0.;
 		// // old
-		sig[2 * nw + 0] = nb * std::pow(8 * p.fit_max_omg, 4);
+		// sig[2 * nw + 0] = nb * std::pow(8 * p.fit_max_omg, 4);
+		sig[2 * nw + 0] = 1;
 	}
-	// the part of bath sum rule
+	// the part of hop regularization
 	if (x.size() >= 2 * nw + 2) {
 		x[2 * nw + 1]	= 2 * nw + 1;
-		y[2 * nw + 1]	= p.bsr[orb_i];
-		sig[2 * nw + 1] = 0.1 * (1 + p.bsr[orb_i]);
-		// WRN(NAV5(2 * nw + 1,x.size(),y.size(),x[2 * nw + 1],y[2 * nw + 1]));
+		y[2 * nw + 1]	= 0.;
+		// sig[2 * nw + 1] = 1E9 /(std::pow(10, -(nb+1)/2) * 64.);
+		sig[2 * nw + 1] = 1;
+		// WRN(NAV(sig[2 * nw + 1]))
+	}
+	// the part of bath sum rule
+	if (x.size() >= 2 * nw + 3) {
+		x[2 * nw + 2]	= 2 * nw + 2;
+		y[2 * nw + 2]	= p.bsr[orb_i];
+		sig[2 * nw + 2] = 0.1 * (1 + p.bsr[orb_i]);
+		// WRN(NAV5(2 * nw + 2,x.size(),y.size(),x[2 * nw + 2],y[2 * nw + 2]));
 	}
     
 }
@@ -132,22 +146,25 @@ void HybErr::operator()(const Int x, const VecReal& a, Real& y, VecReal& dyda) c
 	// (e^((0.5 x^2)/bw^2) * (bw^2 + x^2))/bw^2
 	else if (x == 2 * nw + 0) { // the part of ose regularization
 		const VecReal E = temp.sm(nb, a.p());
-		const VecReal E2 = E * E;
-		y = DOT(E2, E2);
-		VecReal D_E = 4. * E2 * E;
+		const VecReal E3 = E * E * E;
+		const Real coefficient = expect_err * std::pow(p.bandw, -6);
+		y = coefficient * DOT(E3, E3);
+		VecReal D_E = 6. * E3 * E * E;
 		VecReal D_V = VecReal(nb, 0.);
 		VecReal D = concat(D_E, D_V);
-		dyda = D;
-		// const VecReal E = temp.sm(nb, a.p());
-		// const VecReal E2 = EXP(0.5 * (E * (1. / p.bandw)) * (E * (1. / p.bandw)));
-		// y = DOT(E, E2);
-		// VecReal BW(nb, p.bandw);
-		// VecReal D_E = E2 * (BW * BW + E * E) * (1. / (p.bandw * p.bandw));
-		// VecReal D_V = VecReal(nb, 0.);
-		// VecReal D = concat(D_E, D_V);
-		// dyda = D;
+		dyda = coefficient * D;
 	}
-	else if (x == 2 * nw + 1) { // the part of bath sum rule
+	else if (x == 2 * nw + 1) { // the part of hop regularization
+		const VecReal V = temp.sm(nb, a.p() + nb);
+		const VecReal V2 = V * V;
+		const Real coefficient = expect_err * std::pow(regV_b, 3);
+		y = coefficient * DOT(INV(V2), INV(V));
+		VecReal D_E = VecReal(nb, 0.);
+		VecReal D_V = -3. * INV(V2 * V2);
+		VecReal D = concat(D_E, D_V);
+		dyda = coefficient * D;
+	}
+	else if (x == 2 * nw + 2) { // the part of bath sum rule
 		const VecReal V = temp.sm(nb, a.p() + nb);
 		const VecReal Vco = V.co();
 		Real hyb = DOT(Vco, Vco);

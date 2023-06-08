@@ -1,7 +1,7 @@
 #include "bath.h"
 
 Bath::Bath(const MyMpi& mm_i, const Prmtr& prmtr_i) :
-	mm(mm_i), p(prmtr_i), nb(p.nI2B[0]), hb(1, p), uur(mm.id()), ose(p.nI2B[0]), hop(p.nI2B[0]), info(p.nband, 6, 0.),
+	mm(mm_i), p(prmtr_i), nb(p.nI2B[0]), hb(1, p), uur(mm.id()), ose(p.nI2B[0]), hop(p.nI2B[0]), info(p.nband, 7, 0.),
 	vec_ose(p.nband), vec_hop(p.nband)
 {
 	// make random seed output together
@@ -20,7 +20,7 @@ void Bath::bath_fit(const ImGreen& hb_i, Int iter)
 		else init_ose_hop();
 		regularize_ose_hop();
 		const VecReal a0 = concat(ose, hop);
-		if(mm) WRN(NAV(a0))
+		// if(mm) WRN(NAV(a0))
 		Real err;
 		VecReal a;
 		Int nmin;
@@ -35,12 +35,13 @@ void Bath::bath_fit(const ImGreen& hb_i, Int iter)
 			const VecReal a = concat(ose, hop);
 			Real err = hyberr(a);
 			Real err_crv = hyberr.err_curve(a);
-			Real err_reg = hyberr.err_reg(a);
+			Real err_regE = hyberr.err_regE(a);
+			Real err_regV = hyberr.err_regV(a);
 			Real err_bsr = hyberr.err_bsr(a);
 			Real a_norm = a.norm();
 			using namespace std;
-			cout << setw(4) << band_i+1 << "  " << NAV6(nmin, err, err_crv, err_reg, err_bsr, a_norm) << "  " << present() << endl;
-			NAV6(Int(info[band_i][0]=Real(nmin)), info[band_i][1]=err, info[band_i][2]=err_crv, info[band_i][3]=err_reg, info[band_i][4]=err_bsr, info[band_i][5]=a_norm);
+			cout << setw(4) << band_i+1 << "  " << NAV7(nmin, err, err_crv, err_regE, err_regV, err_bsr, a_norm) << "  " << present() << endl;
+			NAV7(Int(info[band_i][0]=Real(nmin)), info[band_i][1]=err, info[band_i][2]=err_crv, info[band_i][3]=err_regE, info[band_i][4]=err_regV, info[band_i][5]=err_bsr, info[band_i][6]=a_norm);
 		}
 	}
 }
@@ -80,12 +81,12 @@ void Bath::bath_fit(const ImGreen& hb_i, VecInt or_deg)// for Zen mode
 			const VecReal a = concat(ose, hop);
 			Real err = hyberr(a);
 			Real err_crv = hyberr.err_curve(a);
-			Real err_reg = hyberr.err_reg(a);
+			Real err_reg = hyberr.err_regE(a);
 			//Real err_bsr = hyberr.err_bsr(a);
 			Real a_norm = a.norm();
 			using namespace std;
 			cout << setw(4) << degi << "  " << NAV5(nmin, err, err_crv, err_reg,/* err_bsr,*/ a_norm) << "  " << present() << endl;
-			NAV5(Int(info[degi][0]=Real(nmin)), info[degi][1]=err, info[degi][2]=err_crv, info[degi][3]=err_reg, /*err_bsr,*/ info[degi][5]=a_norm);
+			NAV5(Int(info[degi][0]=Real(nmin)), info[degi][1]=err, info[degi][2]=err_crv, info[degi][3]=err_reg, /*err_bsr,*/ info[degi][6]=a_norm);
 		}
 	}
 }
@@ -155,7 +156,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_contest(const VecReal& a0)
 				Real err = hyberr(a);
 				if (false) {
 					Real err_crv = hyberr.err_curve(a);
-					Real err_reg = hyberr.err_reg(a);
+					Real err_reg = hyberr.err_regE(a);
 					Real a_norm = a.norm();
 					WRN(NAV5(sndr, ntot, nsnd, nrcv, itry) + ", " + NAV5(err_optm, err, err_crv, err_reg, a_norm));
 				}
@@ -230,10 +231,11 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_bsr(const VecReal& a0, const Int& 
 				Real err = hyberr(a);
 				if (false) {
 					Real err_crv = hyberr.err_curve(a);
-					Real err_reg = hyberr.err_reg(a);
+					Real err_regE = hyberr.err_regE(a);
+					Real err_regV = hyberr.err_regV(a);
 					Real err_bsr = hyberr.err_bsr(a);
 					Real a_norm = a.norm();
-					WRN(NAV5(sndr, ntot, nsnd, nrcv, itry) + ", " + NAV6(err_optm, err, err_crv, err_reg, err_bsr, a_norm));
+					WRN(NAV5(sndr, ntot, nsnd, nrcv, itry) + ", " + NAV7(err_optm, err, err_crv, err_regE, err_regV, err_bsr, a_norm));
 				}
 				if (err_optm - tol > err) { nmin = 0; }
 				if (err_optm > err) { a_optm = a; err_optm = err; }

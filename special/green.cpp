@@ -9,25 +9,28 @@ void Green::read(const Str& file)
 		WRN(STR("file opening failed with ") + NAV(file))
 	}
 	else {
-		for_Int(i, 0, (norbs * norbs + 1) * 2) {
+		// for_Int(i, 0, (norbs * norbs + 1) * 2) {
+		for_Int(i, 0, (norbs + 1) * 2) {
 			Str strr;
 			ifs >> strr;
 		}
 		Real omg;
-		MatReal re(norbs, norbs);
-		MatReal im(norbs, norbs);
+		MatReal re(norbs, norbs, 0.);
+		MatReal im(norbs, norbs, 0.);
 		for_Int(i, 0, nomgs) {
 			ifs >> omg;
 			for_Int(m, 0, norbs) {
-				for_Int(n, 0, norbs) {
+				// for_Int(n, 0, norbs) {
+                    Int n=m;
 					ifs >> re[m][n];
-				}
+				// }
 			}
 			ifs >> omg;
 			for_Int(m, 0, norbs) {
-				for_Int(n, 0, norbs) {
+				// for_Int(n, 0, norbs) {
+                    Int n=m;
 					ifs >> im[m][n];
-				}
+				// }
 			}
 			g[i] = cmplx(re, im);
 		}
@@ -106,32 +109,36 @@ void Green::write(const Str& green_name, Int iter_cnt) const
     // real part of green
     ofs << setw(w_Real) << "w";
     for_Int(m, 0, norbs) {
-        for_Int(n, 0, norbs) {
+        // for_Int(n, 0, norbs) {
+            Int n=m;
             ofs << "  " << setw(w_Real) << iter_str + "Re" + STR(m + 1) + STR(n + 1);
-        }
+        // }
     }
     // imag part of green
     ofs << "  " << setw(w_Real) << "w";
     for_Int(m, 0, norbs) {
-        for_Int(n, 0, norbs) {
+        // for_Int(n, 0, norbs) {
+            Int n=m;
             ofs << "  " << setw(w_Real) << iter_str + "Im" + STR(m + 1) + STR(n + 1);
-        }
+        // }
     }
     ofs << endl;
     for_Int(i, 0, nomgs) {
         // real part of green
         ofs << setw(w_Real) << omg(i);
         for_Int(m, 0, norbs) {
-            for_Int(n, 0, norbs) {
+            // for_Int(n, 0, norbs) {
+                Int n=m;
                 ofs << "  " << setw(w_Real) << real(g[i][m][n]);
-            }
+            // }
         }
         // imag part of green
         ofs << "  " << setw(w_Real) << omg(i);
         for_Int(m, 0, norbs) {
-            for_Int(n, 0, norbs) {
+            // for_Int(n, 0, norbs) {
+                Int n=m;
                 ofs << "  " << setw(w_Real) << imag(g[i][m][n]);
-            }
+            // }
         }
         ofs << endl;
     }

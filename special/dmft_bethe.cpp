@@ -13,7 +13,7 @@ void DMFT::set_parameter() {
 	bethe_u = p.U;
 	bethe_u12 = p.Uprm;
 	p.jz = 0.;
-	p.bandw = 2 * SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(bethe_t * bethe_t));
+	p.bandw = 2 * (2 * SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(bethe_t * bethe_t)));
 	p.derive_ImGreen();
 	if (mm) { OFS ofss("log.parameters.txt", std::ios::app);  p.print(ofss); }
 }
@@ -58,7 +58,8 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 		// obtain se from impurity model.
 		if (mode == 1) {
 			append_gloc_err(se.error(seimp));												log("gerr_update");
-			se = seimp;	g_loc = find_gloc_by_se(se);
+			se = (iter_cnt == 1) ? seimp : 0.5 * se + 0.5 * seimp;	
+			g_loc = find_gloc_by_se(se);
 		}
 		norg_tempU = norg.uormat;
 		{ mm.barrier(); SLEEP(1); }
