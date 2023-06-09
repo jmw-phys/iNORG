@@ -260,7 +260,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_bsr(const VecReal& a0, const Int& 
 			mm.Recv(a, status, mm.ms());
 			if (status.MPI_TAG == 0) break;
 			FitMrq<HybErr> mrq(hyberr.x, hyberr.y, hyberr.sig, a, hyberr, tol);
-			if ((a.size() / 2) % 2 != 0) mrq.hold(a.size() / 4, 0.);
+			if ((a.size() / 2) % 2 != 0) mrq.hold(Int(a.size() / 4), 0.);
 			Int mrq_fit_info = mrq.fit();
 			mm.Send(mrq.a, mm.ms(), 1);
 		}

@@ -37,7 +37,7 @@ public:
 
 	Impdata impH;
 	Real	groune_lst;						// ground state energy record after one optimize iteration.
-	MatReal  final_ground_state;
+	MatReal&  final_ground_state;
 	VecReal  occnum;
 	ImGreen impgreen;
 

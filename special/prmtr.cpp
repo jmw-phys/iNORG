@@ -37,7 +37,7 @@ void Prmtr::set_inert_values()
 
 void Prmtr::set_values() {
     //model related
-    U = 4.;
+    U = 3.5;
     mu = 0.0;
 
     jz = 0.25 * U;

@@ -6,7 +6,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2021 - 2023
 #define condition iter_norg_cnt < p.iter_max_norg  && !converged()
 
 NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i) :
-	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()),
+	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()), final_ground_state(oneedm.ground_state),
 	occupation_err(1.), energy_err(1.), correctionerr(1.), occnum_pre(prmtr_i.n_rot_orb, 0.),
 	iter_norg_cnt(0), groune_pre(1.e99), groune_lst(0.), occnum_lst(prmtr_i.n_rot_orb, 0.),
 	scsp(mm_i, prmtr_i, prmtr_i.npartical), oneedm(mm, prmtr_i, scsp),norg_stab_cnt(0)
@@ -25,7 +25,7 @@ NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i) :
 // }
 
 NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab& table) :	
-	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()),
+	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()), final_ground_state(oneedm.ground_state),
 	occupation_err(1.), energy_err(1.), correctionerr(1.), occnum_pre(prmtr_i.n_rot_orb, 0.),
 	iter_norg_cnt(0), groune_pre(1.e99), groune_lst(0.), occnum_lst(prmtr_i.n_rot_orb, 0.),
 	scsp(mm_i, prmtr_i, prmtr_i.npartical, table), oneedm(mm, prmtr_i, scsp, table),norg_stab_cnt(0)
@@ -34,7 +34,7 @@ NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab& table) :
 }
 
 NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, Str tab_name) :
-	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()),
+	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()), final_ground_state(oneedm.ground_state),
 	occupation_err(1.), energy_err(1.), correctionerr(1.), occnum_pre(prmtr_i.n_rot_orb, 0.),
 	iter_norg_cnt(0), groune_pre(1.e99), groune_lst(0.), occnum_lst(prmtr_i.n_rot_orb, 0.),
 	scsp(mm_i, prmtr_i, prmtr_i.npartical, tab_name), oneedm(mm, prmtr_i, scsp, tab_name),norg_stab_cnt(0)
@@ -51,7 +51,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	if (mm) WRN(NAV2(impH.first,scsp.dim));
 	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 
-	oneedm.update(1); final_ground_state = oneedm.ground_state;
+	oneedm.update(1); 
 	// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 	groune_lst = oneedm.groundstate_energy;
 	if (mm)	{
@@ -73,7 +73,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 		set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 		// if (mm)PIO("ground_state size" + NAV(oneedm.ground_state.size()));
 		groune_pre = groune_lst;	occnum_pre = occnum_lst;
-		oneedm.update(1); final_ground_state = oneedm.ground_state;
+		oneedm.update(1);
 		// if (mm) PIO(NAV(see_MatReal(oneedm.dm)));
 		// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 		occnum_lst = VECVectoVec(oneedm.occupationnumber);				PIO_occweight(occnum_lst);
@@ -94,7 +94,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 		if(mm) std::cout << std::endl;						// blank line
 	}
 	iter_norg_cnt = 0;		occupation_err = 1.;		energy_err = 1.;
-	final_ground_state = oneedm.ground_state;	norg_stab_cnt = 0.; occnum = occnum_lst;
+	norg_stab_cnt = 0.; occnum = occnum_lst;
 	//----------------------print put--------------------------------
 	if(mm) std::cout << "---------- THE NORG CONVERGED ----------" << std::endl;;
 	PIO_occweight(occnum);
@@ -116,7 +116,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 	// if (mm) PIO(NAV2(h0,scsp.dim));
 	// scsp.coefficient = set_row_primeter_byimpH(uormat, impH_i);
 	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
-	oneedm.update(); final_ground_state = oneedm.ground_state;
+	oneedm.update();
 	// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 	groune_lst = oneedm.groundstate_energy;
 	if (mm)	{
@@ -141,7 +141,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 		set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);	//if (mm) scsp.print();
 		// if (mm)PIO("ground_state size" + NAV(oneedm.ground_state.size()));
 		groune_pre = groune_lst;	occnum_pre = occnum_lst;
-		oneedm.update(); final_ground_state = oneedm.ground_state;
+		oneedm.update();
 		// if(mm) PIO(NAV(see_MatReal(oneedm.dm)));
 		// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 		occnum_lst = VECVectoVec(oneedm.occupationnumber);
@@ -162,7 +162,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 		if(mm) std::cout << std::endl;						// blank line
 	}
 	iter_norg_cnt = 0;		occupation_err = 1.;		energy_err = 1.;
-	final_ground_state = oneedm.ground_state;	norg_stab_cnt = 0.; occnum = occnum_lst;
+	norg_stab_cnt = 0.; occnum = occnum_lst;
 	/*--------------------------------print put--------------------------------*/
 	// MatReal occnum, occweight;
 	// occnum = occnum_lst.mat(p.norg_sets, p.n_rot_orb/p.norg_sets);
@@ -274,20 +274,19 @@ void NORG::get_gimp_eigpairs(Green& imp_i)
 					ImGreen green_function(1, p);
 					if(ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
 					if(ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
-					for_Int(i, 0, p.nband)
-						for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
+					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
 				}
 				if(imp_i.type_info() == STR("ReGreen")) {
 					ReGreen green_function(1, p);
 					if(ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
 					if(ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
-					for_Int(i, 0, p.nband)
-						for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
+					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
 				}
 			}
 		}
 		if (mm) PIO("finished the " + STR(i) + " find_g_norg   " + present());
 	}
+	for_Int(j, 1, p.nband) for_Int(n, 0, imp_i.nomgs) imp_i[n][j][j] = imp_i[n][0][0];
 }
 
 void NORG::get_gimp(Green& imp_i, VecInt or_deg)

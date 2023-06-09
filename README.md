@@ -286,3 +286,8 @@ beta-Version: 1.1.13.6 @ 2023.06.09
     realized: 1. modify for the DOI: 10.1103/PhysRevB.100.085104, for green function we only consider one spanless orbital; 2. change the Type for the final_ground_state(Now we only have the once lowest_eigpairs() happened).
     next do : add the Pulay mixing
     thinking: (same as prev)
+
+beta-Version: 1.1.13.7 @ 2023.06.09
+    realized: Fixed the 1.1.13.6's bug.
+    next do : add the Pulay mixing
+    thinking: (same as prev)
