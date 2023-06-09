@@ -193,8 +193,8 @@ void NORG::get_g_by_KCV(Green& imp_i)
 			set_row_primeter_byimpH(uormat, impH, n1pone.oper_value);
 			set_row_primeter_byimpH(uormat, impH, n1mone.oper_value);
 
-			Crrvec greaer(scsp, n1pone, 0, i, final_ground_state, groune_lst);
-			Crrvec lesser(scsp, n1mone, 0, i, final_ground_state, groune_lst);
+			Crrvec greaer(scsp, n1pone, 0, i, final_ground_state[0], groune_lst);
+			Crrvec lesser(scsp, n1mone, 0, i, final_ground_state[0], groune_lst);
 			
 			{// test
 				if(mm) WRN(NAV2(greaer.ex_state.norm(), lesser.ex_state.norm()));
@@ -224,7 +224,7 @@ void NORG::get_g_by_KCV_spup(Green& imp_i)
 		Operator opr_sub(mm, p, scsp_1);
 		// scsp_1.coefficient = set_row_primeter_byimpH(uormat, impH);
 		set_row_primeter_byimpH(uormat, impH, opr_sub.oper_value);
-		Crrvec greaer(scsp, opr_sub, final_ground_state, groune_lst, imp_i);
+		Crrvec greaer(scsp, opr_sub, final_ground_state[0], groune_lst, imp_i);
 	}
 	if(mm) std::cout << present() << std::endl;
 }
@@ -239,7 +239,7 @@ void NORG::get_gimp(Green& imp_i)
 			Operator opr_sub(mm, p, scsp_sub);
 			// scsp_sub.coefficient = set_row_primeter_byimpH(uormat, impH);
 			set_row_primeter_byimpH(uormat, impH, opr_sub.oper_value);
-			CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, final_ground_state, i * 2);
+			CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, final_ground_state[0], i * 2);
 			if(imp_i.type_info() == STR("ImGreen")) {
 				ImGreen green_function(1, p);
 				if(ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
@@ -259,27 +259,30 @@ void NORG::get_gimp(Green& imp_i)
 
 void NORG::get_gimp_eigpairs(Green& imp_i)
 {
-	for_Int(i, 0, p.nband) {
+	// for_Int(i, 0, p.nband) 
+	Int i = 0;
+	{
 		StdVecInt difference = {(i+1), -(i+1)};
 		for(const auto ii: difference)
 		{
 			NocSpace scsp_sub(mm, p, nppso(p.npartical, ii));
 			Operator opr_sub(mm, p, scsp_sub);
 			set_row_primeter_byimpH(uormat, impH, opr_sub.oper_value);
-			MatReal egses(oneedm.lowest_eigpairs(scsp.dim, false, p.degel));
 			for_Int(egs_idx, 0, p.degel){
-				CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, egses[egs_idx], i * 2);
+				CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, final_ground_state[egs_idx], i * 2);
 				if(imp_i.type_info() == STR("ImGreen")) {
 					ImGreen green_function(1, p);
 					if(ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
 					if(ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
-					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
+					for_Int(i, 0, p.nband)
+						for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
 				}
 				if(imp_i.type_info() == STR("ReGreen")) {
 					ReGreen green_function(1, p);
 					if(ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
 					if(ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
-					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
+					for_Int(i, 0, p.nband)
+						for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
 				}
 			}
 		}
@@ -300,7 +303,7 @@ void NORG::get_gimp(Green& imp_i, VecInt or_deg)
 			Operator opr_sub(mm, p, scsp_sub);
 			// scsp_sub.coefficient = set_row_primeter_byimpH(uormat, impH);
 			set_row_primeter_byimpH(uormat, impH, opr_sub.oper_value);
-			CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, final_ground_state, i * 2);
+			CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, final_ground_state[0], i * 2);
 			if(imp_i.type_info() == STR("ImGreen")) {
 				ImGreen green_function(1, p);
 				if(ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
@@ -349,8 +352,8 @@ void NORG::get_g_by_CF(Green& imp_i)
 		set_row_primeter_byimpH(uormat, impH, n1mone.oper_value);
 
 		for_Int(i, 0, imp_i.g[0].nrows()){
-			CrrltFun greaer(mm, p, scsp, scsp_1pone, n1pone, final_ground_state, 0 * 2, i);
-			CrrltFun lesser(mm, p, scsp, scsp_1mone, n1mone, final_ground_state, 0 * 2, i);
+			CrrltFun greaer(mm, p, scsp, scsp_1pone, n1pone, final_ground_state[0], 0 * 2, i);
+			CrrltFun lesser(mm, p, scsp, scsp_1mone, n1mone, final_ground_state[0], 0 * 2, i);
 
 			{// test
 				if(mm) WRN(NAV2(greaer.ex_state.norm(), lesser.ex_state.norm()));
@@ -517,7 +520,7 @@ void NORG::set_row_primeter_byimpH(const VEC<MatReal>& uormat_i, const Impdata& 
 void NORG::write_norg_info(Int iter_cnt) const {
 	using namespace std;
 	Real sc = 0;
-	for_Int(i, 0, final_ground_state.size()) sc -= SQR(final_ground_state[i]) * log(SQR(final_ground_state[i]));
+	for_Int(i, 0, final_ground_state[0].size()) sc -= SQR(final_ground_state[0][i]) * log(SQR(final_ground_state[0][i]));
 	OFS ofs_app_scorrelation(tox + "slater_correlation.txt", std::ios::app);
 	ofs_app_scorrelation << iofmt("sci");
 	ofs_app_scorrelation << setw(4) << iter_cnt;
@@ -580,7 +583,7 @@ void NORG::write_state_info(Int iter_cnt) const {
 	ofs_app_state << "\t" << setw(w_Real) << "state_norm";
 	ofs_app_state << "\t" << setw(w_Real) << "norm__sort";
 	ofs_app_state << endl; 
-	VecReal temp_norm_state = SQR(final_ground_state);
+	VecReal temp_norm_state = SQR(final_ground_state[0]);
 	VecReal temp_norm__sort = temp_norm_state; sort(temp_norm__sort);
 	if(mm) WRN(NAV3(final_ground_state.norm(),temp_norm_state.norm(),temp_norm__sort.norm()));
 	for_Int(i, 0, final_ground_state.size()) 

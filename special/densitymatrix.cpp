@@ -19,16 +19,6 @@ DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i
 	,dm(dm_initialize())
 {
 }
-/*
-MatReal DensityMat::one_electron_density_matrix(Int wish_nev)
-{
-	MatReal multi_oedm(p.norbit, p.norbit, 0.);		// one - electron density matrix at the Multi - states.
-	// if (mm) WRN("lowest_eigpairs BEGIN");
-	// if (mm)WRN("find_one_electron_density_matrix BEGIN"+NAV(ground_states.size()));
-	multi_oedm = find_one_electron_density_matrix(lowest_eigpairs(scsp.dim, true,  wish_nev));
-	return multi_oedm;
-}
-*/
 
 //----------------------------- basic function -----------------------------
 
@@ -108,7 +98,7 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 void DensityMat::update(Int mode) {
 	dm = dm_initialize();
 	if (mode == 1) {
-		MatReal egses(lowest_eigpairs(scsp.dim, false, p.degel));
+		MatReal egses(lowest_eigpairs(scsp.dim, false, 1));
 		for_Int(egs_idx, 0, p.degel) {
 			VEC<MatReal> temp_dm;
 			temp_dm = find_one_electron_density_matrix(egses[egs_idx].mat(1, scsp.dim), table);

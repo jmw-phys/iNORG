@@ -12,7 +12,9 @@ Bath::Bath(const MyMpi& mm_i, const Prmtr& prmtr_i) :
 void Bath::bath_fit(const ImGreen& hb_i, Int iter)
 {
 	if(iter == 1) read_ose_hop(); IFS ifs(prefill0(p.nI2B[0], 2) + ".ose_hop");
-	for_Int(band_i, 0, p.nband){
+	// for_Int(band_i, 0, p.nband)
+	Int band_i = 0;
+	{
 		if(p.nband != hb_i[0].nrows()) ERR("some thing wrong with the hybrid function.")
 		for_Int(i, 0, hb_i.nomgs) hb[i] = hb_i[i][band_i][band_i];
 		ose.reset(p.nI2B[band_i]); hop.reset(p.nI2B[band_i]); nb = p.nI2B[band_i];
@@ -44,6 +46,7 @@ void Bath::bath_fit(const ImGreen& hb_i, Int iter)
 			NAV7(Int(info[band_i][0]=Real(nmin)), info[band_i][1]=err, info[band_i][2]=err_crv, info[band_i][3]=err_regE, info[band_i][4]=err_regV, info[band_i][5]=err_bsr, info[band_i][6]=a_norm);
 		}
 	}
+	for_Int(band_j, 1, p.nband) {vec_ose[band_j] = ose; vec_hop[band_j] = hop;} // add for same as band 1.
 }
 
 void Bath::bath_fit(const ImGreen& hb_i, VecInt or_deg)// for Zen mode
@@ -197,7 +200,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_bsr(const VecReal& a0, const Int& 
 	const HybErr hyberr(p, hb, nb, orb_i);
 	const Int np = a0.size();
 	const Int ntry_fine = MAX(16, mm.np() - 1);
-	const Int ntry = MAX(64 * ntry_fine, 200);
+	const Int ntry = MAX(32 * ntry_fine, 200);
 	const Real tol = 1.e-12;
 	Int nmin = 0;		// number of fittings reaching the minimum
 	MPI_Status status;
@@ -257,6 +260,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_bsr(const VecReal& a0, const Int& 
 			mm.Recv(a, status, mm.ms());
 			if (status.MPI_TAG == 0) break;
 			FitMrq<HybErr> mrq(hyberr.x, hyberr.y, hyberr.sig, a, hyberr, tol);
+			if ((a.size() / 2) % 2 != 0) mrq.hold(a.size() / 4, 0.);
 			Int mrq_fit_info = mrq.fit();
 			mm.Send(mrq.a, mm.ms(), 1);
 		}

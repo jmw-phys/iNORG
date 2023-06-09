@@ -7,7 +7,7 @@ using namespace std;
 
 
 Krylov::Krylov(const DensityMat& old_one_emat_i, const Int position_i) :DensityMat(old_one_emat_i),
-ground_state_energy(old_one_emat_i.groundstate_energy), ground_state_i(old_one_emat_i.ground_state),
+ground_state_energy(old_one_emat_i.groundstate_energy), ground_state_i(old_one_emat_i.ground_state[0]),
 position(position_i)
 {
 

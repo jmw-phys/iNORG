@@ -58,7 +58,7 @@ public:
 	void update(Int mode = 0);
 
 	// To update density matrix by corrstate.
-	void update(const Crrvec& corstate_p, const Crrvec& corstate_m) { dm = correct_one_electron_density_matrix(ground_state, corstate_p, corstate_m); }
+	void update(const Crrvec& corstate_p, const Crrvec& corstate_m) { dm = correct_one_electron_density_matrix(ground_state[0], corstate_p, corstate_m); }
 
 	// To update calculate density matrix by input state.
 	void update(const VecReal& state, const Crrvec& corstate_p, const Crrvec& corstate_m) {
@@ -67,7 +67,6 @@ public:
 
 	// To update calculate density matrix by input Krylov sapce, with omega vec (tow orbital version).
 	void update(const VecReal& state, Crrvec& corstate1_p, Crrvec& corstate1_m, Crrvec& corstate2_p, Crrvec& corstate2_m) {
-		// state = lowest_eigpairs(scsp.dim)[0];
 		dm = correct_one_electron_density_matrix(state, corstate1_p, corstate1_m, corstate2_p, corstate2_m);
 	}
 

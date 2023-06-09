@@ -75,7 +75,7 @@ private:
 		os << iofmt("sci");
 		os << setw(4) << iter_cnt;
 		os << "  " << setw(w_Real) << gloc_err[gloc_err.size() - 1];
-		os << setw(4) << temp;
+		os << setw(4 + 2 * p.nband) << temp;
 		for_Int(i, 0, n_eles.size()) {
 			os << "  " << setw(w_Real) << n_eles[i];
 		}

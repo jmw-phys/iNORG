@@ -18,7 +18,7 @@ void Prmtr::set_inert_values()
 {
     nband = 2;         
     norbs = nband * 2;
-    project = "1band_KH";
+    project = STR(nband)+"band_KH";
     
 	gauss_n_max = 512;		        // default value: 2048
 	gauss_n_min = 64;		        // default value: 64
@@ -37,15 +37,16 @@ void Prmtr::set_inert_values()
 
 void Prmtr::set_values() {
     //model related
-    jz = 0.0;
-    U = 3.;
-    Uprm = 2.7;
-    mu = 0.1;
+    U = 4.;
+    mu = 0.0;
+
+    jz = 0.25 * U;
+    Uprm = U - 2 * jz;
     bandw = 50.;                    //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
     eimp = VecReal(norbs, 0.);
     degel = 1;                      // Degenerate energy levels
-    bethe_t.reset(nband, 0.5);
-	if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] = 0.5 * bethe_t[i];
+    bethe_t.reset(nband, 1);
+	if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] =  bethe_t[i];
     bsr = bethe_t * bethe_t;    // the vector of bath sum rule.
 
     // fitting related
@@ -56,7 +57,7 @@ void Prmtr::set_values() {
     if_norg_imp = false;
     imp_backup = false;
     templet_restrain = !if_norg_imp ? VecInt{0, -1, -2,  0,  2,  1} : VecInt{-1, -4, -4,  4,  4,  1};
-    templet_control  = !if_norg_imp ? VecInt{1,  4,  0,  1,  0,  4} : VecInt{ 0,  1,  1,  1,  1,  0};
+    templet_control  = !if_norg_imp ? VecInt{1,  2,  2,  1,  2,  2} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
     nI2B = SUM(templet_control) - 1;                    // default value:
@@ -66,10 +67,10 @@ void Prmtr::set_values() {
     // nooc_mode = STR("cpnooc");
     nooc_mode = STR("cnooc");
     after_modify_prmtr();
-    control_divs[1] = {1,  2,  2,  1,  2,  2};
-    control_divs[2] = {1,  2,  2,  1,  2,  2};
-    control_divs[3] = {1,  3,  1,  1,  1,  3};
-    control_divs[4] = {1,  3,  1,  1,  1,  3};
+    // control_divs[1] = {1,  2,  2,  1,  2,  2};
+    // control_divs[2] = {1,  2,  2,  1,  2,  2};
+    // control_divs[3] = {1,  3,  1,  1,  1,  3};
+    // control_divs[4] = {1,  3,  1,  1,  1,  3};
     recalc_partical_number();
 }
 

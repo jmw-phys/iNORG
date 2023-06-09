@@ -281,3 +281,8 @@ beta-Version: 1.1.13.5 @ 2023.06.05
     realized: adding the regE and regV in the fitting.
     next do : try to add the partical-hole symmary in fitting.
     thinking: What's the physical for the calc of the no-half-filling case?
+
+beta-Version: 1.1.13.6 @ 2023.06.09
+    realized: 1. modify for the DOI: 10.1103/PhysRevB.100.085104, for green function we only consider one spanless orbital; 2. change the Type for the final_ground_state(Now we only have the once lowest_eigpairs() happened).
+    next do : add the Pulay mixing
+    thinking: (same as prev)

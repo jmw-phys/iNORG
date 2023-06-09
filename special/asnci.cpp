@@ -16,7 +16,7 @@ Asnci::Asnci(const NORG& norg, Idx trncat_size):
     core_dim(trncat_size)
 {
     // inital = git_nci(norg);
-    trncat = truncation(git_nci(norg.final_ground_state));
+    trncat = truncation(git_nci(norg.final_ground_state[0]));
 }
 
 Asnci::Asnci(const NORG& norg, Idx trncat_size, Int ex_pos):
@@ -24,11 +24,11 @@ Asnci::Asnci(const NORG& norg, Idx trncat_size, Int ex_pos):
     nosp(norg.scsp), groundE(norg.groune_lst), coefficient(norg.scsp.coefficient),
     // core_dim(Int(trncat_size / Int(mayhop.size() / 4.0)))
     core_dim(trncat_size),
-    trncat(git_nci_no_rank(norg.final_ground_state, ex_pos))
+    trncat(git_nci_no_rank(norg.final_ground_state[0], ex_pos))
 {
-    // !Nci nci = git_nci(norg.final_ground_state, ex_pos);
+    // !Nci nci = git_nci(norg.final_ground_state[0], ex_pos);
     // !trncat = truncation(nci);
-    // trncat = git_nci_no_rank(norg.final_ground_state, ex_pos);
+    // trncat = git_nci_no_rank(norg.final_ground_state[0], ex_pos);
 
     dim = trncat.first.size();
 
@@ -51,7 +51,7 @@ Asnci::Asnci(const NORG& norg, Idx trncat_size, Int ex_pos):
     if(mm) WRN(NAV(cfig_idx.size()))
     find_fullH_idx();
 
-    // trncat = truncation(git_nci(norg.final_ground_state, ex_pos));
+    // trncat = truncation(git_nci(norg.final_ground_state[0], ex_pos));
 }
 
 NORG Asnci::get_norg(Tab table, Int mode) {

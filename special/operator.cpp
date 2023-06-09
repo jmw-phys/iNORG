@@ -374,7 +374,8 @@ MatReal Operator::lowest_eigpairs(const Idx n, bool if_need_fast, Int wish_nev)
 	if(ev_dgcy[0] > p.degel) {p.degel = ev_dgcy[0]; if(mm) WRN(NAV2(p.degel,ev_dgcy.mat(1,ev_dgcy.size())))}
 	// MatReal eigenvec(eigenvec_i.size(),n);
 	// for_Int(i, 0, eigenvec_i.size()) eigenvec[i] = eigenvec_i[i];
-	ground_state = eigenvec_i[0];
+	// ground_state = eigenvec_i[0];
+	ground_state = eigenvec_i.truncate_row(0, p.degel);
 	// if(mm) WRN("finished lanczos.")
 #ifdef _ASSERTION_
 	//WRN("TEST_Lanczos is right:::" + NAV(mm.np()));
