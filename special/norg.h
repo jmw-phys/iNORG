@@ -127,12 +127,15 @@ public:
 	void writematrix(const MatReal& m, const Str U_name, Int iter_norg_cnt) const;
 */
 
-//---------------------------------------calculate the physical operator---------------------------------
+//---------------------------------calculate the physical operator(API)---------------------------------
 
 	Real sz_imp_sz_bath(const Int imp_postition, const VecReal& vgs_i);
 
 	// To check the NO-interactions check.
 	Real return_nointeractions_ground_state_energy(const MatReal& h0_i) const;
+
+	// calculate the <N_iN_j> correction functon.
+	Real two_partical_correction_function(const MatReal& vgs_i) const;
 //--------------------------------------- for the Green function---------------------------------
 	
 	// void get_gimp_by_krylov_CV_modify(Green& imp_i) const;
