@@ -200,7 +200,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_bsr(const VecReal& a0, const Int& 
 	const HybErr hyberr(p, hb, nb, orb_i);
 	const Int np = a0.size();
 	const Int ntry_fine = MAX(16, mm.np() - 1);
-	const Int ntry = MAX(32 * ntry_fine, 200);
+	const Int ntry = MAX(16 * ntry_fine, 200);
 	const Real tol = 1.e-12;
 	Int nmin = 0;		// number of fittings reaching the minimum
 	MPI_Status status;

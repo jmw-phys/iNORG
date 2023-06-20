@@ -291,3 +291,8 @@ beta-Version: 1.1.13.7 @ 2023.06.09
     realized: Fixed the 1.1.13.6's bug.
     next do : add the Pulay mixing
     thinking: (same as prev)
+
+beta-Version: 1.1.13.9 @ 2023.06.19
+    realized: 08:add the pulay_mixing function(NOT tested); 09: add the even and odd subspace calc green.
+    next do : test for the new space.
+    thinking: What's the physical for the calc of the no-half-filling case? Why the mott insulator will degeneracy.

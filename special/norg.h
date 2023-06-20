@@ -70,6 +70,16 @@ private:
 		return nppso_i;
 	}
 
+// ! NOT pass the test.
+	VecInt nppso_all(const VecInt &a, Int positon)
+	{
+		VecInt nppso_i(a);
+		Int i = abs(positon);
+		if (positon > 0) nppso_i[(i - 1)] += 1;
+		if (positon < 0) nppso_i[(i - 1)] -= 1;
+		return nppso_i;
+	}
+
 	bool converged();
 
 	bool green_modify_converged() const;
@@ -148,6 +158,8 @@ public:
 	void get_gimp(Green& imp_i);
 
 	void get_gimp_eigpairs(Green& imp_i);
+
+	void get_gimp_all(Green& imp_i);
 
 	void get_gimp(Green& imp_i, VecInt or_deg);
 

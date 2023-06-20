@@ -30,6 +30,10 @@ class DMFT {
 	Real bethe_mu;				// Chemical potential /mu
 	VecReal bethe_t;			// hopping strength t
 
+	
+	VEC<ImGreen> se_input;		// Pulay mixing
+    VEC<ImGreen> res_past;		// Pulay mixing: residual 
+
 	ImGreen g0_loc() const;		// the local lattice Green's function with no interaction.
 	void set_parameter();		// set the parameters for the DMFT calculation.
 
@@ -104,6 +108,24 @@ private:
 	ReGreen find_gloc_by_se(const ReGreen& se_i) const;
 
 	ImGreen find_hb_by_se(const ImGreen& se_i) const;
+
+
+	// Calculate Green's function using parity degeneracy
+	void get_gimp_evenodd(NORG & norg,Green & gfimp) const;
+
+	
+    void pulay_mixing(const ImGreen& seimp);
+	Real dot(const ImGreen& r1, const ImGreen& r2) {
+		Real t(0.);
+		for_Int(i, 0, r1.g.size()) {
+			for_Int(row, 0, r1.g[i].nrows()) {
+				for_Int(col, 0, r1.g[i].ncols()) {
+					t += r1[i][row][col].real() * r2[i][row][col].real() + r1[i][row][col].imag() * r2[i][row][col].imag();
+				}
+			}
+		}
+		return t;
+	}
 public:
 	// For mode = 1, DMFT iteration by self-energy, for mode = 0, DMFT iteration by g_imp.
 	DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode);

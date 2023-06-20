@@ -22,10 +22,10 @@ void Prmtr::set_inert_values()
     
 	gauss_n_max = 512;		        // default value: 2048
 	gauss_n_min = 64;		        // default value: 64
-    iter_max = 999;                 // default value: 999
+    iter_max = 99;                 // default value: 99
 
     dlt_freq = 0.005;               
-    eta_freq = 0.1;             
+    eta_freq = 0.01;             
     freq_upp = 5.;                      
     freq_low = -5.;
 
@@ -37,7 +37,7 @@ void Prmtr::set_inert_values()
 
 void Prmtr::set_values() {
     //model related
-    U = 3.5;
+    U = 4;
     mu = 0.0;
 
     jz = 0.25 * U;
@@ -56,8 +56,8 @@ void Prmtr::set_values() {
     // NORG parameter.
     if_norg_imp = false;
     imp_backup = false;
-    templet_restrain = !if_norg_imp ? VecInt{0, -1, -2,  0,  2,  1} : VecInt{-1, -4, -4,  4,  4,  1};
-    templet_control  = !if_norg_imp ? VecInt{1,  2,  2,  1,  2,  2} : VecInt{ 0,  1,  1,  1,  1,  0};
+    templet_restrain = !if_norg_imp ? VecInt{0, -1, -4,  0,  4,  1} : VecInt{-1, -4, -4,  4,  4,  1};
+    templet_control  = !if_norg_imp ? VecInt{1,  1,  1,  2,  1,  1} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
     nI2B = SUM(templet_control) - 1;                    // default value:
@@ -72,6 +72,7 @@ void Prmtr::set_values() {
     // control_divs[3] = {1,  3,  1,  1,  1,  3};
     // control_divs[4] = {1,  3,  1,  1,  1,  3};
     recalc_partical_number();
+    npartical = { 3, 4, 4, 3 };
 }
 
 // we set first divison as impurity. The maximum number of cavity("-"); mean electron("+").
@@ -81,6 +82,7 @@ void Prmtr::after_modify_prmtr() const
     control_divs.reset(norg_sets + 1, ndiv, 0);
     control_divs[0] = templet_restrain;
     for_Int(i, 0, norg_sets) control_divs[i + 1] = templet_control;
+
     MatInt sit_mat(control_divs.truncate_row(1,norg_sets + 1));
     for_Int(i, 0, norg_sets) nI2B[i] = SUM(sit_mat[i]) - sit_mat[i][0];
     for_Int(i, 0, norg_sets) nO2sets[i] = SUM(sit_mat[i]);
