@@ -60,7 +60,7 @@ void Prmtr::set_values() {
     templet_control  = !if_norg_imp ? VecInt{1,  1,  1,  2,  1,  1} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
-    nI2B = SUM(templet_control) - 1;                    // default value:
+    nI2B = SUM(templet_control) - templet_control[0];   // default value:
     nO2sets = SUM(templet_control);                     // default value:
     iter_max_norg = 99;                                 // default
     // nooc_mode = STR("nooc");
@@ -72,7 +72,7 @@ void Prmtr::set_values() {
     // control_divs[3] = {1,  3,  1,  1,  1,  3};
     // control_divs[4] = {1,  3,  1,  1,  1,  3};
     recalc_partical_number();
-    npartical = { 3, 4, 4, 3 };
+    npartical = { nI2B[0]/2, nI2B[0]/2 + 1, nI2B[0]/2 + 1, nI2B[0]/2 };
 }
 
 // we set first divison as impurity. The maximum number of cavity("-"); mean electron("+").

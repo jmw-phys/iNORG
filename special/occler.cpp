@@ -13,7 +13,7 @@ Occler::Occler(const MyMpi& mm_i, Prmtr& prmtr_i):
 }
 
 
-
+// old version
 NORG Occler::find_ground_state_partical(const Impdata &impH_i){
     Int counter(0);
     while(1){
@@ -61,6 +61,8 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i){
     }
     ERR("There some thing wrong in Occler.cpp!")
 }
+
+
 
 // ! tested.
 NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_deg)
