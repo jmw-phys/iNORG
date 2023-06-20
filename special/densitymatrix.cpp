@@ -19,16 +19,6 @@ DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i
 	,dm(dm_initialize())
 {
 }
-/*
-MatReal DensityMat::one_electron_density_matrix(Int wish_nev)
-{
-	MatReal multi_oedm(p.norbit, p.norbit, 0.);		// one - electron density matrix at the Multi - states.
-	// if (mm) WRN("lowest_eigpairs BEGIN");
-	// if (mm)WRN("find_one_electron_density_matrix BEGIN"+NAV(ground_states.size()));
-	multi_oedm = find_one_electron_density_matrix(lowest_eigpairs(scsp.dim, true,  wish_nev));
-	return multi_oedm;
-}
-*/
 
 //----------------------------- basic function -----------------------------
 
@@ -67,7 +57,7 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 			*/
 			// if(mm) WRN(NAV(evalu_i));
 		}
-		for_Int(i, 0, rotaionU.size()) rotaionU[i] = rotaionU[i - (i%2)]; //! using the spin inversion symmetry
+		// for_Int(i, 0, rotaionU.size()) rotaionU[i] = rotaionU[i - (i%2)]; //! using the spin inversion symmetry
 		occupationnumber = evalue;
 	} else {
 		VEC<MatReal> rotaionU_bath;
@@ -92,7 +82,7 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 			//DBG("New uorm111" + NAV3(i, rotaionU_bath[i], evalue[i]));
 		}
 		// if(mm) WRN(NAV3(evalue[0].mat(1,p.nI2B[0]), evalue[1].mat(1,p.nI2B[1]), evalue[2].mat(1,p.nI2B[2])));
-		for_Int(i, 0, rotaionU_bath.size()) rotaionU_bath[i] = rotaionU_bath[i - (i%2)]; //! using the spin inversion symmetry(suit for SC).
+		// for_Int(i, 0, rotaionU_bath.size()) rotaionU_bath[i] = rotaionU_bath[i - (i%2)]; //! using the spin inversion symmetry(suit for SC).
 
 		occupationnumber = evalue;
 		for_Int(i, 0, p.nO2sets.size()) {
@@ -108,11 +98,11 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 void DensityMat::update(Int mode) {
 	dm = dm_initialize();
 	if (mode == 1) {
-		MatReal egses(lowest_eigpairs(scsp.dim, false, p.degel));
+		MatReal egses(lowest_eigpairs(scsp.dim, false, 1));
 		for_Int(egs_idx, 0, p.degel) {
 			VEC<MatReal> temp_dm;
 			temp_dm = find_one_electron_density_matrix(egses[egs_idx].mat(1, scsp.dim), table);
-			if(mm) WRN(NAV(temp_dm[0]));
+			// if(mm) WRN(NAV(temp_dm[0]));
 			for_Int(dm_i, 0, dm.size()) dm[dm_i] += temp_dm[dm_i] * Real(1 / p.degel);
 		}
 	}

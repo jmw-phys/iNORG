@@ -105,13 +105,13 @@ void Impurity::write_H0info(const Bath &b, Int ndeg, Int iter_cnt) const {
     if(iter_cnt > 0) ofs.open(iox + "zic" + prefill0(iter_cnt, 3) +".h0.txt");
     using namespace std;
     if(ndeg > 0) for_Int(i, 0, ndeg)	{
-        ofs << "The impurity for "<< i+1 << "-th degeneracy: " << "nmin: " << b.info[i][0] << " err: " << b.info[i][1] << " err_crv: " << b.info[i][2] << " err_reg: " << b.info[i][3] << " norm: " << b.info[i][4]<< "  " << endl;
+        ofs << "degeneracy band "<< i+1  << "nmin: " << b.info[i][0] << " err: " << b.info[i][1] << " err_crv: " << b.info[i][2] << " err_regE: " << b.info[i][3] << " err_regV: " << b.info[i][4] << " err_bsr: " << b.info[i][5] <<" norm: " << b.info[i][6]<< "  " << endl;
     }
     else for_Int(i, 0, p.nband) {
-        ofs << "The impurity for "<< i+1 << "-th band: " << "nmin: " << b.info[i][0] << " err: " << b.info[i][1] << " err_crv: " << b.info[i][2] << " err_reg: " << b.info[i][3] << " norm: " << b.info[i][4]<< "  " << endl;
+        ofs << "band "<< i+1  << "nmin: " << b.info[i][0] << " err: " << b.info[i][1] << " err_crv: " << b.info[i][2] << " err_regE: " << b.info[i][3] << " err_regV: " << b.info[i][4] << " err_bsr: " << b.info[i][5] <<" norm: " << b.info[i][6]<< "  " << endl;
     }
     for_Int(i, 0, p.nband)	{
-        ofs << i+1 << "-th band: " << endl;
+        ofs << "band "<< i+1 << endl;
         Int begin(i*2 * (p.nI2B[i*2] + 1)), end((i*2 + 1) * (p.nI2B[i*2] + 1));
         ofs << iofmt() << h0.truncate(begin, begin, end, end) << endl;
     }

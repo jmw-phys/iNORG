@@ -18,11 +18,11 @@ void Prmtr::set_inert_values()
 {
     nband = 2;         
     norbs = nband * 2;
-    project = "2band_KH";
+    project = STR(nband)+"band_KH";
     
 	gauss_n_max = 512;		        // default value: 2048
 	gauss_n_min = 64;		        // default value: 64
-    iter_max = 999;                 // default value: 999
+    iter_max = 99;                 // default value: 99
 
     dlt_freq = 0.005;               
     eta_freq = 0.01;             
@@ -37,16 +37,17 @@ void Prmtr::set_inert_values()
 
 void Prmtr::set_values() {
     //model related
-    jz = 0.0;
-    U = 4.;
-    Uprm = 3.7;
-    // U = 0.;
-    // Uprm = 0.;
-    mu = 0.;
-    bandw = 50.;            //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
-    eimp = VecReal(norbs, 0.);
-    degel = 0.;             // Degenerate energy levels. for real material default value: 0.
+    U = 4;
+    mu = 0.0;
 
+    jz = 0.25 * U;
+    Uprm = U - 2 * jz;
+    bandw = 50.;                    //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
+    eimp = VecReal(norbs, 0.);
+    degel = 1;                      // Degenerate energy levels
+    bethe_t.reset(nband, 1);
+	if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] =  bethe_t[i];
+    bsr = bethe_t * bethe_t;    // the vector of bath sum rule.
 
     // fitting related
     fit_pow = 2.; // default value: 2.
@@ -55,18 +56,23 @@ void Prmtr::set_values() {
     // NORG parameter.
     if_norg_imp = false;
     imp_backup = false;
-    templet_restrain = !if_norg_imp ? VecInt{0, -1, -2,  0,  2,  1} : VecInt{-1, -4, -4,  4,  4,  1};
-    templet_control  = !if_norg_imp ? VecInt{1,  3,  0,  1,  0,  3} : VecInt{ 0,  1,  1,  1,  1,  0};
+    templet_restrain = !if_norg_imp ? VecInt{0, -1, -4,  0,  4,  1} : VecInt{-1, -4, -4,  4,  4,  1};
+    templet_control  = !if_norg_imp ? VecInt{1,  1,  1,  2,  1,  1} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
-    nI2B = SUM(templet_control) - 1;                    // default value:
+    nI2B = SUM(templet_control) - templet_control[0];   // default value:
     nO2sets = SUM(templet_control);                     // default value:
     iter_max_norg = 99;                                 // default
-    nooc_mode = STR("nooc");
+    // nooc_mode = STR("nooc");
     // nooc_mode = STR("cpnooc");
-    // nooc_mode = STR("cnooc");
+    nooc_mode = STR("cnooc");
     after_modify_prmtr();
+    // control_divs[1] = {1,  2,  2,  1,  2,  2};
+    // control_divs[2] = {1,  2,  2,  1,  2,  2};
+    // control_divs[3] = {1,  3,  1,  1,  1,  3};
+    // control_divs[4] = {1,  3,  1,  1,  1,  3};
     recalc_partical_number();
+    npartical = { nI2B[0]/2, nI2B[0]/2 + 1, nI2B[0]/2 + 1, nI2B[0]/2 };
 }
 
 // we set first divison as impurity. The maximum number of cavity("-"); mean electron("+").
@@ -76,6 +82,7 @@ void Prmtr::after_modify_prmtr() const
     control_divs.reset(norg_sets + 1, ndiv, 0);
     control_divs[0] = templet_restrain;
     for_Int(i, 0, norg_sets) control_divs[i + 1] = templet_control;
+
     MatInt sit_mat(control_divs.truncate_row(1,norg_sets + 1));
     for_Int(i, 0, norg_sets) nI2B[i] = SUM(sit_mat[i]) - sit_mat[i][0];
     for_Int(i, 0, norg_sets) nO2sets[i] = SUM(sit_mat[i]);
@@ -184,7 +191,7 @@ void Prmtr::derive() {
     Im_z.reset(num_omg);
 	for_Int(n, 0, num_omg) Im_z[n] = Cmplx(0., (2 * n + 1) * unit_omg);
 
-    fit_max_omg = bandw/ 2. ;
+    fit_max_omg = bandw / 4. ;
     fit_num_omg = Int_ROUND(fit_max_omg / unit_omg / 2); // The default value: Int_ROUND(fit_max_omg / unit_omg / 2) change for speed reason.
 
     Str key_prmtr_val = STR("prmtr");
@@ -199,7 +206,7 @@ void Prmtr::derive_ImGreen() const {
     Im_z.reset(num_omg);
 	for_Int(n, 0, num_omg) Im_z[n] = Cmplx(0., (2 * n + 1) * unit_omg);
 
-    fit_max_omg = bandw/ 2. ;
+    fit_max_omg = bandw / 4. ;
     fit_num_omg = Int_ROUND(fit_max_omg / unit_omg / 2); // The default value: Int_ROUND(fit_max_omg / unit_omg / 2) change for speed reason.
 }
 

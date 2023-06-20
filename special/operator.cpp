@@ -368,13 +368,14 @@ MatReal Operator::lowest_eigpairs(const Idx n, bool if_need_fast, Int wish_nev)
 //#endif
 	VecReal inital_state(n, 0.); uur(inital_state); inital_state -= 0.5;
 	VecInt krylov_space_size = lanczos(eval, eigenvec_i, ev_dgcy, n, wish_nev, sep_hmltoperator, inital_state, if_need_fast, 9999);
-	if(mm) {cout <<"PIO: krylov_space_size = "; for_Int(i, 0, krylov_space_size.size()) cout << krylov_space_size[i] << "; "; cout << std::endl;}
+	if(mm) {cout <<"PIO: krylov_space_size = ";cout <<iofmt("sci"); for_Int(i, 0, krylov_space_size.size()) cout << eval[i] << ","<< krylov_space_size[i] << "; "; cout << std::endl;}
 	// if(mm) std::cout << "The eigenvalue" << iofmt("sci") << eval << std::endl;
 	groundstate_energy = eval[0];
-	if (p.degel > 0 && ev_dgcy[0] > p.degel) { p.degel = ev_dgcy[0]; if (mm) WRN(NAV(p.degel)) }
+	if(ev_dgcy[0] > p.degel) {p.degel = ev_dgcy[0]; if(mm) WRN(NAV2(p.degel,ev_dgcy.mat(1,ev_dgcy.size())))}
 	// MatReal eigenvec(eigenvec_i.size(),n);
 	// for_Int(i, 0, eigenvec_i.size()) eigenvec[i] = eigenvec_i[i];
-	ground_state = eigenvec_i[0];
+	// ground_state = eigenvec_i[0];
+	ground_state.reset(eigenvec_i.truncate_row(0, p.degel));
 	// if(mm) WRN("finished lanczos.")
 #ifdef _ASSERTION_
 	//WRN("TEST_Lanczos is right:::" + NAV(mm.np()));

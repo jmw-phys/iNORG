@@ -256,8 +256,47 @@ Version: v1.1.13 @ 2023.05.16
     finished: 1. add the 1-band Degenerate energy levels test. 2. also can auto judge the degenerate energy levels.
     next do : testing 1- or 2-band calc in BSCC-T6;
     thinking: (same as prev)
-
 Version: v1.1.14 @ 2023.05.17
     finished: 1. add the norg.lock rule for sleep the NORG program for APIzen class.
     next do : (same as prev)
     thinking: (same as prev)
+
+beta-Version: 1.1.13.1 @ 2023.05.26
+    finished: 1.add the find_gloc_by_se for finding the gloc by the self-energy in bethe lattice; 2. cancel the pre-judge system in different partical sub space; 3.modify some calculation in lanczos.h; 4. modify some print out.
+    next do : modify the fitting.
+    thinking: To get smooth DOS did we need to move the fitting on retarded green function?
+
+beta-Version: 1.1.13.2 @ 2023.05.28
+    realized: In put the ose prameter and not change ose.
+    next do : using the partical-hole symmetry to fit.
+    thinking: what if we cann't use partical-hole symmetry.
+
+beta-Version: 1.1.13.3 @ 2023.05.29
+    realized: change back for change the ose parmeter.
+    next do : using the bath sum rule.
+    thinking: (same as prev)
+
+beta-Version: 1.1.13.4 @ 2023.05.29
+    realized: adding the bath sum rule in the fitting coding
+    next do : try to add the hoping regularization for the fitting code.
+    thinking: how to enlarge the bath number without the thought fitting.
+
+beta-Version: 1.1.13.5 @ 2023.06.05
+    realized: adding the regE and regV in the fitting.
+    next do : try to add the partical-hole symmary in fitting.
+    thinking: What's the physical for the calc of the no-half-filling case?
+
+beta-Version: 1.1.13.6 @ 2023.06.09
+    realized: 1. modify for the DOI: 10.1103/PhysRevB.100.085104, for green function we only consider one spanless orbital; 2. change the Type for the final_ground_state(Now we only have the once lowest_eigpairs() happened).
+    next do : add the Pulay mixing
+    thinking: (same as prev)
+
+beta-Version: 1.1.13.7 @ 2023.06.09
+    realized: Fixed the 1.1.13.6's bug.
+    next do : add the Pulay mixing
+    thinking: (same as prev)
+
+beta-Version: 1.1.13.9 @ 2023.06.19
+    realized: 08:add the pulay_mixing function(NOT tested); 09: add the even and odd subspace calc green.
+    next do : test for the new space.
+    thinking: What's the physical for the calc of the no-half-filling case? Why the mott insulator will degeneracy.

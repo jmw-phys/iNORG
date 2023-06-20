@@ -37,7 +37,8 @@ public:
 
 	Impdata impH;
 	Real	groune_lst;						// ground state energy record after one optimize iteration.
-	VecReal final_ground_state, occnum;
+	MatReal&  final_ground_state;
+	VecReal  occnum;
 	ImGreen impgreen;
 
 	mutable NocSpace scsp;					// The main space.
@@ -66,6 +67,16 @@ private:
 		Int i = abs(positon);
 		if (positon > 0) nppso_i[(i - 1) * 2] += 1;
 		if (positon < 0) nppso_i[(i - 1) * 2] -= 1;
+		return nppso_i;
+	}
+
+// ! NOT pass the test.
+	VecInt nppso_all(const VecInt &a, Int positon)
+	{
+		VecInt nppso_i(a);
+		Int i = abs(positon);
+		if (positon > 0) nppso_i[(i - 1)] += 1;
+		if (positon < 0) nppso_i[(i - 1)] -= 1;
 		return nppso_i;
 	}
 
@@ -147,6 +158,8 @@ public:
 	void get_gimp(Green& imp_i);
 
 	void get_gimp_eigpairs(Green& imp_i);
+
+	void get_gimp_all(Green& imp_i);
 
 	void get_gimp(Green& imp_i, VecInt or_deg);
 

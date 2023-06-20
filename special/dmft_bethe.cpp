@@ -9,12 +9,11 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
 
 void DMFT::set_parameter() {
 	bethe_mu = p.mu;
-	bethe_t.reset(p.nband, 0.5);
-	if (p.nband > 1) for_Int(i, 0, p.nband - 1) bethe_t[i + 1] = 0.5 * bethe_t[i];
+	bethe_t = p.bethe_t;
 	bethe_u = p.U;
 	bethe_u12 = p.Uprm;
-	p.jz = 0.;
-	p.bandw = 2 * SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(bethe_t * bethe_t));
+	// p.jz = 0.;
+	p.bandw = 2 * (2 * SQRT(SQR(bethe_u) + SQR(bethe_u12) + SQR(bethe_u12-p.jz) + SUM(bethe_t * bethe_t)));
 	p.derive_ImGreen();
 	if (mm) { OFS ofss("log.parameters.txt", std::ios::app);  p.print(ofss); }
 }
@@ -47,7 +46,8 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 		// auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
 		if (iter_cnt > 1) norg.uormat = norg_tempU;	norg.up_date_h0_to_solve(imp.impH, 1);	n_eles = norg.write_impurtiy_occupation(iter_cnt);
 		ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);										if (mm)	g0imp.write("g0imp", iter_cnt);
-		ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
+		//ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp);						if (mm) gfimp.write("gfimp", iter_cnt);
+		ImGreen gfimp(p.nband, p);	get_gimp_evenodd(norg,gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
 		ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();				if (mm) seimp.write("seimp", iter_cnt);
 
 		if (mode == 0) {
@@ -59,21 +59,29 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 		// obtain se from impurity model.
 		if (mode == 1) {
 			append_gloc_err(se.error(seimp));												log("gerr_update");
-			se = seimp;	g_loc = find_gloc_by_se(se);
+			// se = (iter_cnt == 1) ? seimp : 0.5 * se + 0.5 * seimp;	
+			// if(ABS(gloc_err[gloc_err.size()-1]) > 1E-3)
+			se = seimp;	
+			// se_input.push_back(se); pulay_mixing(seimp);}
+			g_loc = find_gloc_by_se(se);
 		}
 		norg_tempU = norg.uormat;
+		{ mm.barrier(); SLEEP(1); }
+		if(IFS("norg.stop"))  break;
 	}
 
 	// ! auto_nooc("for_green_calc", imp); // in here we can change the nooc space once, last chance.
 	NORG finalrg(mm, p); 		finalrg.uormat = norg_tempU;								finalrg.up_date_h0_to_solve(imp.impH, 1);
-	ImGreen gfimp(p.nband, p);	finalrg.get_gimp_eigpairs(gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
-	ReGreen g0_imp_re(p.nband, p);imp.find_g0(g0_imp_re);									if (mm) g0_imp_re.write("g0fimp");
-	ReGreen gfimp_re(p.nband, p);	finalrg.get_gimp_eigpairs(gfimp_re);					if (mm) gfimp_re.write("gfimp");
-	ReGreen se = g0_imp_re.inverse() - gfimp_re.inverse();									if (mm) se.write("se_loc");
+	ImGreen gfimp(p.nband, p);	get_gimp_evenodd(finalrg,gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
 
-		
+	ReGreen g0_imp_re(p.nband, p);  imp.find_g0(g0_imp_re);									if (mm) g0_imp_re.write("g0fimp");
+	ReGreen gfimp_re(p.nband, p);	get_gimp_evenodd(finalrg,gfimp);						if (mm) gfimp_re.write("gfimp");
+	ReGreen se_re = g0_imp_re.inverse() - gfimp_re.inverse();								if (mm) se_re.write("se_loc");
+
+	ReGreen g_loc_re(p.nband, p); g_loc_re = find_gloc_by_se(se_re);						if (mm) g_loc_re.write("g_loc_re");
+
+	
 	// if (mm) bth.write_ose_hop();
-	// ReGreen g_loc(p.nband, p);find_gloc_by_se(g_loc,se);		if (mm) g_loc.write("g_loc_re");
 }
 
 
@@ -88,6 +96,20 @@ ImGreen DMFT::find_gloc_by_se(const ImGreen& se_i) const
 			Cmplx temp = SQRT(SQR(z) - 4 * SQR(bethe_t[i]));
 			if(imag(temp) < 0) temp *= -1;
 			// temp = real(temp) + I * ABS(imag(temp));
+			gloc_temp[n][i][i] = (z - temp)/ (2 * SQR(bethe_t[i]));
+		}
+	}
+	return gloc_temp;
+}
+
+ReGreen DMFT::find_gloc_by_se(const ReGreen& se_i) const
+{
+	ReGreen gloc_temp(g_loc.norbs, p);
+	for_Int(n, 0, gloc_temp.nomgs) {
+		for_Int(i,0,p.nband){
+			Cmplx z = gloc_temp.z(n) + bethe_mu - se_i[n][i][i];
+			Cmplx temp = SQRT(SQR(z) - 4 * SQR(bethe_t[i]));
+			if(imag(temp) < 0) temp *= -1;
 			gloc_temp[n][i][i] = (z - temp)/ (2 * SQR(bethe_t[i]));
 		}
 	}
@@ -179,7 +201,7 @@ void DMFT::auto_nooc(Str mode, const Impurity& imp) {
 		MatReal occnum, occweight;
 		controler[0] = p.control_divs[0];
 		{
-			NORG norg(opcler.find_ground_state_partical(imp.impH, VecInt{1}));
+			NORG norg(opcler.find_ground_state_partical(imp.impH, VecInt{1,1}));
 			uormat = norg.uormat;
 			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb / p.norg_sets);occweight = occnum;
 			nppso = norg.scsp.nppso;
@@ -200,3 +222,95 @@ void DMFT::auto_nooc(Str mode, const Impurity& imp) {
 		p.according_controler(controler, ordeg);
 	}
 }
+
+void DMFT::pulay_mixing(const ImGreen& seimp){
+    Int len_std = 5;
+    ImGreen res = seimp - se;
+    res_past.push_back(res);
+    if (res_past.size() > len_std) {
+        se_input.erase(se_input.begin());
+        res_past.erase(res_past.begin());
+    }
+    Int len = res_past.size();
+
+    VecReal beta(len);
+    for_Int(i,0,len){
+        // beta[len - 1 - i] = exp(-(iter_cnt - i - 1));
+		beta[len - 1 - i] = 1;
+    }
+
+    MatReal temp(len + 1, len + 1, 0.);
+    MatReal alpha(len + 1, 1, 0.);
+    for_Int(i, 0, len) {
+        for_Int(j, i, len){
+            temp[i][j] = dot(res_past[i], res_past[j]);
+            temp[j][i] = temp[i][j];
+        }
+    }
+    for_Int(i, 0, len) {
+        temp[len][i] = 1.;
+        temp[i][len] = 1.;
+    }
+    alpha[len] = 1.;
+    if (mm) WRN(NAV(temp));
+    Int info = gaussj(temp, alpha);
+	if(mm)	WRN(NAV(alpha));
+    se -= se;
+    for_Int(i, 0, len) {
+        se += alpha[i][0] * se_input[i] + alpha[i][0] * beta[i] * res_past[i];
+    }
+    se_input.push_back(se);
+}
+
+// void DMFT::get_gimpim_evenodd(NORG& norg,Green& gfimp) const {
+void DMFT::get_gimp_evenodd(NORG& norg,Green& gfimp) const {
+
+	if(gfimp.type_info() == STR("ImGreen"))
+	{
+		ImGreen gfimp1(p.norbs, p);	norg.get_gimp_all(gfimp1);
+		if (mm)	gfimp1.write("gfimp1", iter_cnt);
+		ImGreen gfimp2(p.norbs, p); gfimp2 = gfimp1;
+		for_Int(i, 0, p.norbs) {
+			for_Int(n, 0, gfimp1.nomgs) {
+				if (i < p.nband) {
+					gfimp1[n][i][i] += gfimp2[n][i + p.nband][i + p.nband];
+				}
+				else {
+					gfimp1[n][i][i] += gfimp2[n][i - p.nband][i - p.nband];
+				}
+				gfimp1[n][i][i] /= 2.;
+			}
+		}
+		if (mm)	gfimp1.write("gfimp11", iter_cnt);
+		for_Int(i, 0, p.nband) {
+			for_Int(n, 0, gfimp.nomgs) {
+				gfimp[n][i][i] = gfimp1[n][i * 2][i * 2];
+			}
+		}
+	}
+
+	if(gfimp.type_info() == STR("ReGreen"))
+	{
+		ReGreen gfimp1(p.norbs, p);	norg.get_gimp_all(gfimp1);
+		//if (mm)	gfimp1.write("gfimp1", iter_cnt);
+		ReGreen gfimp2(p.norbs, p); gfimp2 = gfimp1;
+		for_Int(i, 0, p.norbs) {
+			for_Int(n, 0, gfimp1.nomgs) {
+				if (i < p.nband) {
+					gfimp1[n][i][i] += gfimp2[n][i + p.nband][i + p.nband];
+				}
+				else {
+					gfimp1[n][i][i] += gfimp2[n][i - p.nband][i - p.nband];
+				}
+				gfimp1[n][i][i] /= 2.;
+			}
+		}
+		//if (mm)	gfimp1.write("gfimp11", iter_cnt);
+		for_Int(i, 0, p.nband) {
+			for_Int(n, 0, gfimp.nomgs) {
+				gfimp[n][i][i] = gfimp1[n][i * 2][i * 2];
+			}
+		}
+	}
+}
+

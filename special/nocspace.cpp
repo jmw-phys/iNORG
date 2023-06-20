@@ -548,7 +548,7 @@ void NocSpace::find_all_noc_subspaces_multi() {
 
 	find_all_possible_state_by_col(a, s);
 	if(mm) PIO(NAV(s.size())+"   "+present());
-	IFS ifs(STR("judger"+nppso_str(nppso)+ ".bdat"));
+	IFS ifs(STR("judger"+nppso_str()+ ".bdat"));
 	VecInt judger_out(s.size());
 	if(!ifs) judger_out = multi_judger(s, a);
 	else biread(ifs, CharP(judger_out.p()), judger_out.szof());
@@ -576,7 +576,7 @@ void NocSpace::find_all_noc_subspaces_by_row()
 
 	find_all_possible_state_by_row(a, s);
 	if(mm) PIO(NAV(s.size())+"   "+present());
-	IFS ifs(STR("judger"+nppso_str(nppso)+ ".bdat"));
+	IFS ifs(STR("judger"+nppso_str()+ ".bdat"));
 	VecInt judger_out(s.size());
 	if(!ifs) judger_out = multi_judger_by_row(s, a);
 	else biread(ifs, CharP(judger_out.p()), judger_out.szof());
@@ -591,7 +591,7 @@ void NocSpace::find_all_noc_subspaces_by_row()
 		idx_div.push_back(dim);
 	}
 	// if(mm) {
-	// 	OFS ofs;	ofs.open("judger"+nppso_str(nppso)+ ".bdat");
+	// 	OFS ofs;	ofs.open("judger"+nppso_str()+ ".bdat");
 	// 	biwrite(ofs, CharP(judger_out.p()), judger_out.szof());
 	// 	ofs.close();
 	// }
@@ -735,7 +735,7 @@ void NocSpace::print(std::ostream& os) const {
 
 	using namespace std;
 	Str NOOC = p.nooc_mode;
-	Str nppsos = nppso_str(nppso);
+	Str nppsos = nppso_str();
 	Int norbits = SUM(sit_mat);
 	Str rotation_imp = p.if_norg_imp ? "Yes" : "NO";
 

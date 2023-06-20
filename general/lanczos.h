@@ -135,16 +135,17 @@ VecInt lanczos(VecReal& evals, Mat<T>& evecs, VecInt& ev_dgcy, Idx n, Int wish_n
             v1 += H * v0;  k++;
         }
         Krylovsize.push_back(k);
-        if (e > 0 && compare_error(eval[e - 1], va[0]) < 1.E-8) nev++;
+        if (e > 0 && compare_error(eval[e - 1], va[0]) < 1.E-6) nev++;
             // eval.reset(nev, eval.begin());
             // eval.push_back()
             // if(fast_mode) WRN("The eigen value may have degeneracy. This may take some attention.");
         //WRN(NAV5(wish_nev,e, nev,eval.size(),evec.size()));
         // std::cout << "The eigenvalue" << iofmt("sci") << va[0] << std::endl;
-        if (e >= nev) break;
         Idx level = wish_nev + e - nev;
         evec.push_back(gs);
-        eval.push_back(va[0]); ev_dgcy[level]++;
+        eval.push_back(va[0]);
+        if (e >= nev) break;
+        ev_dgcy[level]++;
         e++;
         if (fast_mode) break;
     }
