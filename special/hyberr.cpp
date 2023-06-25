@@ -5,7 +5,7 @@ modify	by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 #include "hyberr.h"
 
 HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i) :
-	p(p_i), hb(hb_i), nw(p.fit_num_omg), nb(nb_i), regV_b(1E-10),
+	p(p_i), hb(hb_i), nw(p.fit_num_omg), nb(nb_i), regV_b(1E-4),
 	x(2 * nw + 1), y(2 * nw + 1), sig(2 * nw + 1)
 {
 	// set the curve expected:
@@ -54,7 +54,7 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i) :
 
 
 HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i, Int orb_i) :
-	p(p_i), hb(hb_i), nw(p.fit_num_omg), nb(nb_i), regV_b(1E-10),
+	p(p_i), hb(hb_i), nw(p.fit_num_omg), nb(nb_i), regV_b(1E-4),
 	x(2 * nw + 3), y(2 * nw + 3), sig(2 * nw + 3)
 {
 	// set the curve expected:

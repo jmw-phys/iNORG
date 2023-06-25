@@ -22,7 +22,7 @@ void Prmtr::set_inert_values()
     
 	gauss_n_max = 512;		        // default value: 2048
 	gauss_n_min = 64;		        // default value: 64
-    iter_max = 99;                 // default value: 99
+    iter_max = 99;                   // default value: 99
 
     dlt_freq = 0.005;               
     eta_freq = 0.01;             
@@ -37,8 +37,8 @@ void Prmtr::set_inert_values()
 
 void Prmtr::set_values() {
     //model related
-    U = 4;
-    mu = 0.0;
+    U = 3.1;
+    mu = 0.1;
 
     jz = 0.25 * U;
     Uprm = U - 2 * jz;
@@ -56,8 +56,8 @@ void Prmtr::set_values() {
     // NORG parameter.
     if_norg_imp = false;
     imp_backup = false;
-    templet_restrain = !if_norg_imp ? VecInt{0, -1, -4,  0,  4,  1} : VecInt{-1, -4, -4,  4,  4,  1};
-    templet_control  = !if_norg_imp ? VecInt{1,  1,  1,  2,  1,  1} : VecInt{ 0,  1,  1,  1,  1,  0};
+    templet_restrain = !if_norg_imp ? VecInt{0, -2, -4,  0,  4,  2} : VecInt{-1, -4, -4,  4,  4,  1};
+    templet_control  = !if_norg_imp ? VecInt{1,  4,  0,  1,  0,  4} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
     nI2B = SUM(templet_control) - templet_control[0];   // default value:
@@ -72,7 +72,6 @@ void Prmtr::set_values() {
     // control_divs[3] = {1,  3,  1,  1,  1,  3};
     // control_divs[4] = {1,  3,  1,  1,  1,  3};
     recalc_partical_number();
-    npartical = { nI2B[0]/2, nI2B[0]/2 + 1, nI2B[0]/2 + 1, nI2B[0]/2 };
 }
 
 // we set first divison as impurity. The maximum number of cavity("-"); mean electron("+").

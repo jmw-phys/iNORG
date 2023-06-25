@@ -125,7 +125,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_contest(const VecReal& a0)
 	const HybErr hyberr(p, hb, nb);
 	const Int np = a0.size();
 	const Int ntry_fine = MAX(16, mm.np() - 1);
-	const Int ntry = MAX(64 * ntry_fine, 200);
+	const Int ntry = MAX(16 * ntry_fine, 200);
 	const Real tol = 1.e-12;
 	Int nmin = 0;		// number of fittings reaching the minimum
 	MPI_Status status;
@@ -260,7 +260,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_bsr(const VecReal& a0, const Int& 
 			mm.Recv(a, status, mm.ms());
 			if (status.MPI_TAG == 0) break;
 			FitMrq<HybErr> mrq(hyberr.x, hyberr.y, hyberr.sig, a, hyberr, tol);
-			if ((a.size() / 2) % 2 != 0) mrq.hold(Int(a.size() / 4), 0.);
+			if ((a.size() / 2) % 2 != 0) mrq.hold(Int(a.size() / 4), -p.mu);
 			Int mrq_fit_info = mrq.fit();
 			mm.Send(mrq.a, mm.ms(), 1);
 		}

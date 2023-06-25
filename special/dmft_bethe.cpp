@@ -46,8 +46,7 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 		// auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
 		if (iter_cnt > 1) norg.uormat = norg_tempU;	norg.up_date_h0_to_solve(imp.impH, 1);	n_eles = norg.write_impurtiy_occupation(iter_cnt);
 		ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);										if (mm)	g0imp.write("g0imp", iter_cnt);
-		//ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp);						if (mm) gfimp.write("gfimp", iter_cnt);
-		ImGreen gfimp(p.nband, p);	get_gimp_evenodd(norg,gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
+		ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
 		ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();				if (mm) seimp.write("seimp", iter_cnt);
 
 		if (mode == 0) {
@@ -62,7 +61,7 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 			// se = (iter_cnt == 1) ? seimp : 0.5 * se + 0.5 * seimp;	
 			// if(ABS(gloc_err[gloc_err.size()-1]) > 1E-3)
 			se = seimp;	
-			// se_input.push_back(se); pulay_mixing(seimp);}
+			// else {se_input.push_back(se); pulay_mixing(seimp);}
 			g_loc = find_gloc_by_se(se);
 		}
 		norg_tempU = norg.uormat;
@@ -72,10 +71,9 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 
 	// ! auto_nooc("for_green_calc", imp); // in here we can change the nooc space once, last chance.
 	NORG finalrg(mm, p); 		finalrg.uormat = norg_tempU;								finalrg.up_date_h0_to_solve(imp.impH, 1);
-	ImGreen gfimp(p.nband, p);	get_gimp_evenodd(finalrg,gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
-
-	ReGreen g0_imp_re(p.nband, p);  imp.find_g0(g0_imp_re);									if (mm) g0_imp_re.write("g0fimp");
-	ReGreen gfimp_re(p.nband, p);	get_gimp_evenodd(finalrg,gfimp);						if (mm) gfimp_re.write("gfimp");
+	ImGreen gfimp(p.nband, p);	finalrg.get_gimp_eigpairs(gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
+	ReGreen g0_imp_re(p.nband, p);imp.find_g0(g0_imp_re);									if (mm) g0_imp_re.write("g0fimp");
+	ReGreen gfimp_re(p.nband, p);	finalrg.get_gimp_eigpairs(gfimp_re);					if (mm) gfimp_re.write("gfimp");
 	ReGreen se_re = g0_imp_re.inverse() - gfimp_re.inverse();								if (mm) se_re.write("se_loc");
 
 	ReGreen g_loc_re(p.nband, p); g_loc_re = find_gloc_by_se(se_re);						if (mm) g_loc_re.write("g_loc_re");
@@ -212,8 +210,8 @@ void DMFT::auto_nooc(Str mode, const Impurity& imp) {
 			Int o(0), freze_o(0), e(0), freze_e(0), orb_rep(0), nooc_o(0), nooc_e(0);
 			for_Int(j, 0, p.norg_sets) {orb_rep = j; if(ordeg[j] == i + 1) break;}
 			o = nppso[orb_rep] - 1; e = p.nI2B[orb_rep] - nppso[orb_rep];
-			for_Int(j, 0, o) 							if(occweight[orb_rep][j] < 1e-7) freze_o++;
-			for_Int(j, nppso[orb_rep], p.nI2B[orb_rep])	if(occweight[orb_rep][j] < 1e-7) freze_e++;
+			for_Int(j, 0, o) 							if(occweight[orb_rep][j] < 1e-8) freze_o++;
+			for_Int(j, nppso[orb_rep], p.nI2B[orb_rep])	if(occweight[orb_rep][j] < 1e-8) freze_e++;
 			nooc_o = o - freze_o; nooc_e = e - freze_e;
 			controler[i+1] = p.if_norg_imp ?  VecInt{freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{1, freze_o, nooc_o, 1, nooc_e, freze_e };
 		}

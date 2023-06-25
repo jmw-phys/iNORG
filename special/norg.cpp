@@ -632,6 +632,8 @@ void NORG::write_state_info(Int iter_cnt) const {
 VecReal NORG::write_impurtiy_occupation(Int iter_cnt) const {
 	using namespace std;
 	VecReal particals(p.norg_sets, 0);
+	MatReal dcoo, fluctuation_correlation_function(p.norbs, p.norbs, 0.);
+	if(!(p.if_norg_imp)) dcoo = print_DO(oneedm);
 	if (mm) {
 		OFS ofs;
 		if(iter_cnt < 0) ofs.open("nmat.txt");
@@ -655,6 +657,7 @@ VecReal NORG::write_impurtiy_occupation(Int iter_cnt) const {
 			ofs << setw(6) << "sup" << setw(p_Real) << counter[0] << endl;
 			ofs << setw(6) << "sdn" << setw(p_Real) << counter[1] << endl;
 			ofs << setw(6) << "sum" << setw(p_Real) << counter[2];
+			// ofs << "#   < n_i n_j >   data:" << endl; // ! not finished for rotation case.
 			ofs.close();
 		} else {
 			VEC<MatReal> dmtemp(oneedm.dm);
@@ -670,8 +673,16 @@ VecReal NORG::write_impurtiy_occupation(Int iter_cnt) const {
 			counter[2] = counter[0] + counter[1];
 			ofs << setw(6) << "sup" << setw(p_Real) << counter[0] << endl;
 			ofs << setw(6) << "sdn" << setw(p_Real) << counter[1] << endl;
-			ofs << setw(6) << "sum" << setw(p_Real) << counter[2];
+			ofs << setw(6) << "sum" << setw(p_Real) << counter[2] << endl;
+
+			ofs <<"\n\n#   < n_i n_j >   data:" ;
+			ofs << iofmt() << dcoo << endl;
+			// fluctuation_correlation_function = dcoo;
+			ofs <<"\n\n#   < n_i n_j > - <n_i><n_j>  data:" ;
+			for_Int(i, 0, p.norbs) for_Int(j, 0, p.norbs) fluctuation_correlation_function[i][j] = dcoo[i][j] - particals[i] * particals[j];
+			ofs << iofmt() << fluctuation_correlation_function << endl;
 			ofs.close();
+			PIO(NAV(fluctuation_correlation_function))
 		}
 	}
 	return particals;

@@ -272,12 +272,13 @@ Tab Operator::find_fullH_idx()
 		for_Int(set_i, 0, p.norg_sets) {
 			for_Int(set_j, 0, p.norg_sets) {
 				VEC<Int> N_veci(a.filled_spinless[set_i]), N_vecj(a.filled_spinless[set_j]);
-				for (const auto& N_i : N_veci) for (const auto& N_j : N_vecj) 
-					if (N_i != N_j) {
+				for (const auto& N_i : N_veci) for (const auto& N_j : N_vecj) {
+					// if (N_i != N_j) {
 						h_idx = { sparse_idx, h_i, int(mat_hop_pos.size() + 1 + tensor_u[N_i][N_j][N_j][N_i]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
 						// ? if this term(↓) is necessary? only can mute this term when the interaction happen in different sets.
 						// h_idx = { sparse_idx, h_i,-int(mat_hop_pos.size() + 1 + tensor_u[N_i][N_j][N_i][N_j]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-					}
+					// }
+				}
 			}
 		}
 		//! off-Diagonal term. C\power-index{i|†}C\index{j}|| C\power-index{i|†}C\power-index{j|†}C\power-index{k}C\index{l}
@@ -371,7 +372,7 @@ MatReal Operator::lowest_eigpairs(const Idx n, bool if_need_fast, Int wish_nev)
 	if(mm) {cout <<"PIO: krylov_space_size = ";cout <<iofmt("sci"); for_Int(i, 0, krylov_space_size.size()) cout << eval[i] << ","<< krylov_space_size[i] << "; "; cout << std::endl;}
 	// if(mm) std::cout << "The eigenvalue" << iofmt("sci") << eval << std::endl;
 	groundstate_energy = eval[0];
-	if(ev_dgcy[0] > p.degel) {p.degel = ev_dgcy[0]; if(mm) WRN(NAV2(p.degel,ev_dgcy.mat(1,ev_dgcy.size())))}
+	if(ev_dgcy[0] != p.degel) {p.degel = ev_dgcy[0]; if(mm) WRN(NAV2(p.degel,ev_dgcy.mat(1,ev_dgcy.size())))}
 	// MatReal eigenvec(eigenvec_i.size(),n);
 	// for_Int(i, 0, eigenvec_i.size()) eigenvec[i] = eigenvec_i[i];
 	// ground_state = eigenvec_i[0];

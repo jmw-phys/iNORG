@@ -70,6 +70,11 @@ public:
 		dm = correct_one_electron_density_matrix(state, corstate1_p, corstate1_m, corstate2_p, corstate2_m);
 	}
 
+	// Find the double occupancy, denoted as <n_i n_j>, according to the current status. 
+	MatReal find_double_occupancy() const;
+
+
+
 	// // (Deprecated) To update calculate density matrix by input Krylov sapce, with omega vec.
 	// void update(const VecReal& state, Crrvec& corstate_p, Crrvec& corstate_m, const VecReal& omega_point) {
 	// 	dm = correct_one_electron_density_matrix(state, corstate_p, corstate_m, omega_point);

@@ -256,6 +256,7 @@ Version: v1.1.13 @ 2023.05.16
     finished: 1. add the 1-band Degenerate energy levels test. 2. also can auto judge the degenerate energy levels.
     next do : testing 1- or 2-band calc in BSCC-T6;
     thinking: (same as prev)
+
 Version: v1.1.14 @ 2023.05.17
     finished: 1. add the norg.lock rule for sleep the NORG program for APIzen class.
     next do : (same as prev)
@@ -300,3 +301,8 @@ beta-Version: 1.1.13.9 @ 2023.06.19
     realized: 08:add the pulay_mixing function(NOT tested); 09: add the even and odd subspace calc green.
     next do : test for the new space.
     thinking: What's the physical for the calc of the no-half-filling case? Why the mott insulator will degeneracy.
+
+Version: v1.1.15 @ 2023.06.25
+    realized: 1. Add the <n_i n_j> calc; 2. Return the 1.1.13.6 for main calculation.
+    next do : bench Cross-Validation with 1.1.13.6
+    thinking: Why would <n_i n_i> same as <n_i>?
