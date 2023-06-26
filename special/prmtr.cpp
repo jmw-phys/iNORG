@@ -37,16 +37,18 @@ void Prmtr::set_inert_values()
 
 void Prmtr::set_values() {
     //model related
-    U = 3.1;
-    mu = 0.1;
+    U = 3.0;
+    mu = 0.0;
 
-    jz = 0.25 * U;
-    Uprm = U - 2 * jz;
+    // jz = 0.25 * U;
+    // Uprm = U - 2 * jz;
+    jz = 0;
+    Uprm = U - 0.3;
     bandw = 50.;                    //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
     eimp = VecReal(norbs, 0.);
     degel = 1;                      // Degenerate energy levels
-    bethe_t.reset(nband, 1);
-	if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] =  bethe_t[i];
+    bethe_t.reset(nband, 0.5);
+	if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] = 0.5 * bethe_t[i];
     bsr = bethe_t * bethe_t;    // the vector of bath sum rule.
 
     // fitting related

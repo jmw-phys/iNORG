@@ -291,8 +291,8 @@ void NORG::get_gimp_all(Green& imp_i)
 
 void NORG::get_gimp_eigpairs(Green& imp_i)
 {
-	// for_Int(i, 0, p.nband) 
-	Int i = 0;
+	// Int i = 0;																				// add for same as band 1.
+	for_Int(i, 0, p.nband) 
 	{
 		StdVecInt difference = {(i+1), -(i+1)};
 		for(const auto ii: difference)
@@ -318,7 +318,7 @@ void NORG::get_gimp_eigpairs(Green& imp_i)
 		}
 		if (mm) PIO("finished the " + STR(i) + " find_g_norg   " + present());
 	}
-	for_Int(j, 1, p.nband) for_Int(n, 0, imp_i.nomgs) imp_i[n][j][j] = imp_i[n][0][0];
+	// for_Int(j, 1, p.nband) for_Int(n, 0, imp_i.nomgs) imp_i[n][j][j] = imp_i[n][0][0];		// add for same as band 1.
 }
 
 void NORG::get_gimp(Green& imp_i, VecInt or_deg)
