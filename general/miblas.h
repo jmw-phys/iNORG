@@ -41,6 +41,39 @@ inline MKL_Complex16 DOT(const Vec<MKL_Complex16> &lhs, const Vec<MKL_Complex16>
 	return dotc;
 }
 
+// cblas_?scal x = a * x, where a is a scalar, x is an n-element vector.
+inline void SCAL(const double &a, Vec<double> &x)
+{
+#ifdef _CHECK_DIMENSION_MATCH_
+	ASSERT_EQ(y.size(), x.size());
+#endif
+	if (!x.size()) return;
+	MKL_INT N = (MKL_INT)x.size();
+	double *X = x.p();
+	MKL_INT incX = 1;
+	cblas_dscal(N, a, X, incX);
+}
+
+// cblas_?scal x = a * x, where a is a scalar, x is an n-element vector.
+inline void SCAL(const float &a, Vec<float> &x)
+{
+#ifdef _CHECK_DIMENSION_MATCH_
+	ASSERT_EQ(y.size(), x.size());
+#endif
+	if (!x.size()) return;
+	MKL_INT N = (MKL_INT)x.size();
+	float *X = x.p();
+	MKL_INT incX = 1;
+	cblas_sscal(N, a, X, incX);
+}
+
+// cblas_?scal x = a * x, where a is a scalar, x is an n-element vector.
+inline void SCAL(const Cmplx &a, Vec<Cmplx> &x)
+{
+	for_Idx (i, 0, x.size()) x[i] = x[i] * a;
+}
+
+
 // matrix-vector multiplication y = a * x
 inline void MUL(Vec<double> &y, const Mat<double> &a, const Vec<double> &x)
 {
@@ -60,7 +93,7 @@ inline void MUL(Vec<double> &y, const Mat<double> &a, const Vec<double> &x)
 	MKL_INT incY = 1;
 	cblas_dgemv(CblasRowMajor, CblasNoTrans, M, N, alpha, A, N, X, incX, beta, Y, incY);
 }
- 
+
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // These two function was out of date cause OneAPI was come up, But It still have been used before 2022-4-19  !!!!!!!!!!!!!!
 // (Waring Ifo:" warning #1478: function "mkl_dcsrmv";  warning #1478: function "mkl_dcsrgemv" "		      !!!!!!!!!!!!!!

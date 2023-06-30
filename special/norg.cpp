@@ -110,6 +110,8 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 }
 
 void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) {
+	std::streambuf* old = std::cout.rdbuf();
+	std::cout.rdbuf(NULL); // redirect std::cout to nowhere
 	// oneedm.write_the_multiTab("0.25-");
 	if(mm) std::cout << std::endl;						// blank line
 	impH = impH_i;
@@ -163,7 +165,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 	}
 	iter_norg_cnt = 0;		occupation_err = 1.;		energy_err = 1.;
 	norg_stab_cnt = 0.; occnum = occnum_lst;
-	/*--------------------------------print put--------------------------------*/
+	/*-------------------------------- print put --------------------------------*/
 	// MatReal occnum, occweight;
 	// occnum = occnum_lst.mat(p.norg_sets, p.n_rot_orb/p.norg_sets);
 	// occweight = occnum;
@@ -174,7 +176,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 	p.rotationU = uormat;
 	// write_impurtiy_occupation();
 
-
+	std::cout.rdbuf(old);
 	// Finish the NORGiteration.
 	// oneedm.save_the_Tab(oneedm.table, "mainspace");
 }
@@ -291,8 +293,8 @@ void NORG::get_gimp_all(Green& imp_i)
 
 void NORG::get_gimp_eigpairs(Green& imp_i)
 {
-	// for_Int(i, 0, p.nband) 
-	Int i = 0;
+	// Int i = 0;																				// add for same as band 1.
+	for_Int(i, 0, p.nband) 
 	{
 		StdVecInt difference = {(i+1), -(i+1)};
 		for(const auto ii: difference)
@@ -318,7 +320,7 @@ void NORG::get_gimp_eigpairs(Green& imp_i)
 		}
 		if (mm) PIO("finished the " + STR(i) + " find_g_norg   " + present());
 	}
-	for_Int(j, 1, p.nband) for_Int(n, 0, imp_i.nomgs) imp_i[n][j][j] = imp_i[n][0][0];
+	// for_Int(j, 1, p.nband) for_Int(n, 0, imp_i.nomgs) imp_i[n][j][j] = imp_i[n][0][0];		// add for same as band 1.
 }
 
 void NORG::get_gimp(Green& imp_i, VecInt or_deg)

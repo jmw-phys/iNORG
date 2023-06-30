@@ -12,8 +12,8 @@ Bath::Bath(const MyMpi& mm_i, const Prmtr& prmtr_i) :
 void Bath::bath_fit(const ImGreen& hb_i, Int iter)
 {
 	if(iter == 1) read_ose_hop(); IFS ifs(prefill0(p.nI2B[0], 2) + ".ose_hop");
-	// for_Int(band_i, 0, p.nband)
-	Int band_i = 0;
+	// Int band_i = 0;																// add for same as band 1.
+	for_Int(band_i, 0, p.nband)
 	{
 		if(p.nband != hb_i[0].nrows()) ERR("some thing wrong with the hybrid function.")
 		for_Int(i, 0, hb_i.nomgs) hb[i] = hb_i[i][band_i][band_i];
@@ -46,7 +46,7 @@ void Bath::bath_fit(const ImGreen& hb_i, Int iter)
 			NAV7(Int(info[band_i][0]=Real(nmin)), info[band_i][1]=err, info[band_i][2]=err_crv, info[band_i][3]=err_regE, info[band_i][4]=err_regV, info[band_i][5]=err_bsr, info[band_i][6]=a_norm);
 		}
 	}
-	for_Int(band_j, 1, p.nband) {vec_ose[band_j] = ose; vec_hop[band_j] = hop;} // add for same as band 1.
+	// for_Int(band_j, 1, p.nband) {vec_ose[band_j] = ose; vec_hop[band_j] = hop;} // add for same as band 1.
 }
 
 void Bath::bath_fit(const ImGreen& hb_i, VecInt or_deg)// for Zen mode

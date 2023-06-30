@@ -388,6 +388,7 @@ Vec<T>& Vec<T>::operator*(const Vec<Bool>& rhs)
 template<typename T> Vec<T> &Vec<T>::operator+=(T t) { for_Idx (i, 0, n) (*this)[i] += t; return *this; }
 template<typename T> Vec<T> &Vec<T>::operator-=(T t) { for_Idx (i, 0, n) (*this)[i] -= t; return *this; }
 template<typename T> Vec<T> &Vec<T>::operator*=(T t) { for_Idx (i, 0, n) (*this)[i] *= t; return *this; }
+// template<typename T> Vec<T> &Vec<T>::operator*=(T t) { SCAL(t, *this); return *this; }
 
 template<typename T>
 Vec<T> Vec<T>::operator-() const

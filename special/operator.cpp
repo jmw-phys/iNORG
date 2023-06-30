@@ -341,6 +341,7 @@ SparseMatReal Operator::find_hmlt(const Tab h_idx) const
 	}
 	// TIME_END("find_hmlt" + NAV(mm.id()), t_find_hmlt);
 	hmlt_splited.shrink_to_fit();
+	hmlt_splited.fix();
 	return hmlt_splited;
 }
 
@@ -368,7 +369,7 @@ MatReal Operator::lowest_eigpairs(const Idx n, bool if_need_fast, Int wish_nev)
 //	}
 //#endif
 	VecReal inital_state(n, 0.); uur(inital_state); inital_state -= 0.5;
-	VecInt krylov_space_size = lanczos(eval, eigenvec_i, ev_dgcy, n, wish_nev, sep_hmltoperator, inital_state, if_need_fast, 9999);
+	VecInt krylov_space_size = lanczos(eval, eigenvec_i, ev_dgcy, n, wish_nev, sep_hmltoperator, inital_state, mm, if_need_fast, 9999);
 	if(mm) {cout <<"PIO: krylov_space_size = ";cout <<iofmt("sci"); for_Int(i, 0, krylov_space_size.size()) cout << eval[i] << ","<< krylov_space_size[i] << "; "; cout << std::endl;}
 	// if(mm) std::cout << "The eigenvalue" << iofmt("sci") << eval << std::endl;
 	groundstate_energy = eval[0];

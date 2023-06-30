@@ -306,3 +306,8 @@ Version: v1.1.15 @ 2023.06.25
     realized: 1. Add the <n_i n_j> calc; 2. Return the 1.1.13.6 for main calculation.
     next do : bench Cross-Validation with 1.1.13.6
     thinking: Why would <n_i n_i> same as <n_i>?
+
+Version: v1.2.0 @ 2023.06.30
+    realized: 1. Implement Lanczos full parallelization; 2.Implement fast search in the multi-particle number space.
+    next do : update for the ZenAPI class
+    thinking: What are the physical properties of the La3Ni2O7 material?

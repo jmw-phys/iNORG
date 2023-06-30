@@ -259,31 +259,31 @@ Vec<MatCmplx> Crrvec::krylov_space_for_green_matrix(const Green& mat_green){
     //--------------------------------------------
     Int mat_diago_length = mat_green.g[0].ncols();
     VecCmplx omega_vec = mat_green.z_omg;
-    Vec<VEC<Real>> ltd(mat_diago_length);         // diagonal elements
-    Vec<VEC<Real>> lt_sd(mat_diago_length);       // sub-diagonal elements
-    Vec<VEC<Real>> inner_m(mat_diago_length);     // for the inner product of Krylov basis and ex_state.
+    Vec<VEC<Real>> ltd(mat_diago_length);                           // diagonal elements
+    Vec<VEC<Real>> lt_sd(mat_diago_length);                         // sub-diagonal elements
+    Vec<VEC<Real>> inner_m(mat_diago_length);                       // for the inner product of Krylov basis and ex_state.
     Mat<VEC<Real>> inner_n(mat_diago_length, mat_diago_length);     // for the inner product of Krylov basis and ex_state.
-    Int krylov_length = 200;    // The dim of Krylov space.
-    VEC<VecReal> ex_state_temp_sets;
-    for_Int(i, 0, mat_diago_length) ex_state_temp_sets.push_back(project_uplwer_parical_space(ground_state, crtorann, 0, i));
+    Int krylov_length = 200;                                        // The dim of Krylov space.
+    VEC<VecReal> ex_state_temp_sets_p;                              //save the ex_state parallelly
+    for_Int(i, 0, mat_diago_length) ex_state_temp_sets_p.push_back(project_uplwer_parical_space(ground_state, crtorann, 0, i));
 
     for_Int(r, 0, mat_diago_length){
         VEC<Real> ltd_i;        // diagonal elements
         VEC<Real> lt_sd_i;      // sub-diagonal elements
         VEC<Real> inner_m_i;    // for the inner product of Krylov basis and ex_state.
         
-        VecReal v0(ex_state_temp_sets[r]);
-        v0.normalize();
+        VecReal v0(ex_state_temp_sets_p[r]);
+        v0 *= INV(SQRT(mm.Allreduce(DOT(v0, v0))));
         VecReal v0_saved(v0), v1(sep_h * v0);
         Real a_i(0.), b_i(0.);
-        a_i = DOT(v1, v0);
+        a_i = mm.Allreduce(DOT(v1, v0));
         ltd_i.push_back(a_i);
-        inner_m_i.push_back(DOT(v0, ex_state_temp_sets[r]));
-        for_Int(c, 0, mat_diago_length)inner_n[r][c].push_back(DOT(ex_state_temp_sets[c], v0));
+        inner_m_i.push_back(mm.Allreduce(DOT(v0, ex_state_temp_sets_p[r])));
+        for_Int(c, 0, mat_diago_length)inner_n[r][c].push_back(mm.Allreduce(DOT(ex_state_temp_sets_p[c], v0)));
         for_Int(i, 0, krylov_length) {
             find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
-            ltd_i.push_back(a_i); lt_sd_i.push_back(b_i); inner_m_i.push_back(DOT(v0, ex_state_temp_sets[r]));
-            for_Int(c, 0, mat_diago_length)inner_n[r][c].push_back(DOT(ex_state_temp_sets[c], v0));
+            ltd_i.push_back(a_i); lt_sd_i.push_back(b_i); inner_m_i.push_back(mm.Allreduce(DOT(v0, ex_state_temp_sets_p[r])));
+            for_Int(c, 0, mat_diago_length)inner_n[r][c].push_back(mm.Allreduce(DOT(ex_state_temp_sets_p[c], v0)));
         }
         ltd[r]      = ltd_i;
         lt_sd[r]    = lt_sd_i;
@@ -297,6 +297,7 @@ Vec<MatCmplx> Crrvec::krylov_space_for_green_matrix(const Green& mat_green){
             MatReal S(va.size(), va.size(), 0.);
             Int info = trd_heevr_vd(va, vb, S);
             if (info != 0) ERR("the i-th parameter had an illegal value." + NAV3(info, va, vb));
+            if(mm && r == 0) WRN(NAV(va[0]));
             VecCmplx inner_m_c(cmplx(m)), inner_n_c(cmplx(n)), second_part(va.size());
             MatCmplx s_mat(cmplx(S.tr()));
             
@@ -318,7 +319,7 @@ Vec<MatCmplx> Crrvec::krylov_space_for_green_matrix(const Green& mat_green){
 
     return g;
 }
-//---------------------------------------------Private function---------------------------------------------
+//--------------------------------------------- Private function ---------------------------------------------
 
 SparseMatReal Crrvec::find_diagonal_sparse_matrix(Real number)
 {
@@ -418,13 +419,13 @@ VecCmplx Crrvec::find_correct_vec()
 
 void Crrvec::find_trdgnl_one_step(const VecReal& initial_vector, VecReal& v0, VecReal& v1, Real& a, Real& b, const SparseMatReal& sep_h) {
     v1 -= a * v0;
-    b = v1.norm();
-    v1 -= DOT(v1, initial_vector) * initial_vector;
-    v1.normalize();
+    b = SQRT(mm.Allreduce(DOT(v1, v1)));
+    v1 -= mm.Allreduce(DOT(v1, initial_vector)) * initial_vector;
+    v1 *= INV(SQRT(mm.Allreduce(DOT(v1, v1))));
     SWAP(v0, v1);
     v1 *= -b;
     v1 += sep_h * v0;
-    a = DOT(v1, v0);
+    a = mm.Allreduce(DOT(v1, v0));
 }
 
 void Crrvec::find_excted_state_by_ab(const VecReal& initial_vector, VecReal& v0, VecReal& v1, VecReal& vec_a, VecReal& vec_b, Int& k, const SparseMatReal& sep_h) {
@@ -499,7 +500,10 @@ VecReal Crrvec::project_uplwer_parical_space(const VecReal& initial_vector, cons
     }
     VecReal ex_state(mm.Allreduce(ex_state_part));
     // TIME_END("find_Newstate" + NAV(mm.id()), t_find_Newstate);
-    return ex_state;
+    VecPartition vp(mm.np(), mm.id(), new_nosp.dim);
+    VecReal ex_state_p(vp.len());
+    for_Int(h_i, 0, vp.len()) ex_state_p[h_i] = ex_state[vp.bgn() + h_i];
+    return ex_state_p;
 }
 
 bool Crrvec::if_in_this_orbital(const VecOnb &exd_cf, const Int crtann, const Int div_in_one_row_pos, const Int orbit_pos_in_div) const {

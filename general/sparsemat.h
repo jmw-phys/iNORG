@@ -21,11 +21,13 @@ private:
     const MyMpi& mm;			// parameters
 
 
-    //Int dim;                // the dim of the matrix
+    //Int dim;                  // the dim of the matrix
     // Three Array Variation of CSR Format : 
-    VEC<T> va;           // For the value, store as seperate vector.
-    VEC<Int> colnu;      // For the colum number.
-    VecInt roin;            // Fot the row Index (default:zero-based indexing)
+    VEC<T> va;                  // For the value, store as seperate vector.
+    VEC<Int> colnu;             // For the colum number.
+    VecInt roin;                // Fot the row Index (default:zero-based indexing)
+    Vec<T> va_vec;              // For the value, store as Vec<T>
+    Vec<Int> colnu_vec;         // For the colum number, as VecInt
 
 public:
 
@@ -68,6 +70,13 @@ public:
     VEC<T> get_va() { return va; }
     VEC<Int> get_colnu() { return colnu; }
     VecInt get_roin() { return roin; }
+
+    void fix() {
+        va_vec.reset(va);
+        std::vector<T>().swap(va);
+        colnu_vec.reset(colnu);
+        std::vector<Int>().swap(colnu);
+    }
 
     void free(){
         std::vector<T>().swap(va);
@@ -130,19 +139,19 @@ void SparseMat<T>::ho(Vec<T>& hp, const Vec<T>& KetVec)
 }
 
 template<typename T>
-Vec<T> SparseMat<T>::operator*(const Vec<T>& KetVec) const
+Vec<T> SparseMat<T>::operator*(const Vec<T>& KetVec_p) const
 {
     VecPartition vp(mm.np(), mm.id(), length_k);
 #ifdef _CHECK_DIMENSION_MATCH_
-    ASSERT_EQ(length_k, KetVec.size());
+    ASSERT_EQ(length_m, KetVec_p.size());
     ASSERT_EQ(length_m, vp.len());
 #endif
-    VecReal val(va);
+    // VecReal val(va);
     VecReal ret(vp.len(), 0.);
-    VecInt colnu_i(colnu);
-    if (roin.size() > 1) sparse_MUL(vp.len(), length_k, roin, colnu_i, val, KetVec, ret);
-    Vec<T>hp(mm.Allgatherv(ret, vp));
-    return hp;
+    // VecInt colnu_i(colnu);
+    Vec<T> KetVec = mm.Allgatherv(KetVec_p, vp);
+    if (roin.size() > 1) sparse_MUL(vp.len(), length_k, roin, colnu_vec, va_vec, KetVec, ret);
+    return ret;
 }
 
 template<typename T>
@@ -174,50 +183,53 @@ SparseMat<T> SparseMat<T>::operator+=(SparseMat<T>& rhs)
     return retsparmat;
 
 }
-//template<typename T>
-//void SparseMat<T>::square() const
-//{
-//    //VecPartition vp(mm.np(), mm.id(), length_k);
-//    //#ifdef _CHECK_DIMENSION_MATCH_
-//    //ASSERT_EQ(length_k, KetVec.size());
-//    //ASSERT_EQ(length_m, vp.len());
-//    //#endif
-//    VecReal val(va);
-//    VecReal ret(vp.len(), 0.);
-//    VecInt colnu_i(colnu);
-//    VecInt roin_ret, colnu_ret;
-//    VecReal val_ret;
-//    sparse_MUL(vp.len(),length_k,roin,colnu_i,val, vp.len(), length_k, roin, colnu_i, val, roin_ret, colnu_ret, val_ret);
-//    //Vec<T>hp(mm.Allgatherv(ret, vp));
-//    return hp;
-//}
 
-//template<typename T>
-//void SparseMat<T>::test(Vec<T>& hp, const Vec<T>& KetVec)
-//{
-//#ifdef _CHECK_DIMENSION_MATCH_
-//    ASSERT_EQ(length_k, KetVec.size());
-//    ASSERT_EQ(length_m, length_k);
-//    ASSERT_EQ(hp.size(), KetVec.size());
-//#endif
-//    VecReal val(va);
-//    VecInt colnu_i(colnu);
-//    sparse_MUL(length_m, roin, colnu_i, val, KetVec, hp);
-//}
-//
-//template<typename T>
-//VecReal SparseMat<T>::test(const Vec<T>& KetVec)
-//{
-//#ifdef _CHECK_DIMENSION_MATCH_
-//    ASSERT_EQ(length_k, KetVec.size());
-//    ASSERT_EQ(length_m, length_k);
-//#endif
-//    VecReal val(va);
-//    VecReal ret(length_m, 0.);
-//    VecInt colnu_i(colnu);
-//    sparse_MUL(length_m, roin, colnu_i, val, KetVec, ret);
-//    return ret;
-//}
+/*
+template<typename T>
+void SparseMat<T>::square() const
+{
+   //VecPartition vp(mm.np(), mm.id(), length_k);
+   //#ifdef _CHECK_DIMENSION_MATCH_
+   //ASSERT_EQ(length_k, KetVec.size());
+   //ASSERT_EQ(length_m, vp.len());
+   //#endif
+   VecReal val(va);
+   VecReal ret(vp.len(), 0.);
+   VecInt colnu_i(colnu);
+   VecInt roin_ret, colnu_ret;
+   VecReal val_ret;
+   sparse_MUL(vp.len(),length_k,roin,colnu_i,val, vp.len(), length_k, roin, colnu_i, val, roin_ret, colnu_ret, val_ret);
+   //Vec<T>hp(mm.Allgatherv(ret, vp));
+   return hp;
+}
+
+template<typename T>
+void SparseMat<T>::test(Vec<T>& hp, const Vec<T>& KetVec)
+{
+#ifdef _CHECK_DIMENSION_MATCH_
+   ASSERT_EQ(length_k, KetVec.size());
+   ASSERT_EQ(length_m, length_k);
+   ASSERT_EQ(hp.size(), KetVec.size());
+#endif
+   VecReal val(va);
+   VecInt colnu_i(colnu);
+   sparse_MUL(length_m, roin, colnu_i, val, KetVec, hp);
+}
+
+template<typename T>
+VecReal SparseMat<T>::test(const Vec<T>& KetVec)
+{
+#ifdef _CHECK_DIMENSION_MATCH_
+   ASSERT_EQ(length_k, KetVec.size());
+   ASSERT_EQ(length_m, length_k);
+#endif
+   VecReal val(va);
+   VecReal ret(length_m, 0.);
+   VecInt colnu_i(colnu);
+   sparse_MUL(length_m, roin, colnu_i, val, KetVec, ret);
+   return ret;
+}
+*/
 
 template<typename T>
 SparseMat<T>::SparseMat(const Int &n_i, const MyMpi& mm_i) : mm(mm_i), length_m(n_i), roin(n_i + 1, 0.)
