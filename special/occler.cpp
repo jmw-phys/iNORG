@@ -82,12 +82,17 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_
             auto iter = sub_energy_data.find(nppso.string());
             if (iter != sub_energy_data.end()) {
                 sub_energy[counter] = sub_energy_data[nppso.string()];
-                if(mm) PIO("The energy: "+nppso_str(nppso)+STR(sub_energy[counter]));
+                if(mm) PIO("The subspace and energy: "+nppso_str(nppso)+STR(sub_energy[counter]));
             }
             else {
+                std::streambuf* old = std::cout.rdbuf();
+                std::cout.rdbuf(NULL); // redirect std::cout to nowhere
+                
                 NORG a(mm, p);
                 // IFS ifs_a("ru" + nppso_str(a.scsp.nppso) + ".bi");
                 // if (ifs_a) for_Int(i, 0, a.uormat.size()) biread(ifs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());
+
+                std::cout.rdbuf(old);
                 a.up_date_h0_to_solve(impH_i, sub_energy.truncate(0, counter)); sub_energy[counter] = a.groune_lst;
                 sub_energy_data[nppso.string()] = a.groune_lst;
                 if(mm) PIO("The subspace and energy: "+nppso_str(nppso)+STR(sub_energy[counter]));

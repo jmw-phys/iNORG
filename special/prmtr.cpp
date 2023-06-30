@@ -69,10 +69,10 @@ void Prmtr::set_values() {
     // nooc_mode = STR("cpnooc");
     nooc_mode = STR("cnooc");
     after_modify_prmtr();
-    // control_divs[1] = {1,  2,  2,  1,  2,  2};
-    // control_divs[2] = {1,  2,  2,  1,  2,  2};
-    // control_divs[3] = {1,  3,  1,  1,  1,  3};
-    // control_divs[4] = {1,  3,  1,  1,  1,  3};
+    control_divs[1] = {1,  5,  0,  1,  0,  3};
+    control_divs[2] = {1,  5,  0,  1,  0,  3};
+    control_divs[3] = {1,  4,  0,  1,  0,  4};
+    control_divs[4] = {1,  4,  0,  1,  0,  4};
     recalc_partical_number();
 }
 
