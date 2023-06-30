@@ -69,6 +69,7 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_
 {
     Int counter_norg(0);
     VEC<MatReal> u_temp;
+    std::map<std::string, Real> sub_energy_data;
     while(1){
             Int counter(0);
             VEC<VecInt> nppsos = list_all_posible_nppsos(nparticals, or_deg);
@@ -78,10 +79,20 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_
             if (mm) std::cout << "The " << ++counter_norg << "-th NORG begin" << std::endl; // norg counter
 
             p.according_nppso(nparticals = nppso);
-            NORG a(mm, p);
-            // IFS ifs_a("ru" + nppso_str(a.scsp.nppso) + ".bi");
-            // if (ifs_a) for_Int(i, 0, a.uormat.size()) biread(ifs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());
-            a.up_date_h0_to_solve(impH_i, sub_energy.truncate(0, counter)); sub_energy[counter] = a.groune_lst;
+            auto iter = sub_energy_data.find(nppso.string());
+            if (iter != sub_energy_data.end()) {
+                sub_energy[counter] = sub_energy_data[nppso.string()];
+                if(mm) PIO("The energy: "+nppso_str(nppso)+STR(sub_energy[counter]));
+            }
+            else {
+                NORG a(mm, p);
+                // IFS ifs_a("ru" + nppso_str(a.scsp.nppso) + ".bi");
+                // if (ifs_a) for_Int(i, 0, a.uormat.size()) biread(ifs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());
+                a.up_date_h0_to_solve(impH_i, sub_energy.truncate(0, counter)); sub_energy[counter] = a.groune_lst;
+                sub_energy_data[nppso.string()] = a.groune_lst;
+                if(mm) PIO("The subspace and energy: "+nppso_str(nppso)+STR(sub_energy[counter]));
+            }
+
             if (mm) {
                 // OFS ofs_a;
                 // ofs_a.open("ru" + nppso_str(a.scsp.nppso) + ".bi"); 
@@ -181,8 +192,10 @@ Int Occler::if_ground_state() {
 // }
 
 VEC<VecInt> Occler::list_all_posible_nppsos(const VecInt& nppso_i, const VecInt& or_deg) const {
+    if(nppso_i.size() != or_deg.size()) ERR("The or_deg's number should same as the nppso.")
 	VEC<Int> idx(MAX(or_deg),0); Int cter(0);
-	for_Int(i, 0, or_deg.size()*2) if(cter < or_deg[i/2]) idx[cter++] = i; 
+	// for_Int(i, 0, or_deg.size()*2) if(cter < or_deg[i/2]) idx[cter++] = i; // for spin inversion symmetry
+	for_Int(i, 0, or_deg.size()) if(cter < or_deg[i]) idx[cter++] = i;           // list all the possible
     VEC<VEC<Int>> nppsos_ii(MAX(or_deg)), nppsos_idx;
     for_Int(i, 0, idx.size()){
         Int idx_m(nppso_i[idx[i]]-1), idx_p(nppso_i[idx[i]]+1);
@@ -194,6 +207,7 @@ VEC<VecInt> Occler::list_all_posible_nppsos(const VecInt& nppso_i, const VecInt&
     // if(mm) WRN(NAV2(nppsos_ii[0].size(),nppsos_ii[1].size()));
     nppsos_idx = cart_product(nppsos_ii);
     VEC<VecInt> nppsos(nppsos_idx.size(), nparticals);
-    for_Int(i, 0, nppsos_idx.size()) for_Int(j, 0, or_deg.size()*2) nppsos[i][j] = nppsos_idx[i][or_deg[j/2] - 1];
+    // for_Int(i, 0, nppsos_idx.size()) for_Int(j, 0, or_deg.size()*2) nppsos[i][j] = nppsos_idx[i][or_deg[j/2] - 1]; // for spin inversion symmetry
+    for_Int(i, 0, nppsos_idx.size()) for_Int(j, 0, or_deg.size()) nppsos[i][j] = nppsos_idx[i][or_deg[j] - 1];        // list all the possible
     return nppsos;
 }

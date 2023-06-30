@@ -39,7 +39,7 @@ CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const Operator& oper
 // (Deactivate) Only for test
 ImGreen CrrltFun::find_density_density_correlation_function(const Real &ge0) {
 
-    Real upper_fraction(DOT(ex_state, ex_state));
+    Real upper_fraction(mm.Allreduce(DOT(ex_state, ex_state)));
     Vectrdgnl trdgnl(find_trdgnl(ex_state, -1));
     // if (mm) WRN("Finish the find_trdgnl");
     VecReal zerod(get<0>(trdgnl).size(), 0.);
@@ -63,18 +63,18 @@ ImGreen CrrltFun::find_density_density_correlation_function(const Real &ge0) {
 
 void CrrltFun::find_gf_greater(const Real& ge0, Green &g0) 
 {
-    Real upper_fraction(DOT(ex_state, ex_state));
+    Real upper_fraction(mm.Allreduce(DOT(ex_state, ex_state)));
     // if (mm) WRN(NAV(upper_fraction));
     //VECtrdgnl trdignl(find_trdgnl_first(ex_state));
     VEC<Real> ltd;	        // diagonal elements 
     VEC<Real> lt_sd;	    // sub-diagonal elements
     const SparseMatReal sep_h = find_hmlt(table);
     VecReal v0(ex_state);
-    v0.normalize();
+    v0 *= INV(SQRT(mm.Allreduce(DOT(v0, v0))));
     VecReal v0_saved(v0);
     VecReal v1(sep_h * v0);
     Real a_i(0.), b_i(0.);
-    a_i = DOT(v1, v0);
+    a_i = mm.Allreduce(DOT(v1, v0));
     ltd.push_back(a_i);
     if(g0.type_info() == STR("ImGreen")){
         for_Int(i, 0, 60) {
@@ -117,18 +117,18 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
 
 void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0) 
 {
-    Real upper_fraction(DOT(ex_state, ex_state));
+    Real upper_fraction(mm.Allreduce(DOT(ex_state, ex_state)));
     // if (mm) WRN(NAV(upper_fraction));
     //VECtrdgnl trdignl(find_trdgnl_first(ex_state));
     VEC<Real> ltd;	        // diagonal elements 
     VEC<Real> lt_sd;	    // sub-diagonal elements
     const SparseMatReal sep_h = find_hmlt(table);
     VecReal v0(ex_state);
-    v0.normalize();
+    v0 *= INV(SQRT(mm.Allreduce(DOT(v0, v0))));
     VecReal v0_saved(v0);
     VecReal v1(sep_h * v0);
     Real a_i(0.), b_i(0.);
-    a_i = DOT(v1, v0);
+    a_i = mm.Allreduce(DOT(v1, v0));
     ltd.push_back(a_i);
     if(g0.type_info() == STR("ImGreen")){
         for_Int(i, 0, 60) {
@@ -305,12 +305,12 @@ CrrltFun::Vectrdgnl CrrltFun::find_trdgnl(const VecReal& initial_vector, const I
     Real a(0.), b(0.);
     while (true)
     {
-        a = DOT(v1, v0);
+        a = mm.Allreduce(DOT(v1, v0));
         ltd.push_back(a);
         if (k >= 30) if (k > v0_saved.size() - 20) break;
         k++;
         v1 -= a * v0;
-        v1 -= DOT(v1, v0_saved) * v0_saved;
+        v1 -= mm.Allreduce(DOT(v1, v0_saved)) * v0_saved;
         b = v1.norm();
         lt_sd.push_back(b);
         v1 *= (1 / b);
@@ -327,13 +327,13 @@ CrrltFun::Vectrdgnl CrrltFun::find_trdgnl(const VecReal& initial_vector, const I
 
 void CrrltFun::find_trdgnl_one_step(const VecReal& initial_vector, VecReal& v0, VecReal& v1, Real&a, Real& b, const SparseMatReal& sep_h){
     v1 -= a * v0;
-    b = v1.norm();
-    v1 -= DOT(v1, initial_vector) * initial_vector;
-    v1.normalize();
+    b = SQRT(mm.Allreduce(DOT(v1, v1)));
+    v1 -= mm.Allreduce(DOT(v1, initial_vector)) * initial_vector;
+    v1 *= INV(SQRT(mm.Allreduce(DOT(v1, v1))));
     SWAP(v0, v1);
     v1 *= -b;
     v1 += sep_h * v0;
-    a = DOT(v1, v0);
+    a = mm.Allreduce(DOT(v1, v0));
 }
 
 //--------------------------------------------- ex_state function part ---------------------------------------------
@@ -399,7 +399,10 @@ VecReal CrrltFun::project_uplwer_parical_space(const VecReal& initial_vector, co
     VecReal ex_state(mm.Allreduce(ex_state_part));
     // TIME_END("find_Newstate" + NAV(mm.id()), t_find_Newstate);
     // if(mm) WRN(NAV4(initial_vector.truncate(0,1000), ex_state.truncate(0,1000), SUM(initial_vector), SUM(ex_state)));
-    return ex_state;
+    VecPartition vp(mm.np(), mm.id(), new_nosp.dim);
+    VecReal ex_state_p(vp.len());
+    for_Int(h_i, 0, vp.len()) ex_state_p[h_i] = ex_state[vp.bgn() + h_i];
+    return ex_state_p;
 }
 
 bool CrrltFun::if_in_this_orbital(const VecOnb &exd_cf, const Int crtann, const Int div_in_one_row_pos, const Int orbit_pos_in_div) const {
