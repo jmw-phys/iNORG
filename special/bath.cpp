@@ -56,7 +56,7 @@ void Bath::bath_fit(const ImGreen& hb_i, VecInt or_deg)// for Zen mode
 		Int count(0), orb_rep(-1);
 		VecCmplx hb_fit(hb.nomgs); 
 		for_Int(i, 0, hb_i.norbs) {
-			if(or_deg[i] - 1 == degi) {
+			if (or_deg[i * 2] - 1 == degi) {
 				for_Int(n, 0, hb.nomgs) hb_fit[n] += hb_i.g[n][i][i];
 				count++;
 			}
@@ -64,7 +64,7 @@ void Bath::bath_fit(const ImGreen& hb_i, VecInt or_deg)// for Zen mode
 		if(p.nband != hb_i[0].nrows()) ERR("some thing wrong with the hybrid function.")
 		for_Int(i, 0, hb.nomgs) hb[i] = hb_fit[i] / Real(count);
 
-		for_Int(j, 0, p.nband) {orb_rep = j; if(or_deg[j] == degi + 1) break;}
+		for_Int(j, 0, p.nband) { orb_rep = j; if (or_deg[j * 2] == degi + 1) break; }
 		ose.reset(p.nI2B[orb_rep]); hop.reset(p.nI2B[orb_rep]); nb = p.nI2B[orb_rep];
 		if(ifs) {ose = vec_ose[orb_rep]; hop = vec_hop[orb_rep];} 
 		else init_ose_hop();
@@ -76,8 +76,8 @@ void Bath::bath_fit(const ImGreen& hb_i, VecInt or_deg)// for Zen mode
 		ose = a.truncate(0, nb);
 		hop = a.truncate(nb, nb + nb);
 		regularize_ose_hop();
-		for_Int(i, 0, p.nband) if(or_deg[i]-1 == degi) vec_ose[i] = ose;
-		for_Int(i, 0, p.nband) if(or_deg[i]-1 == degi) vec_hop[i] = hop;
+		for_Int(i, 0, p.nband) if (or_deg[i * 2] - 1 == degi) vec_ose[i] = ose;
+		for_Int(i, 0, p.nband) if (or_deg[i * 2] - 1 == degi) vec_hop[i] = hop;
 		// if(mm) WRN(NAV2(vec_ose.size(),vec_hop.size()));
 		if (mm) {
 			const HybErr hyberr(p, hb, nb);
@@ -125,7 +125,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_contest(const VecReal& a0)
 	const HybErr hyberr(p, hb, nb);
 	const Int np = a0.size();
 	const Int ntry_fine = MAX(16, mm.np() - 1);
-	const Int ntry = MAX(16 * ntry_fine, 200);
+	const Int ntry = MAX(16 * ntry_fine, 20);
 	const Real tol = 1.e-12;
 	Int nmin = 0;		// number of fittings reaching the minimum
 	MPI_Status status;
@@ -200,7 +200,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_bsr(const VecReal& a0, const Int& 
 	const HybErr hyberr(p, hb, nb, orb_i);
 	const Int np = a0.size();
 	const Int ntry_fine = MAX(16, mm.np() - 1);
-	const Int ntry = MAX(16 * ntry_fine, 200);
+	const Int ntry = MAX(16 * ntry_fine, 20);
 	const Real tol = 1.e-12;
 	Int nmin = 0;		// number of fittings reaching the minimum
 	MPI_Status status;
@@ -294,7 +294,8 @@ MatReal Bath::find_hop() const
 void Bath::write_ose_hop(Int iter_cnt) const {
 	using namespace std;
     OFS ofs;
-	if (iter_cnt < 0) ofs.open(prefill0(p.nI2B[0], 2) + ".ose_hop");
+	// if (iter_cnt < 0) ofs.open(prefill0(p.nI2B[0], 2) + ".ose_hop");
+	if (iter_cnt < 0) ofs.open("ose_hop");
 	if (iter_cnt > 0) ofs.open(iox + "zic" + prefill0(iter_cnt, 3) + "." + prefill0(p.nI2B[0], 2) + ".ose_hop.txt");
 	for_Int(band_i, 0, p.nband)	{
 		ofs << iofmt("sci");
@@ -313,8 +314,8 @@ void Bath::write_ose_hop(Int iter_cnt) const {
 
 void Bath::read_ose_hop() {
 	using namespace std;
-	// IFS ifs_ose;ifs_ose.open("ose.txt");
-	IFS ifs(prefill0(p.nI2B[0], 2) + ".ose_hop");
+	// IFS ifs(prefill0(p.nI2B[0], 2) + ".ose_hop");
+	IFS ifs("ose_hop");
 	Str strr;
 	if(ifs)for_Int(band_i, 0, p.nband)	{
 		ifs >> strr;

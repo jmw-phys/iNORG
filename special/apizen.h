@@ -69,6 +69,8 @@ private:
 	ImGreen fix_se(const ImGreen& se) const;
 */
 
+
+	void auto_nooc(Str mode, const Impurity &imp);
 public:
 	APIzen(const MyMpi& mm_i, Prmtr& p, const Str& file = empty_str);
 

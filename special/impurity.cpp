@@ -11,7 +11,8 @@ Impurity::Impurity(const MyMpi &mm_i, const Prmtr &prmtr_i, const Bath &bth_i, c
     : mm(mm_i), p(prmtr_i), bth(bth_i), nb(p.nbath), ni(p.norbs), ns(p.norbit), pos_imp(p.norbs), h0(p.norbit, p.norbit, 0.), imp_lvl(p.norbs, 0.)
 {
     // if (!file.empty()) read(file);
-    VecInt ordeg(concat(or_deg,or_deg).mat(2, p.nband).tr().vec());
+    // VecInt ordeg(concat(or_deg,or_deg).mat(2, p.nband).tr().vec());
+    VecInt ordeg(or_deg);
     
     VecReal deg_lvl(MAX(ordeg), 0.);
     for_Int(i, 0, ni) deg_lvl[ordeg[i] - 1] += p.eimp[i] - p.mu;
@@ -88,10 +89,9 @@ void Impurity::update(Str mode) {
     if (mode.empty()) {
         set_factor();
         impH = std::make_pair(h0, set_interaction());
-        modify_Impdata_for_half_fill(impH);
+        // modify_Impdata_for_half_fill(impH);
     }
     else if (mode == "behte") {
-        p.jz = 0.;
         set_factor();
         impH = std::make_pair(h0, set_interaction());
         modify_Impdata_for_half_fill(impH);

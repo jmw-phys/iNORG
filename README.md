@@ -311,3 +311,8 @@ Version: v1.2.0 @ 2023.06.30
     realized: 1. Implement Lanczos full parallelization; 2.Implement fast search in the multi-particle number space.
     next do : update for the ZenAPI class
     thinking: What are the physical properties of the La3Ni2O7 material?
+
+Version: v1.2.1 @ 2023.06.30
+    realized: update for the apizen.cpp
+    next do : test the new fitting code with dop driveing.
+    thinking: (same as prev)

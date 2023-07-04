@@ -4,7 +4,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 
 #include "prmtr.h"
 
-Prmtr::Prmtr(const MyMpi &mm) : np(mm.np())
+Prmtr::Prmtr(const MyMpi& mm) : np(mm.np())
 {
     set_inert_values();
     set_values();
@@ -74,6 +74,7 @@ void Prmtr::set_values() {
     control_divs[3] = {1,  4,  0,  1,  0,  4};
     control_divs[4] = {1,  4,  0,  1,  0,  4};
     recalc_partical_number();
+    rotationU = uormat_initialize();
 }
 
 // we set first divison as impurity. The maximum number of cavity("-"); mean electron("+").

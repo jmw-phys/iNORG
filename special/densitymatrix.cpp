@@ -57,7 +57,7 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 			*/
 			// if(mm) WRN(NAV(evalu_i));
 		}
-		// for_Int(i, 0, rotaionU.size()) rotaionU[i] = rotaionU[i - (i%2)]; //! using the spin inversion symmetry
+		for_Int(i, 0, rotaionU.size()) rotaionU[i] = rotaionU[i - (i%2)]; //! using the spin inversion symmetry
 		occupationnumber = evalue;
 	} else {
 		VEC<MatReal> rotaionU_bath;
@@ -82,7 +82,7 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 			//DBG("New uorm111" + NAV3(i, rotaionU_bath[i], evalue[i]));
 		}
 		// if(mm) WRN(NAV3(evalue[0].mat(1,p.nI2B[0]), evalue[1].mat(1,p.nI2B[1]), evalue[2].mat(1,p.nI2B[2])));
-		// for_Int(i, 0, rotaionU_bath.size()) rotaionU_bath[i] = rotaionU_bath[i - (i%2)]; //! using the spin inversion symmetry(suit for SC).
+		for_Int(i, 0, rotaionU_bath.size()) rotaionU_bath[i] = rotaionU_bath[i - (i%2)]; //! using the spin inversion symmetry(suit for SC).
 
 		occupationnumber = evalue;
 		for_Int(i, 0, p.nO2sets.size()) {

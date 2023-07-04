@@ -326,7 +326,7 @@ void NORG::get_gimp_eigpairs(Green& imp_i)
 void NORG::get_gimp(Green& imp_i, VecInt or_deg)
 {
 	VecInt idx(MAX(or_deg),0); Int cter(0);
-	for_Int(i, 0, or_deg.size()) if(cter < or_deg[i]) idx[cter++] = i; 
+	for_Int(i, 0, p.nband) if (cter < or_deg[2 * i]) idx[cter++] = i;
 	for (int &i : idx) {
 	// for_Int(i, 0, p.nband) {
 		StdVecInt difference = {(i+1), -(i+1)};
@@ -354,7 +354,41 @@ void NORG::get_gimp(Green& imp_i, VecInt or_deg)
 		}
 		if (mm) PIO("finished the " + STR(i) + " find_g_norg   " + present());
 	}
-	for_Int(i, 0, or_deg.size()) for_Int(n, 0, imp_i.nomgs) imp_i[n][i][i] = imp_i[n][idx[or_deg[i] - 1]][idx[or_deg[i] - 1]];
+	for_Int(i, 0, p.nband) for_Int(n, 0, imp_i.nomgs) imp_i[n][i][i] = imp_i[n][idx[or_deg[2 * i] - 1]][idx[or_deg[2 * i] - 1]];
+}
+
+
+void NORG::get_gimp_eigpairs(Green& imp_i, VecInt or_deg)
+{
+	VecInt idx(MAX(or_deg), 0); Int cter(0);
+	for_Int(i, 0, p.nband) if (cter < or_deg[2 * i]) idx[cter++] = i;
+	for (int& i : idx) {
+		for_Int(i, 0, p.nband) {
+			StdVecInt difference = { (i + 1), -(i + 1) };
+			for (const auto ii : difference) {
+				NocSpace scsp_sub(mm, p, nppso(p.npartical, ii));
+				Operator opr_sub(mm, p, scsp_sub);
+				set_row_primeter_byimpH(uormat, impH, opr_sub.oper_value);
+				for_Int(egs_idx, 0, p.degel) {
+					CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, final_ground_state[egs_idx], i * 2);
+					if (imp_i.type_info() == STR("ImGreen")) {
+						ImGreen green_function(1, p);
+						if (ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
+						if (ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
+						for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
+					}
+					if (imp_i.type_info() == STR("ReGreen")) {
+						ReGreen green_function(1, p);
+						if (ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
+						if (ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
+						for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
+					}
+				}
+			}
+			if (mm) PIO("finished the " + STR(i) + " find_g_norg   " + present());
+		}
+	}
+	for_Int(i, 0, p.nband) for_Int(n, 0, imp_i.nomgs) imp_i[n][i][i] = imp_i[n][idx[or_deg[2 * i] - 1]][idx[or_deg[2 * i] - 1]];
 }
 
 void NORG::readmatrix(MatReal& m, const Str& file)
@@ -411,7 +445,7 @@ VEC<MatReal> NORG::uormat_initialize()
 		uormat_i.push_back(std::move(temp));
 	}
 
-	return std::move(uormat_i);
+	return uormat_i;
 }
 
 bool NORG::converged() 

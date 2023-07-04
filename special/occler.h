@@ -15,8 +15,9 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2023
 
 class Occler{
 	const MyMpi &mm;						// parameters
-	Prmtr &p;							    // parameters
-    VecInt &nparticals;                     // temporyly storge the partical number
+	// Prmtr &p;							    // parameters
+	Prmtr tp;							    // test parameters
+    // VecInt &nparticals;                     // temporyly storge the partical number
     // Real sub_energy[0], sub_energy[2], sub_energy[1];
 	VecReal sub_energy;
 

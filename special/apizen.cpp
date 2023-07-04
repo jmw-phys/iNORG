@@ -10,39 +10,38 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 {
 	update(file);
 	Bath bth(mm, p);
-	Impurity imp(mm, p, bth, or_deg_idx.truncate(0, nband));
-	NORG norg(mm, prmtr_i);		// for test, not search the whole particle space.
-	OFS ofs("norg.lock");
+	Impurity imp(mm, p, bth, or_deg_idx);
+	// NORG norg(mm, prmtr_i);		// for test, not search the whole particle space.
+	// OFS ofs("norg.lock");
 	
-	// NORG norg(choose_cauculation_style("one_pcl_test", imp));
 
-
-	while(true) {
-		if(IFS("norg.stop"))  break;
-		if(if_lock("norg")) {
+	// while(true) {
+	// 	if(IFS("norg.stop"))  break;
+	// 	if(if_lock("norg")) {
 	// if(mode == "table_mode") while(true) if(if_lock("norg")) {
 		dmft_cnt++; update(file);
 		ImGreen hb(nband, p);	
 		for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)	hb.g[j][i][i] = -imfrq_hybrid_function[i][j];	if (mm) hb.write_zen("hb_zen", "Read");
-		bth.read_ose_hop(); //bth.bath_fit(hb, or_deg_idx.truncate(0, nband));							if (mm) bth.write_ose_hop();
+		bth.read_ose_hop(); bth.bath_fit(hb, or_deg_idx);												if (mm) bth.write_ose_hop();
 		imp.update();																					if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 		ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_zen("hb_imp", "Fit");
-		// NORG norg(choose_cauculation_style("ful_pcl_sch", imp));
-		norg.up_date_h0_to_solve(imp.impH, 1);															if (mm) norg.write_impurtiy_occupation();
+		auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);	//norg.uormat = p.rotationU;
+		norg.up_date_h0_to_solve(imp.impH, 1);															norg.write_impurtiy_occupation();
 		ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_zen("g0imp");
-		ImGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));					if (mm) gfimp.write_zen("gfimp");
+		ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp, or_deg_idx);							if (mm) gfimp.write_zen("gfimp");
 		ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();							if (mm) seimp.write_zen("seimp");
-		if(mm)	std::remove("norg.lock");
-		{ mm.barrier(); SLEEP(1); }
-		}
-	}
 
+	// 	if(mm)	std::remove("norg.lock");
+	// 	{ mm.barrier(); SLEEP(1); }
+	// 	}
+	// }
+/*
 	if(mode == "realf_mode"){
 		ReGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_zen("Re_g0imp");
 		ReGreen gfimp(p.nband, p);	norg.get_gimp(gfimp, or_deg_idx.truncate(0,nband));					if (mm) gfimp.write_zen("Re_gfimp");
 		ReGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();							if (mm) seimp.write_zen("Re_seimp");
 	}
-
+*/
 
  /*
 	{
@@ -168,7 +167,7 @@ void APIzen::read_ZEN(const Str& file)
 
 	imfrq_hybrid_function.reset(norbs,num_omg,0.);
 	solver_eimp_data.reset(norbs,0.);
-	or_deg_idx.reset(norbs, 0);
+	or_deg_idx.reset(nband, 0);
 
 	{// hyb.in
 		Str hybdata(file + ".hyb.in");
@@ -219,13 +218,15 @@ void APIzen::read_ZEN(const Str& file)
 		}
 		else {
 			Int drop_Int(0), c(0);
-			VecReal temp_emps(norbs, 0.);
-			for_Int(i, 0, norbs) {
+			VecReal temp_emps(nband, 0.);
+			for_Int(i, 0, nband) {
 				ifs >> drop_Int;
 				ifs >> temp_emps[i]; ifs >> or_deg_idx[i];
 				if (!ifs) ERR(STR("read_ZEN-in error with ") + NAV(eimpdata));
 			}
-			for_Int(j, 0, nband) for_Int(i, 0, 2) p.eimp[c++] = temp_emps[j+nband*i];
+			// for_Int(j, 0, nband) for_Int(i, 0, 2) p.eimp[c++] = temp_emps[j+nband*i];
+			or_deg_idx.reset(concat(or_deg_idx,or_deg_idx).mat(2,or_deg_idx.size()).tr().vec());
+			p.eimp.reset(concat(temp_emps,temp_emps).mat(2,temp_emps.size()).tr().vec());
 			// if (test_mode) num_nondegenerate = 1;
 			num_nondegenerate = MAX(or_deg_idx);
 		}
@@ -238,24 +239,22 @@ void APIzen::read_ZEN(const Str& file)
 
 NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 	if(mode == "ful_pcl_sch"){
-		Occler opcler(mm,p);
+		Occler opcler(mm, p);
 		VEC<MatReal> uormat;
-		VecInt ordeg(concat(or_deg_idx.truncate(0,nband),or_deg_idx.truncate(0,nband)).mat(2,nband).tr().vec()), nppso;
-		Vec<VecInt> controler(MAX(or_deg_idx) + 1, VecInt(p.ndiv, 0));
+		VecInt ordeg(p.norbs, 0), nppso;
+		for_Int(i, 0, p.nband) for_Int(j, 0, 2) ordeg[i * 2 + j] = i + 1;
+		Vec<VecInt> controler(MAX(ordeg) + 1, VecInt(p.ndiv, 0));
 		MatReal occnum, occweight;
-		// controler[0] = {0, -1, p.control_divs[0][2], 0, p.control_divs[0][4], 1};
 		controler[0] = p.control_divs[0];
-		// if(mm) WRN(NAV(controler[0]));
 		{
-			// p.if_norg_imp = false; p.after_modify_prmtr(); 
-			NORG norg(opcler.find_ground_state_partical(imp.impH, or_deg_idx.truncate(0,nband)));
+			NORG norg(opcler.find_ground_state_partical(imp.impH, VecInt{1,1,2,2}));
 			uormat = norg.uormat;
 			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb / p.norg_sets);occweight = occnum;
 			nppso = norg.scsp.nppso;
 		}
 		for_Int(i, 0, p.norg_sets) for_Int(j, 0, p.n_rot_orb/p.norg_sets) occweight[i][j] = occnum[i][j] > 0.5 ? (1 - occnum[i][j]) : occnum[i][j];
 
-		for_Int(i, 0, MAX(or_deg_idx)){
+		for_Int(i, 0, MAX(ordeg)){
 			Int o(0), freze_o(0), e(0), freze_e(0), orb_rep(0), nooc_o(0), nooc_e(0);
 			for_Int(j, 0, p.norg_sets) {orb_rep = j; if(ordeg[j] == i + 1) break;}
 			o = nppso[orb_rep] - 1; e = p.nI2B[orb_rep] - nppso[orb_rep];
@@ -264,7 +263,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 			nooc_o = o - freze_o; nooc_e = e - freze_e;
 			controler[i+1] = p.if_norg_imp ?  VecInt{freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{1, freze_o, nooc_o, 1, nooc_e, freze_e };
 		}
-
+		// if(mm) WRN(NAV(controler));
 		// p.if_norg_imp = true; p.after_modify_prmtr(); 
 		p.according_controler(controler, ordeg);
 		// {// WRN
@@ -273,13 +272,13 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 		// 	if(mm) WRN(NAV3(ordeg,m_controler, p.control_divs));
 		// }
 		NORG frezeorb(mm, p);
-		IFS ifs_a("ru" + frezeorb.scsp.nppso_str() + ".bi"); frezeorb.uormat = uormat;
-		if (ifs_a) for_Int(i, 0, frezeorb.uormat.size()) biread(ifs_a, CharP(frezeorb.uormat[i].p()), frezeorb.uormat[i].szof());
+		// IFS ifs_a("ru" + frezeorb.scsp.nppso_str() + ".bi"); frezeorb.uormat = uormat;
+		// if (ifs_a) for_Int(i, 0, frezeorb.uormat.size()) biread(ifs_a, CharP(frezeorb.uormat[i].p()), frezeorb.uormat[i].szof());
 		frezeorb.up_date_h0_to_solve(imp.impH, 1);
 		if (mm)	{
-			OFS ofs_a;
-			ofs_a.open("ru" + frezeorb.scsp.nppso_str() + ".bi");
-			for_Int(i, 0, frezeorb.uormat.size()) biwrite(ofs_a, CharP(frezeorb.uormat[i].p()), frezeorb.uormat[i].szof());
+			// OFS ofs_a;
+			// ofs_a.open("ru" + frezeorb.scsp.nppso_str() + ".bi");
+			// for_Int(i, 0, frezeorb.uormat.size()) biwrite(ofs_a, CharP(frezeorb.uormat[i].p()), frezeorb.uormat[i].szof());
 		}
 		return frezeorb;
 	}
@@ -429,5 +428,39 @@ bool APIzen::if_lock(const Str file) const {
 	} else {
 		{ mm.barrier(); SLEEP(5000); }
 		return false;
+	}
+}
+
+
+void APIzen::auto_nooc(Str mode, const Impurity& imp) {
+	if(mode == "ful_pcl_sch"){
+		Occler opcler(mm, p);
+		VEC<MatReal> uormat;
+		VecInt ordeg(p.norbs, 0), nppso;
+		for_Int(i, 0, p.nband) for_Int(j, 0, 2) ordeg[i * 2 + j] = i + 1;
+		Vec<VecInt> controler(MAX(ordeg) + 1, VecInt(p.ndiv, 0));
+		MatReal occnum, occweight;
+		controler[0] = p.control_divs[0];
+		{
+			NORG norg(opcler.find_ground_state_partical(imp.impH, or_deg_idx));
+			uormat = norg.uormat;
+			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb / p.norg_sets);occweight = occnum;
+			nppso = norg.scsp.nppso;
+			p.rotationU = uormat;
+		}
+		for_Int(i, 0, p.norg_sets) for_Int(j, 0, p.n_rot_orb/p.norg_sets) occweight[i][j] = occnum[i][j] > 0.5 ? (1 - occnum[i][j]) : occnum[i][j];
+
+		for_Int(i, 0, MAX(ordeg)){
+			Int o(0), freze_o(0), e(0), freze_e(0), orb_rep(0), nooc_o(0), nooc_e(0);
+			for_Int(j, 0, p.norg_sets) {orb_rep = j; if(ordeg[j] == i + 1) break;}
+			o = nppso[orb_rep] - 1; e = p.nI2B[orb_rep] - nppso[orb_rep];
+			for_Int(j, 0, o) 							if(occweight[orb_rep][j] < 1e-8) freze_o++;
+			for_Int(j, nppso[orb_rep], p.nI2B[orb_rep])	if(occweight[orb_rep][j] < 1e-8) freze_e++;
+			nooc_o = o - freze_o; nooc_e = e - freze_e;
+			controler[i+1] = p.if_norg_imp ?  VecInt{freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{1, freze_o, nooc_o, 1, nooc_e, freze_e };
+		}
+		// if(mm) WRN(NAV(controler));
+		// p.if_norg_imp = true; p.after_modify_prmtr(); 
+		p.according_controler(controler, ordeg);
 	}
 }

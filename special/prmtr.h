@@ -89,6 +89,17 @@ private:
 			<< "    # " + comment << endl;
 	}
 	void derive();
+
+	VEC<MatReal> uormat_initialize() {
+		VEC<MatReal> uormat_i;
+		for_Int(i, 0, nO2sets.size()) {
+			MatReal temp(dmat(nO2sets[i], 1.));
+			uormat_i.push_back(std::move(temp));
+		}
+		return uormat_i;
+	}
+
+
 public:
 	Prmtr(const MyMpi& mm);
 	void after_modify_prmtr() const;
