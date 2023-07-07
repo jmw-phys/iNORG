@@ -446,6 +446,7 @@ void APIzen::auto_nooc(Str mode, const Impurity& imp) {
 			uormat = norg.uormat;
 			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb / p.norg_sets);occweight = occnum;
 			nppso = norg.scsp.nppso;
+			p.npartical = norg.scsp.nppso;
 			p.rotationU = uormat;
 		}
 		for_Int(i, 0, p.norg_sets) for_Int(j, 0, p.n_rot_orb/p.norg_sets) occweight[i][j] = occnum[i][j] > 0.5 ? (1 - occnum[i][j]) : occnum[i][j];
