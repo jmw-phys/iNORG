@@ -316,3 +316,8 @@ Version: v1.2.1 @ 2023.07.07
     realized: update for the apizen.cpp
     next do : test the new fitting code with dop driveing.
     thinking: (same as prev)
+
+Version: v1.2.2 @ 2023.07.14
+    realized: add the <S_z^2> and <n_i n_j> calc.
+    next do : try on the ZEN's iteration.
+    thinking: (same as prev)

@@ -102,7 +102,7 @@ VecInt lanczos(VecReal& evals, Mat<T>& evecs, VecInt& ev_dgcy, Idx n, Int wish_n
             if (!(fast_mode)) if (k >= n/10 || k >= 60 ) if (residual_method_for_b(ltd, lt_sd, b, k, fast_mode)) break;
             if ((fast_mode))  if (k >= n/10 || k >= 60 ) if (residual_method_for_b(ltd, lt_sd, b, k, fast_mode)) break;
             if (k >= max_krylov) {
-                WRN("Getting Wrong with someting? krylov was too large!" + NAV2(e, k));
+                if(mm) WRN("Getting Wrong with someting? krylov was too large!" + NAV2(e, k));
                 if (k >= 20 + max_krylov) break;
             }
             k++;

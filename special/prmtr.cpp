@@ -26,8 +26,8 @@ void Prmtr::set_inert_values()
 
     dlt_freq = 0.005;               
     eta_freq = 0.01;             
-    freq_upp = 5.;                      
-    freq_low = -5.;
+    freq_upp = 9.;                      
+    freq_low = -9.;
 
     beta = pi_Real*100;
     unit_omg = pi_Real/beta;

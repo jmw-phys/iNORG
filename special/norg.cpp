@@ -363,30 +363,28 @@ void NORG::get_gimp_eigpairs(Green& imp_i, VecInt or_deg)
 	VecInt idx(MAX(or_deg), 0); Int cter(0);
 	for_Int(i, 0, p.nband) if (cter < or_deg[2 * i]) idx[cter++] = i;
 	for (int& i : idx) {
-		for_Int(i, 0, p.nband) {
-			StdVecInt difference = { (i + 1), -(i + 1) };
-			for (const auto ii : difference) {
-				NocSpace scsp_sub(mm, p, nppso(p.npartical, ii));
-				Operator opr_sub(mm, p, scsp_sub);
-				set_row_primeter_byimpH(uormat, impH, opr_sub.oper_value);
-				for_Int(egs_idx, 0, p.degel) {
-					CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, final_ground_state[egs_idx], i * 2);
-					if (imp_i.type_info() == STR("ImGreen")) {
-						ImGreen green_function(1, p);
-						if (ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
-						if (ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
-						for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
-					}
-					if (imp_i.type_info() == STR("ReGreen")) {
-						ReGreen green_function(1, p);
-						if (ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
-						if (ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
-						for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
-					}
+		StdVecInt difference = { (i + 1), -(i + 1) };
+		for (const auto ii : difference) {
+			NocSpace scsp_sub(mm, p, nppso(p.npartical, ii));
+			Operator opr_sub(mm, p, scsp_sub);
+			set_row_primeter_byimpH(uormat, impH, opr_sub.oper_value);
+			for_Int(egs_idx, 0, p.degel) {
+				CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, final_ground_state[egs_idx], i * 2);
+				if (imp_i.type_info() == STR("ImGreen")) {
+					ImGreen green_function(1, p);
+					if (ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
+					if (ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
+					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
+				}
+				if (imp_i.type_info() == STR("ReGreen")) {
+					ReGreen green_function(1, p);
+					if (ii > 0) temp_green.find_gf_greater(groune_lst, green_function);
+					if (ii < 0) temp_green.find_gf_lesser(groune_lst, green_function);
+					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
 				}
 			}
-			if (mm) PIO("finished the " + STR(i) + " find_g_norg   " + present());
 		}
+		if (mm) PIO("finished the " + STR(i) + " find_g_norg   " + present());
 	}
 	for_Int(i, 0, p.nband) for_Int(n, 0, imp_i.nomgs) imp_i[n][i][i] = imp_i[n][idx[or_deg[2 * i] - 1]][idx[or_deg[2 * i] - 1]];
 }
@@ -717,8 +715,24 @@ VecReal NORG::write_impurtiy_occupation(Int iter_cnt) const {
 			ofs <<"\n\n#   < n_i n_j > - <n_i><n_j>  data:" ;
 			for_Int(i, 0, p.norbs) for_Int(j, 0, p.norbs) fluctuation_correlation_function[i][j] = dcoo[i][j] - particals[i] * particals[j];
 			ofs << iofmt() << fluctuation_correlation_function << endl;
+			// PIO(NAV(fluctuation_correlation_function))
+
+			ofs <<"\n\n#   < S^2 >   data:" ;
+			MatReal mat_S(p.nband, p.nband, 0.), mat_ninj(p.nband, p.nband, 0.);
+			for_Int(i, 0, p.nband) for_Int(j, 0, p.nband) {
+				mat_S[i][j] = dcoo[2 * i][2 * j] + dcoo[2 * i + 1][2 * j + 1] - dcoo[2 * i][2 * j + 1] - dcoo[2 * i + 1][2 * j];
+				mat_S[i][j] *= 3/2.0;
+			}
+			ofs << iofmt() << mat_S << endl;
+			
+			ofs <<"\n\n#   < N_iN_j >   data:" ;
+			for_Int(i, 0, p.nband) for_Int(j, 0, p.nband) {
+				mat_ninj[i][j] = dcoo[2 * i][2 * j] + dcoo[2 * i + 1][2 * j + 1] + dcoo[2 * i][2 * j + 1] + dcoo[2 * i + 1][2 * j];
+			}
+			ofs << iofmt() << mat_ninj << endl;
+
 			ofs.close();
-			PIO(NAV(fluctuation_correlation_function))
+			// */
 		}
 	}
 	return particals;
