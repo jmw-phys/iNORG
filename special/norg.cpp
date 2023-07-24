@@ -708,15 +708,21 @@ VecReal NORG::write_impurtiy_occupation(Int iter_cnt) const {
 			ofs << setw(6) << "sup" << setw(p_Real) << counter[0] << endl;
 			ofs << setw(6) << "sdn" << setw(p_Real) << counter[1] << endl;
 			ofs << setw(6) << "sum" << setw(p_Real) << counter[2] << endl;
+			MatReal mat_sz(p.nband, p.nband, 0.), mat_ninj(p.nband, p.nband, 0.), mat_FCF_NN(p.nband, p.nband, 0.);
 
-			ofs <<"\n\n#   < S^2 >   data:" ;
-			MatReal mat_S(p.nband, p.nband, 0.), mat_ninj(p.nband, p.nband, 0.), mat_FCF_NN(p.nband, p.nband, 0.);
+			ofs <<"\n\n#   < sz^2 >   data:" ;
 			for_Int(i, 0, p.nband) for_Int(j, 0, p.nband) {
-				mat_S[i][j] = dcoo[2 * i][2 * j] + dcoo[2 * i + 1][2 * j + 1] - dcoo[2 * i][2 * j + 1] - dcoo[2 * i + 1][2 * j];
-				mat_S[i][j] *= 3/2.0;
+				mat_sz[i][j] = dcoo[2 * i][2 * j] + dcoo[2 * i + 1][2 * j + 1] - dcoo[2 * i][2 * j + 1] - dcoo[2 * i + 1][2 * j];
+				mat_sz[i][j] *= 1/4.0;
 			}
-			ofs << iofmt() << mat_S;
-			
+			ofs << iofmt() << mat_sz;
+
+			ofs <<"\n\n#   < Sz^2 >   =" << iofmt() << SUM(mat_sz);
+
+			Real S2(SUM(mat_sz));
+			for_Int(i, 0, p.nband) { S2 += 0.5 * (prtil[i * 2] + prtil[i * 2 + 1] - dcoo[2 * i][2 * i + 1] - dcoo[2 * i + 1][2 * i]); }
+			ofs <<"\n\n#   < S^2 >   =" << iofmt() << S2;
+
 			ofs <<"\n\n#   < N_iN_j >   data:" ;
 			for_Int(i, 0, p.nband) for_Int(j, 0, p.nband) {
 				mat_ninj[i][j] = dcoo[2 * i][2 * j] + dcoo[2 * i + 1][2 * j + 1] + dcoo[2 * i][2 * j + 1] + dcoo[2 * i + 1][2 * j];

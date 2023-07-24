@@ -318,6 +318,11 @@ Version: v1.2.1 @ 2023.07.07
     thinking: (same as prev)
 
 Version: v1.2.2 @ 2023.07.14
-    realized: add the <S_z^2> and <n_i n_j> calc.
+    realized: add the <s_z,i s_z,j> and <n_i n_j> calc.
     next do : try on the ZEN's iteration.
     thinking: (same as prev)
+
+Version: v1.2.3 @ 2023.07.24
+    realized: add the <S_z^2> and <S^2> calc.
+    next do : try to initialize the orbital set from HFA transform.
+    thinking: if the HFA transform worked?
