@@ -665,7 +665,7 @@ void NORG::write_state_info(Int iter_cnt) const {
 
 VecReal NORG::write_impurtiy_occupation(Int iter_cnt) const {
 	using namespace std;
-	VecReal particals(p.norg_sets, 0);
+	VecReal prtil(p.norg_sets, 0);				// particals.
 	MatReal dcoo, fluctuation_correlation_function(p.norbs, p.norbs, 0.);
 	if(!(p.if_norg_imp)) dcoo = print_DO(oneedm);
 	if (mm) {
@@ -676,16 +676,16 @@ VecReal NORG::write_impurtiy_occupation(Int iter_cnt) const {
 			VecReal counter(3);
 			MatReal dm_origional = see_MatReal(uormat).ct() * see_MatReal(oneedm.dm) * see_MatReal(uormat);
 			// WRN(NAV(dm_origional));
-			particals = dm_origional.diagonal().mat(p.norg_sets, p.nO2sets[0]).tr()[0];
+			prtil = dm_origional.diagonal().mat(p.norg_sets, p.nO2sets[0]).tr()[0];
 
 			ofs << "#   < n_i >   data:" << endl;
 			for_Int(orb_i, 0, p.norbs) {
 				ofs << iofmt();
 				std::string temp = (orb_i % 2) == 0 ? STR(Int(orb_i / 2) + 1) + "up" : STR(Int(orb_i / 2) + 1) + "dn";
-				ofs << setw(6) << temp << setw(p_Real) << particals[orb_i] << endl;
+				ofs << setw(6) << temp << setw(p_Real) << prtil[orb_i] << endl;
 			}
-			counter[0] = SUM(particals.mat(p.nband, 2).tr()[0]);
-			counter[1] = SUM(particals.mat(p.nband, 2).tr()[1]);
+			counter[0] = SUM(prtil.mat(p.nband, 2).tr()[0]);
+			counter[1] = SUM(prtil.mat(p.nband, 2).tr()[1]);
 
 			counter[2] = counter[0] + counter[1];
 			ofs << setw(6) << "sup" << setw(p_Real) << counter[0] << endl;
@@ -700,8 +700,8 @@ VecReal NORG::write_impurtiy_occupation(Int iter_cnt) const {
 			for_Int(orb_i, 0, p.norbs) {
 				ofs << iofmt();
 				std::string temp = (orb_i % 2) == 0 ? STR(Int(orb_i / 2) + 1) + "up" : STR(Int(orb_i / 2) + 1) + "dn";
-				particals[orb_i] = dmtemp[orb_i][0][0];
-				ofs << setw(6) << temp << setw(p_Real) << particals[orb_i] << endl;
+				prtil[orb_i] = dmtemp[orb_i][0][0];
+				ofs << setw(6) << temp << setw(p_Real) << prtil[orb_i] << endl;
 				(orb_i % 2) == 0 ? counter[0] += dmtemp[orb_i][0][0] : counter[1] += dmtemp[orb_i][0][0];
 			}
 			counter[2] = counter[0] + counter[1];
@@ -709,33 +709,40 @@ VecReal NORG::write_impurtiy_occupation(Int iter_cnt) const {
 			ofs << setw(6) << "sdn" << setw(p_Real) << counter[1] << endl;
 			ofs << setw(6) << "sum" << setw(p_Real) << counter[2] << endl;
 
-			ofs <<"\n\n#   < n_i n_j >   data:" ;
-			ofs << iofmt() << dcoo << endl;
-			// fluctuation_correlation_function = dcoo;
-			ofs <<"\n\n#   < n_i n_j > - <n_i><n_j>  data:" ;
-			for_Int(i, 0, p.norbs) for_Int(j, 0, p.norbs) fluctuation_correlation_function[i][j] = dcoo[i][j] - particals[i] * particals[j];
-			ofs << iofmt() << fluctuation_correlation_function << endl;
-			// PIO(NAV(fluctuation_correlation_function))
-
 			ofs <<"\n\n#   < S^2 >   data:" ;
-			MatReal mat_S(p.nband, p.nband, 0.), mat_ninj(p.nband, p.nband, 0.);
+			MatReal mat_S(p.nband, p.nband, 0.), mat_ninj(p.nband, p.nband, 0.), mat_FCF_NN(p.nband, p.nband, 0.);
 			for_Int(i, 0, p.nband) for_Int(j, 0, p.nband) {
 				mat_S[i][j] = dcoo[2 * i][2 * j] + dcoo[2 * i + 1][2 * j + 1] - dcoo[2 * i][2 * j + 1] - dcoo[2 * i + 1][2 * j];
 				mat_S[i][j] *= 3/2.0;
 			}
-			ofs << iofmt() << mat_S << endl;
+			ofs << iofmt() << mat_S;
 			
 			ofs <<"\n\n#   < N_iN_j >   data:" ;
 			for_Int(i, 0, p.nband) for_Int(j, 0, p.nband) {
 				mat_ninj[i][j] = dcoo[2 * i][2 * j] + dcoo[2 * i + 1][2 * j + 1] + dcoo[2 * i][2 * j + 1] + dcoo[2 * i + 1][2 * j];
 			}
-			ofs << iofmt() << mat_ninj << endl;
+			ofs << iofmt() << mat_ninj;
+
+			ofs << "\n\n#   < N_iN_j > - <N_i><N_j>   data:";
+			for_Int(i, 0, p.nband) for_Int(j, 0, p.nband) {
+				mat_FCF_NN[i][j] = dcoo[2 * i][2 * j] + dcoo[2 * i + 1][2 * j + 1] + dcoo[2 * i][2 * j + 1] + dcoo[2 * i + 1][2 * j];
+				mat_FCF_NN[i][j] -= prtil[2*i]*prtil[2*j] + prtil[2*i+1]*prtil[2*j+1]+ prtil[2*i]*prtil[2*j+1]+ prtil[2*i+1]*prtil[2*j];
+			}
+			ofs << iofmt() << mat_FCF_NN;
+
+			ofs <<"\n\n#   < n_i n_j >   data:" ;
+			ofs << iofmt() << dcoo;
+
+			ofs <<"\n\n#   < n_i n_j > - <n_i><n_j>  data:" ;
+			for_Int(i, 0, p.norbs) for_Int(j, 0, p.norbs) fluctuation_correlation_function[i][j] = dcoo[i][j] - prtil[i] * prtil[j];
+			ofs << iofmt() << fluctuation_correlation_function;
+			// PIO(NAV(fluctuation_correlation_function))
 
 			ofs.close();
 			// */
 		}
 	}
-	return particals;
+	return prtil;
 }
 
 
