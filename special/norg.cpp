@@ -710,7 +710,7 @@ VecReal NORG::write_impurtiy_occupation(Int iter_cnt) const {
 			ofs << setw(6) << "sum" << setw(p_Real) << counter[2] << endl;
 			MatReal mat_sz(p.nband, p.nband, 0.), mat_ninj(p.nband, p.nband, 0.), mat_FCF_NN(p.nband, p.nband, 0.);
 
-			ofs <<"\n\n#   < sz^2 >   data:" ;
+			ofs <<"\n\n#   < sz_i sz_j >   data:" ;
 			for_Int(i, 0, p.nband) for_Int(j, 0, p.nband) {
 				mat_sz[i][j] = dcoo[2 * i][2 * j] + dcoo[2 * i + 1][2 * j + 1] - dcoo[2 * i][2 * j + 1] - dcoo[2 * i + 1][2 * j];
 				mat_sz[i][j] *= 1/4.0;
