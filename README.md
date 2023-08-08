@@ -326,3 +326,8 @@ Version: v1.2.3 @ 2023.07.24
     realized: add the <S_z^2> and <S^2> calc.
     next do : try to initialize the orbital set from HFA transform.
     thinking: if the HFA transform worked?
+
+Version: v1.2.4 @ 2023.08.08
+    realized: upgrade for the fitting.
+    next do : test on the ZEN
+    thinking: if the HFA transform worked?

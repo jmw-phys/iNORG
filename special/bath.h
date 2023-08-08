@@ -19,10 +19,17 @@ public:
 	UURandomSFMT uur;
 	VecReal ose;			// on-site energies for bath sites
 	VecReal hop;			// hopping coefficients between impurity site and bath sites
+
+	VecReal osea;
+	VecReal hopb;
+	VecReal oseA;
+	VecReal hopB;
+
 	VEC<VecReal> vec_ose, vec_hop;
 	MatReal info;		// print out the NAV5(nmin, err, err_crv, err_reg, /*err_bsr,*/ a_norm)
 private:
 	void regularize_ose_hop();
+	void regularize_osea_hopb();
 	void init_ose_hop() {
 		uur(ose);
 		ose -= 0.5;
@@ -31,6 +38,16 @@ private:
 		hop -= 0.5;
 		hop *= 4.;
 		regularize_ose_hop();
+	}
+	void init_osea_hopb() {
+		uur(osea);
+		osea -= 0.5;
+		osea *= 4.;
+		uur(hopb);
+		hopb -= 0.5;
+		hopb *= 4.;
+
+		regularize_osea_hopb();
 	}
 	std::tuple<Real, VecReal, Int> bath_fit_contest(const VecReal& a0);
 	std::tuple<Real, VecReal, Int> bath_fit_bsr(const VecReal& a0, const Int& orb_i);

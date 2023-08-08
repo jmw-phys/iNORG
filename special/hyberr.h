@@ -20,9 +20,12 @@ public:
 	VecReal sig;
 	Real expect_err;
 	Real regV_b;
+
+	VecReal oseA;
+	VecReal hopB;
 public:
-	HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i);
-	HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i, Int orb_i);
+	HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i, VecReal oseA_i, VecReal hopB_i);
+	HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i, VecReal oseA_i, VecReal hopB_i, Int orb_i);
 	
 	// return y = f(x; a);
 	Real operator()(const Int x, const VecReal& a) const {
@@ -30,27 +33,47 @@ public:
 		if (x < 2 * nw) {
 			const Int n = x < nw ? x : x - nw;
 			const Real omgn = p.Imomg(n);
-			const VecCmplx E = cmplx(temp.sm(nb, a.p()));
+			//const VecCmplx E = cmplx(temp.sm(nb, a.p()));
+			VecCmplx E(oseA.size());
+			for_Int(i,0,oseA.size()){
+				E[i]=oseA[i]*std::exp(a[i]);
+			}
 			const VecCmplx S = INV(E - VecCmplx(nb, I * omgn));
-			const VecCmplx V = cmplx(temp.sm(nb, a.p() + nb));
+			//const VecCmplx V = cmplx(temp.sm(nb, a.p() + nb));
+			VecCmplx V(hopB.size());
+			for_Int(i,0,hopB.size()){
+				V[i]=hopB[i]*std::exp(a[oseA.size()+i]);
+			}
 			const VecCmplx Vco = V.co();
 			Cmplx hyb = DOT(Vco, S * Vco);
 			return x < nw ? real(hyb) : imag(hyb);
 		}
 		else if (x == 2 * nw + 0) {
-			const VecReal E = temp.sm(nb, a.p());
+			//const VecReal E = temp.sm(nb, a.p());
+			VecReal E(oseA.size());
+			for_Int(i,0,oseA.size()){
+				E[i]=oseA[i]*std::exp(a[i]);
+			}
 			const VecReal E3 = E * E * E;
 			const Real coefficient = expect_err * std::pow(p.bandw, -6);
 			return coefficient * DOT(E3, E3);
 		}
 		else if (x == 2 * nw + 1) {
-			const VecReal V = temp.sm(nb, a.p() + nb);
+			//const VecReal V = temp.sm(nb, a.p() + nb);
+			VecReal V(hopB.size());
+			for_Int(i,0,hopB.size()){
+				V[i]=hopB[i]*std::exp(a[oseA.size()+i]);
+			}
 			const VecReal V2 = V * V;
 			const Real coefficient = expect_err * std::pow(regV_b, 3);
 			return coefficient * DOT(INV(V2), INV(V));
 		}
 		else if (x == 2 * nw + 2) {
-			const VecReal V = temp.sm(nb, a.p() + nb);
+			//const VecReal V = temp.sm(nb, a.p() + nb);
+			VecReal V(hopB.size());
+			for_Int(i,0,hopB.size()){
+				V[i]=hopB[i]*std::exp(a[oseA.size()+i]);
+			}
 			const VecReal Vco = V.co();
 			Real hyb = DOT(Vco, Vco);
 			return hyb;
