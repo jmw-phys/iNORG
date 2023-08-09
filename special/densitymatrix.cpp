@@ -68,6 +68,7 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 			if(mm) std::cout << "The "<<i<<"-th impurity occupation number: "<<iofmt()<<dm[i][0][0]<< std::endl;
 		}
 		// if (mm) WRN(NAV3(dm[0], dm[1], dm[2]));
+		for_Int(i, 0, p.nband) rotaionU_bath[i*2] = rotaionU_bath[i*2 + 1] = 0.5 * (rotaionU_bath[i*2] + rotaionU_bath[i*2 + 1]); //! using the spin inversion symmetry(suit for SC).
 
 		VEC<VecReal> evalue;
 		for_Int(i, 0, p.norg_sets) {
@@ -79,7 +80,7 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 				SWAP(rotaionU_bath[i][j], rotaionU_bath[i][p.nI2B[i] - j - 1]);
 				SWAP(evalue[i][j], evalue[i][p.nI2B[i] - j - 1]);
 			}
-			//DBG("New uorm111" + NAV3(i, rotaionU_bath[i], evalue[i]));
+			// if(mm) WRN("New uorm" + NAV3(i, rotaionU_bath[i], evalue[i]));
 		}
 		// if(mm) WRN(NAV3(evalue[0].mat(1,p.nI2B[0]), evalue[1].mat(1,p.nI2B[1]), evalue[2].mat(1,p.nI2B[2])));
 		// for_Int(i, 0, rotaionU_bath.size()) rotaionU_bath[i] = rotaionU_bath[i - (i%2)]; //! using the spin inversion symmetry(suit for SC).
