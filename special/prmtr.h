@@ -20,7 +20,7 @@ public:
 	mutable Real U;					// Hubbard interaction U
 	mutable Real jz;				// hund interaction Jz
 	mutable Real Uprm;				// U^' as U - 2 * Jz
-	Real mu;						// chemical potential
+	mutable Real mu;				// chemical potential
 	mutable Real degel;				// Degenerate energy levels
 	VecReal	eimp;					// the impurity energy 
 	VecReal	bsr;					// the vector of bath sum rule.

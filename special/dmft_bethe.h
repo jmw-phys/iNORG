@@ -51,19 +51,7 @@ public:
 private:
 	void auto_nooc(Str mode, const Impurity &imp);
 
-	bool converged() const {
-		const Real dev = DEV(gloc_err);
-		if(gloc_err[gloc_err.size()-2]<1.E-5 && gloc_err[gloc_err.size()-2]<gloc_err[gloc_err.size()-1]) return true;
-		if(gloc_err[gloc_err.size()-1]<1.E-6) return true;
-		if (dev > 1.E-4) { return false; }
-		else if (dev > 1.E-10) {
-			for_Int(i, 1, gloc_err.size()) {
-				if (gloc_err[0] > gloc_err[i]) { return false; }
-			}
-			return true;
-		}
-		else{ return true; }
-	}
+	bool converged() const;
 
 	void append_gloc_err(Real err) {
 		for_Int(i, 1, gloc_err.size()) {

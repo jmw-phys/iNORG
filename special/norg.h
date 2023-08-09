@@ -187,7 +187,7 @@ public:
 		return transform_uormat;
 	}
 
-	VecReal write_impurtiy_occupation(Int iter_cnt = -1) const;
+	VecReal write_impurtiy_occupation(Int iter_cnt = -1, const Str& phy_name = empty_str) const;
 
 	void PIO_occweight(VecReal occnum_lst) const {
 		MatReal occnum, occweight;

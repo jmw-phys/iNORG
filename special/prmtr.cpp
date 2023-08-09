@@ -24,10 +24,10 @@ void Prmtr::set_inert_values()
 	gauss_n_min = 64;		        // default value: 64
     iter_max = 99;                   // default value: 99
 
-    dlt_freq = 0.005;               
-    eta_freq = 0.01;             
-    freq_upp = 9.;                      
-    freq_low = -9.;
+    dlt_freq = 0.005;
+    eta_freq = 0.01;
+    freq_upp = 5.;
+    freq_low = -5.;
 
     beta = pi_Real*100;
     unit_omg = pi_Real/beta;
@@ -40,7 +40,7 @@ void Prmtr::set_values() {
     U = 3.0;
     mu = 0.0;
 
-    // jz = 0.25 * U;
+    // jz = 0.5;
     // Uprm = U - 2 * jz;
     jz = 0;
     Uprm = U - 0.3;
@@ -58,8 +58,8 @@ void Prmtr::set_values() {
     // NORG parameter.
     if_norg_imp = false;
     imp_backup = false;
-    templet_restrain = !if_norg_imp ? VecInt{0, -2, -4,  0,  4,  2} : VecInt{-1, -4, -4,  4,  4,  1};
-    templet_control  = !if_norg_imp ? VecInt{1,  4,  0,  1,  0,  4} : VecInt{ 0,  1,  1,  1,  1,  0};
+    templet_restrain = !if_norg_imp ? VecInt{0, -1, -3,  0,  3,  1} : VecInt{-1, -4, -4,  4,  4,  1};
+    templet_control  = !if_norg_imp ? VecInt{1,  3,  1,  1,  1,  3} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
     nI2B = SUM(templet_control) - templet_control[0];   // default value:
@@ -69,10 +69,10 @@ void Prmtr::set_values() {
     // nooc_mode = STR("cpnooc");
     nooc_mode = STR("cnooc");
     after_modify_prmtr();
-    // control_divs[1] = {1,  5,  0,  1,  0,  3};
-    // control_divs[2] = {1,  5,  0,  1,  0,  3};
-    // control_divs[3] = {1,  4,  0,  1,  0,  4};
-    // control_divs[4] = {1,  4,  0,  1,  0,  4};
+    // control_divs[1] = {1,  2,  2,  1,  2,  2};
+    // control_divs[2] = {1,  2,  2,  1,  2,  2};
+    // control_divs[3] = {1,  3,  1,  1,  1,  3};
+    // control_divs[4] = {1,  3,  1,  1,  1,  3};
     recalc_partical_number();
     rotationU = uormat_initialize();
 }

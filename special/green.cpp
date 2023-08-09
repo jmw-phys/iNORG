@@ -101,7 +101,7 @@ void Green::write(const Str& green_name, Int iter_cnt) const
 {
     OFS ofs;
     // if (iter_cnt == 999) { ofs.open(iox + green_name + ".txt"); }
-    if (iter_cnt == 999) { ofs.open(green_name + ".txt"); }
+    if (iter_cnt == 999) { ofs.open(green_name + ".out"); }
     else { ofs.open(iox + "zic" + prefill0(iter_cnt, 3) + ".mb." + green_name + ".txt"); }
     Str iter_str = iter_cnt == 999 ? "" : STR(green_name,iter_cnt)+"_";
     // OFS ofs(iox + "zic" + prefill0(iter_cnt, 3) + ".mb." + green_name + ".txt");

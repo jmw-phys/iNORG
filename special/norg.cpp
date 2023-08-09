@@ -663,14 +663,14 @@ void NORG::write_state_info(Int iter_cnt) const {
 	ofs_app_state.close();
 }
 
-VecReal NORG::write_impurtiy_occupation(Int iter_cnt) const {
+VecReal NORG::write_impurtiy_occupation(Int iter_cnt, const Str& phy_name) const {
 	using namespace std;
 	VecReal prtil(p.norg_sets, 0);				// particals.
 	MatReal dcoo, fluctuation_correlation_function(p.norbs, p.norbs, 0.);
 	if(!(p.if_norg_imp)) dcoo = print_DO(oneedm);
 	if (mm) {
 		OFS ofs;
-		if(iter_cnt < 0) ofs.open("nmat.txt");
+		if(iter_cnt < 0) ofs.open(phy_name +"nmat.txt");
 		if(iter_cnt > 0) ofs.open(iox + "zic" + prefill0(iter_cnt, 3) +".nmat.txt");
 		if (p.if_norg_imp) {
 			VecReal counter(3);

@@ -92,6 +92,7 @@ void Impurity::update(Str mode) {
         // modify_Impdata_for_half_fill(impH);
     }
     else if (mode == "behte") {
+        for_Int(i, 0, ni) imp_lvl[i] = p.eimp[i] - p.mu;
         set_factor();
         impH = std::make_pair(h0, set_interaction());
         modify_Impdata_for_half_fill(impH);

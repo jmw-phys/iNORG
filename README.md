@@ -331,3 +331,8 @@ Version: v1.2.4 @ 2023.08.08
     realized: upgrade for the fitting.
     next do : test on the ZEN
     thinking: if the HFA transform worked?
+
+Version: v1.2.5 @ 2023.08.09
+    realized: add the continuous calculation function (mu += 0.1). {dmft_bethe.cpp}
+    next do : test in the d-h states.
+    thinking: (same as prev)

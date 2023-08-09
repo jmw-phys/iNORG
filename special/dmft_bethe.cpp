@@ -27,23 +27,25 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 	IFS fitdata("ose_hop"), mbgfdata("mb.gfimp"), mbsedata("mb.seimp");
 	log("initial");	set_parameter();
 	Bath bth(mm, p); 	Impurity imp(mm, p, bth);
-	// NORG norg(mm, p);
+	NORG norg(mm, p);
 	if (fitdata) bth.read_ose_hop();
 	if (mbsedata) { se	   = ImGreen(p.nband, p, "mb.seimp");								if (mm) se.write("se", iter_cnt); }
 	if (mbgfdata) { g_loc = ImGreen(p.nband, p, "mb.gfimp");								if (mm) g_loc.write("g_loc", iter_cnt); }
 	else {g_loc = g0_loc();																	if (mm) g_loc.write("g_0loc", iter_cnt);}
 	
     VEC<MatReal> norg_tempU;
-	while (iter_cnt < p.iter_max && !converged()) 
+	se_input.push_back(se);
+	// while (iter_cnt < p.iter_max && !converged()) 
+	while (iter_cnt < p.iter_max) 
 	{
 		++iter_cnt;ImGreen hb(p.nband, p);
 		if (!(fitdata && iter_cnt == 1)) {
 			hb = (mode == 1) ? find_hb_by_se(se):find_hb(g_loc);							if (mm) hb.write("hb", iter_cnt);
 			bth.bath_fit(hb,iter_cnt);														if (mm) bth.write_ose_hop(iter_cnt);
 		}
-		imp.update("behte");																		if (mm) imp.write_H0info(bth, -1, iter_cnt);
+		imp.update("behte");																if (mm) imp.write_H0info(bth, -1, iter_cnt);
 		ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 								if (mm) hb_imp.write("hb-fit", iter_cnt);
-		auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
+		// auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
 		if (iter_cnt > 1) norg.uormat = norg_tempU;	norg.up_date_h0_to_solve(imp.impH, 1);	n_eles = norg.write_impurtiy_occupation(iter_cnt);
 		ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);										if (mm)	g0imp.write("g0imp", iter_cnt);
 		ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
@@ -60,24 +62,50 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 			append_gloc_err(se.error(seimp));												log("gerr_update");
 			// se = (iter_cnt == 1) ? seimp : 0.5 * se + 0.5 * seimp;	
 			// if(ABS(gloc_err[gloc_err.size()-1]) > 1E-3)
-			se = seimp;	
-			// else {se_input.push_back(se); pulay_mixing(seimp);}
+			// se = seimp;	
+			// else {pulay_mixing(seimp);}
+			pulay_mixing(seimp);
 			g_loc = find_gloc_by_se(se);
 		}
 		norg_tempU = norg.uormat;
+
+		if (converged()) {
+			if(mm) {
+				g0imp.write("mu" + STR(p.mu) + "mb.g0imp");
+				gfimp.write("mu" + STR(p.mu) + "mb.gfimp");
+				seimp.write("mu" + STR(p.mu) + "mb.seimp");
+			}
+			norg.write_impurtiy_occupation(-1, "mu" + STR(p.mu));
+			ReGreen g0_imp_re(p.nband, p);	imp.find_g0(g0_imp_re);							if (mm) g0_imp_re.write("mu" + STR(p.mu) + "Re-g0fimp");
+			ReGreen gfimp_re(p.nband, p);	norg.get_gimp_eigpairs(gfimp_re);				if (mm) gfimp_re.write("mu" + STR(p.mu) + "Re-gfimp");
+			ReGreen se_re = g0_imp_re.inverse() - gfimp_re.inverse();						if (mm) se_re.write("mu" + STR(p.mu) + "Re-seloc");
+			ReGreen g_loc_re(p.nband, p); g_loc_re = find_gloc_by_se(se_re);				if (mm) g_loc_re.write("mu" + STR(p.mu) + "Re-gloc");
+			p.mu += 0.1;
+			if (p.mu > 1.2)
+				break;
+			set_parameter();
+			res_past.clear();
+			se_input.clear();
+			iter_cnt = 0;
+			se_input.push_back(se);
+			gloc_err = { 1.e99,1.e98,1.e97 ,1.e96 ,1.e95};
+			if(mm) norg.scsp.print();
+		}
+
 		{ mm.barrier(); SLEEP(1); }
 		if(IFS("norg.stop"))  break;
 	}
 
+/*
 	// ! auto_nooc("for_green_calc", imp); // in here we can change the nooc space once, last chance.
 	NORG finalrg(mm, p); 		finalrg.uormat = norg_tempU;								finalrg.up_date_h0_to_solve(imp.impH, 1);
-	ImGreen gfimp(p.nband, p);	finalrg.get_gimp_eigpairs(gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
+	// ImGreen gfimp(p.nband, p);	finalrg.get_gimp_eigpairs(gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
 	ReGreen g0_imp_re(p.nband, p);imp.find_g0(g0_imp_re);									if (mm) g0_imp_re.write("g0fimp");
 	ReGreen gfimp_re(p.nband, p);	finalrg.get_gimp_eigpairs(gfimp_re);					if (mm) gfimp_re.write("gfimp");
 	ReGreen se_re = g0_imp_re.inverse() - gfimp_re.inverse();								if (mm) se_re.write("se_loc");
 
 	ReGreen g_loc_re(p.nband, p); g_loc_re = find_gloc_by_se(se_re);						if (mm) g_loc_re.write("g_loc_re");
-
+*/
 	
 	// if (mm) bth.write_ose_hop();
 }
@@ -313,3 +341,18 @@ void DMFT::get_gimp_evenodd(NORG& norg,Green& gfimp) const {
 	}
 }
 
+// -------------------------------------------------- private --------------------------------------------------
+
+	bool DMFT::converged() const {
+		const Real dev = DEV(gloc_err);
+		if(gloc_err[gloc_err.size()-2]<1.E-4 && gloc_err[gloc_err.size()-2]<gloc_err[gloc_err.size()-1]) return true;
+		if(gloc_err[gloc_err.size()-1]<1.E-5) return true;
+		if (dev > 1.E-4) { return false; }
+		else if (dev > 1.E-10) {
+			for_Int(i, 1, gloc_err.size()) {
+				if (gloc_err[0] > gloc_err[i]) { return false; }
+			}
+			return true;
+		}
+		else{ return true; }
+	}
