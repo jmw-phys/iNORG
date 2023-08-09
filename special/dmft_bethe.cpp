@@ -24,7 +24,7 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 {
 	// make random seed output together
 	{ mm.barrier(); SLEEP(1); }
-	IFS fitdata(prefill0(p.nI2B[0], 2) + ".ose_hop"), mbgfdata("mb.gfimp"), mbsedata("mb.seimp");
+	IFS fitdata("ose_hop"), mbgfdata("mb.gfimp"), mbsedata("mb.seimp");
 	log("initial");	set_parameter();
 	Bath bth(mm, p); 	Impurity imp(mm, p, bth);
 	// NORG norg(mm, p);
