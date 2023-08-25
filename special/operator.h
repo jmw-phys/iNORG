@@ -72,4 +72,7 @@ public:
 
 	void write_the_multiTab(Str name) const;
 	Tab read_the_Tab(Str name) const;
+
+	// 1 Ln: N; 2 Ln: Sz; 3 Ln: P;
+	MatReal local_multiplets_state(const MatReal& g_state) const;
 };

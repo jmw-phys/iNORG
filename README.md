@@ -336,3 +336,8 @@ Version: v1.2.5 @ 2023.08.09
     realized: add the continuous calculation function (mu += 0.1). {dmft_bethe.cpp}
     next do : test in the d-h states.
     thinking: (same as prev)
+
+Version: v1.2.6 @ 2023.08.25
+    realized: add the Atomic Orbital Configuration Probability calculation.
+    next do : tested in three or five orbitals.
+    thinking: (same as prev)

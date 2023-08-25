@@ -485,3 +485,43 @@ Tab Operator::read_the_Tab(Str name) const{
 	}
 	return tab;
 }
+
+// ! only suit for the two orbital cases.
+MatReal Operator::local_multiplets_state(const MatReal& g_state) const {
+	MatReal local_multiplets_state(3, 6, 0.);
+	VecReal gs_p = g_state[0]; gs_p.normalize();
+
+	//set the first line for N;
+	// {0, 1, 2,..., 2*n}
+	local_multiplets_state[0] = VecReal{ 0,  1,  2,  2,  3,  4 };
+	//set the second line for Sz;
+	// {0, 1/2, 2/2,..., n/2}
+	local_multiplets_state[1] = VecReal{ 0,0.5,  0,  1,0.5,  0 };
+
+	for_Int(h_i, 0, dim) {
+		StateStatistics a(h_i, scsp.wherein_NocSpace(h_i), scsp);
+		VecInt imp(4, 0);// the last one left for check the right.
+		for_Int(i, 0, p.norbs) imp[i] = a.cfg.cf[(i)*ndiv].isocc(0) ? 1 : 0;
+		switch (SUM(imp)) {
+		case 0:
+			local_multiplets_state[2][0] += gs_p[h_i] * gs_p[h_i];
+			break;
+		case 1:
+			local_multiplets_state[2][1] += gs_p[h_i] * gs_p[h_i];
+			break;
+		case 2:
+			if (SUM(imp.mat(2, 2).tr()[0]) == 1) local_multiplets_state[2][2] += gs_p[h_i] * gs_p[h_i];
+			else local_multiplets_state[2][3] += gs_p[h_i] * gs_p[h_i];
+			break;
+		case 3:
+			local_multiplets_state[2][4] += gs_p[h_i] * gs_p[h_i];
+			break;
+		case 4:
+			local_multiplets_state[2][5] += gs_p[h_i] * gs_p[h_i];
+			break;
+		default:
+			cout << "Input is not within the specified range" << endl;
+		}
+	}
+	return local_multiplets_state;
+}

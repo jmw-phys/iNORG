@@ -23,11 +23,12 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 	dmft_cnt++; update(file);
 	ImGreen hb(nband, p);	
 	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)	hb.g[j][i][i] = -imfrq_hybrid_function[i][j];	if (mm) hb.write_zen("hb_zen", "Read");
-	bth.read_ose_hop(); bth.bath_fit(hb, or_deg_idx);												if (mm) bth.write_ose_hop();
+	bth.read_ose_hop();	bth.bath_fit(hb, or_deg_idx);												if (mm) bth.write_ose_hop();
 	imp.update();																					if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 	ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_zen("hb_imp", "Fit");
 	auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);	//norg.uormat = p.rotationU;
 	norg.up_date_h0_to_solve(imp.impH, 1);															norg.write_impurtiy_occupation();
+	// MatReal local_multiplets_state = norg.oneedm.local_multiplets_state(norg.oneedm.ground_state);	if (mm)WRN(NAV(local_multiplets_state));
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_zen("g0imp");
 	ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp, or_deg_idx);							if (mm) gfimp.write_zen("gfimp");
 	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();							if (mm) seimp.write_zen("seimp");
@@ -39,7 +40,7 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 /*
 	// if(mode == "realf_mode"){
 		ReGreen g0imp_re(p.nband, p);	imp.find_g0(g0imp_re);													if (mm)	g0imp_re.write_zen("Re_g0imp");
-		ReGreen gfimp_re(p.nband, p);	norg.get_gimp(gfimp_re, or_deg_idx);									if (mm) gfimp_re.write_zen("Re_gfimp");
+		ReGreen gfimp_re(p.nband, p);	norg.get_gimp_eigpairs(gfimp_re, or_deg_idx);							if (mm) gfimp_re.write_zen("Re_gfimp");
 		ReGreen seimp_re(p.nband, p);	seimp_re = g0imp_re.inverse() - gfimp_re.inverse();						if (mm) seimp_re.write_zen("Re_seimp");
 	// }
 */
