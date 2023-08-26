@@ -195,8 +195,10 @@ void Impurity::modify_Impdata_for_half_fill(Impdata& impH_i){
 	MatReal& h0 = impH_i.first;
 	Int norb2set = p.nO2sets[0];
 	for_Int(i, 0, p.norg_sets) {
-		if(p.nband > 1)h0[i * norb2set][i * norb2set] -= p.U * 0.5 + p.Uprm * 0.5 + (p.Uprm - p.jz) * 0.5;
-		else if(p.nband == 1)h0[i * norb2set][i * norb2set] -= p.U * 0.5;
+        if      (p.nband == 1)h0[i * norb2set][i * norb2set] -= p.U * 0.5;
+        else if (p.nband == 2)h0[i * norb2set][i * norb2set] -= p.U * 0.5 + p.Uprm * 0.5 + (p.Uprm - p.jz) * 0.5;
+        else if (p.nband == 3)h0[i * norb2set][i * norb2set] -= p.U * 0.5 + 2 * (p.Uprm * 0.5) + 2 * (p.Uprm - p.jz) * 0.5;
+        else if (p.nband  > 3)h0[i * norb2set][i * norb2set] -= p.U * 0.5 + (p.nband-1) * (p.Uprm * 0.5) + (p.nband-1) * (p.Uprm - p.jz) * 0.5;
         else ERR("impurity input is wrong");
 	}
 }

@@ -341,3 +341,8 @@ Version: v1.2.6 @ 2023.08.25
     realized: add the Atomic Orbital Configuration Probability calculation.
     next do : tested in three or five orbitals.
     thinking: (same as prev)
+
+Version: v1.2.7 @ 2023.08.26
+    realized: fix the bug for mu in the 3 or 5 bands.
+    next do : (same as prev)
+    thinking: (same as prev)

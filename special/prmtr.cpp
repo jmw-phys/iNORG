@@ -16,7 +16,7 @@ Prmtr::Prmtr(const MyMpi& mm) : np(mm.np())
 
 void Prmtr::set_inert_values()
 {
-    nband = 2;         
+    nband = 3;         
     norbs = nband * 2;
     project = STR(nband)+"band_KH";
     
@@ -48,7 +48,8 @@ void Prmtr::set_values() {
     eimp = VecReal(norbs, 0.);
     degel = 1;                      // Degenerate energy levels
     bethe_t.reset(nband, 0.5);
-	if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] = 0.5 * bethe_t[i];
+	// if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] = 0.5 * bethe_t[i];
+	if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] = 0.25;
     bsr = bethe_t * bethe_t;    // the vector of bath sum rule.
 
     // fitting related
@@ -58,7 +59,7 @@ void Prmtr::set_values() {
     // NORG parameter.
     if_norg_imp = false;
     imp_backup = false;
-    templet_restrain = !if_norg_imp ? VecInt{0, -1, -3,  0,  3,  1} : VecInt{-1, -4, -4,  4,  4,  1};
+    templet_restrain = !if_norg_imp ? VecInt{0, -1, -2,  0,  2,  1} : VecInt{-1, -4, -4,  4,  4,  1};
     templet_control  = !if_norg_imp ? VecInt{1,  3,  1,  1,  1,  3} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
@@ -66,8 +67,8 @@ void Prmtr::set_values() {
     nO2sets = SUM(templet_control);                     // default value:
     iter_max_norg = 99;                                 // default
     // nooc_mode = STR("nooc");
-    // nooc_mode = STR("cpnooc");
-    nooc_mode = STR("cnooc");
+    nooc_mode = STR("cpnooc");
+    // nooc_mode = STR("cnooc");
     after_modify_prmtr();
     // control_divs[1] = {1,  2,  2,  1,  2,  2};
     // control_divs[2] = {1,  2,  2,  1,  2,  2};
