@@ -670,7 +670,7 @@ VecReal NORG::write_impurtiy_occupation(Int iter_cnt, const Str& phy_name) const
 	if(!(p.if_norg_imp)) dcoo = print_DO(oneedm);
 	if (mm) {
 		OFS ofs;
-		if(iter_cnt < 0) ofs.open(phy_name +"nmat.txt");
+		if(iter_cnt < 0) ofs.open(phy_name +"nmat.out");
 		if(iter_cnt > 0) ofs.open(iox + "zic" + prefill0(iter_cnt, 3) +".nmat.txt");
 		if (p.if_norg_imp) {
 			VecReal counter(3);

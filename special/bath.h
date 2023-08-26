@@ -69,6 +69,6 @@ public:
 	void bath_TRfit(const ImGreen& hb_i, Int iter);// not finished.
 	MatReal find_hop() const;
 
-	void write_ose_hop(Int iter_cnt = -1) const;
+	void write_ose_hop(Int iter_cnt = -1, const Str& bath_name = empty_str) const;
 	void read_ose_hop();
 };

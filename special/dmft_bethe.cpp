@@ -11,8 +11,8 @@ void DMFT::set_parameter() {
 	bethe_mu = p.mu;
 	bethe_t = p.bethe_t;
 	bethe_u = p.U;
-	bethe_u12 = p.Uprm;
-	// p.jz = 0.;
+	// p.jz = 0.25 * p.U;
+	bethe_u12 = p.U - 2 * p.jz;
 	p.bandw = 2 * (2 * SQRT(SQR(bethe_u) + SQR(bethe_u12) + SQR(bethe_u12-p.jz) + SUM(bethe_t * bethe_t)));
 	p.derive_ImGreen();
 	if (mm) { OFS ofss("log.parameters.txt", std::ios::app);  p.print(ofss); }
@@ -24,17 +24,18 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 {
 	// make random seed output together
 	{ mm.barrier(); SLEEP(1); }
-	IFS fitdata("ose_hop"), mbgfdata("mb.gfimp"), mbsedata("mb.seimp");
+	IFS fitdata("ose_hop"), mbgfdata("mb.gfloc"), mbsedata("mb.seimp");
 	log("initial");	set_parameter();
 	Bath bth(mm, p); 	Impurity imp(mm, p, bth);
 	NORG norg(mm, p);
 	if (fitdata) bth.read_ose_hop();
-	if (mbsedata) { se	   = ImGreen(p.nband, p, "mb.seimp");								if (mm) se.write("se", iter_cnt); }
-	if (mbgfdata) { g_loc = ImGreen(p.nband, p, "mb.gfimp");								if (mm) g_loc.write("g_loc", iter_cnt); }
-	else {g_loc = g0_loc();																	if (mm) g_loc.write("g_0loc", iter_cnt);}
-	
+	if (mbsedata) { se	  = ImGreen(p.nband, p, "mb.seimp");								if (mm) se.write("seimp", iter_cnt); }
+	if (mbgfdata) { g_loc = ImGreen(p.nband, p, "mb.gfloc");								if (mm) g_loc.write("gfloc", iter_cnt);}
+	else {g_loc = g0_loc();																	if (mm) g_loc.write("g0loc", iter_cnt);}
+
     VEC<MatReal> norg_tempU;
 	se_input.push_back(se);
+	Int Flag_semix(0);
 	// while (iter_cnt < p.iter_max && !converged()) 
 	while (iter_cnt < p.iter_max) 
 	{
@@ -59,34 +60,43 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 
 		// obtain se from impurity model.
 		if (mode == 1) {
-			append_gloc_err(se.error(seimp));												log("gerr_update");
+			Real err_temp(se.error(seimp));
+			append_gloc_err(err_temp);														log("sigerr_update");
 			// se = (iter_cnt == 1) ? seimp : 0.5 * se + 0.5 * seimp;	
-			// if(ABS(gloc_err[gloc_err.size()-1]) > 1E-3)
-			// se = seimp;	
-			// else {pulay_mixing(seimp);}
+			// se = seimp;
+			if (err_temp < 0.01) Flag_semix = 1;
 			pulay_mixing(seimp);
-			g_loc = find_gloc_by_se(se);
+			if (!Flag_semix) {
+				se = seimp;
+				res_past.clear();
+				se_input.clear();
+				se_input.push_back(se);
+			}
+			g_loc = find_gloc_by_se(se);													if (mm) g_loc.write("gfloc", iter_cnt);
 		}
 		norg_tempU = norg.uormat;
 
 		if (converged()) {
+			Real& var_a(p.U);
 			if(mm) {
-				g0imp.write("mu" + STR(p.mu) + "mb.g0imp");
-				gfimp.write("mu" + STR(p.mu) + "mb.gfimp");
-				seimp.write("mu" + STR(p.mu) + "mb.seimp");
+				g0imp.write("U" + STR(var_a) + "mb.g0imp");
+				gfimp.write("U" + STR(var_a) + "mb.gfimp");
+				seimp.write("U" + STR(var_a) + "mb.seimp");
+				g_loc.write("U" + STR(var_a) + "mb.gfloc");
+				bth.write_ose_hop(-1, "U" + STR(var_a));
 			}
-			norg.write_impurtiy_occupation(-1, "mu" + STR(p.mu));
-			ReGreen g0_imp_re(p.nband, p);	imp.find_g0(g0_imp_re);							if (mm) g0_imp_re.write("mu" + STR(p.mu) + "Re-g0fimp");
-			ReGreen gfimp_re(p.nband, p);	norg.get_gimp_eigpairs(gfimp_re);				if (mm) gfimp_re.write("mu" + STR(p.mu) + "Re-gfimp");
-			ReGreen se_re = g0_imp_re.inverse() - gfimp_re.inverse();						if (mm) se_re.write("mu" + STR(p.mu) + "Re-seloc");
-			ReGreen g_loc_re(p.nband, p); g_loc_re = find_gloc_by_se(se_re);				if (mm) g_loc_re.write("mu" + STR(p.mu) + "Re-gloc");
-			p.mu += 0.1;
-			if (p.mu > 1.2)
+			norg.write_impurtiy_occupation(-1, "U" + STR(var_a));
+			ReGreen g0_imp_re(p.nband, p);	imp.find_g0(g0_imp_re);							if (mm) g0_imp_re.write("U" + STR(var_a) + "Re-g0fimp");
+			ReGreen gfimp_re(p.nband, p);	norg.get_gimp_eigpairs(gfimp_re);				if (mm) gfimp_re.write("U" + STR(var_a) + "Re-gfimp");
+			ReGreen se_re = g0_imp_re.inverse() - gfimp_re.inverse();						if (mm) se_re.write("U" + STR(var_a) + "Re-seimp");
+			ReGreen g_loc_re(p.nband, p); g_loc_re = find_gloc_by_se(se_re);				if (mm) g_loc_re.write("U" + STR(var_a) + "Re-gfloc");
+			var_a -= 0.05;
+			if (var_a < 1.2)
 				break;
 			set_parameter();
 			res_past.clear();
 			se_input.clear();
-			iter_cnt = 0;
+			Flag_semix = iter_cnt = 0;
 			se_input.push_back(se);
 			gloc_err = { 1.e99,1.e98,1.e97 ,1.e96 ,1.e95};
 			if(mm) norg.scsp.print();

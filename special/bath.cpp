@@ -360,10 +360,10 @@ MatReal Bath::find_hop() const
     return h0;
 }
 
-void Bath::write_ose_hop(Int iter_cnt) const {
+void Bath::write_ose_hop(Int iter_cnt, const Str& bath_name) const {
 	using namespace std;
     OFS ofs;
-	if (iter_cnt < 0) ofs.open("ose_hop");
+	if (iter_cnt < 0) ofs.open(bath_name + "ose_hop.out");
 	if (iter_cnt > 0) ofs.open(iox + "zic" + prefill0(iter_cnt, 3) + ".ose_hop.txt");
 	for_Int(band_i, 0, p.nband)	{
 		ofs << iofmt("sci");
