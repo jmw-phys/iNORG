@@ -170,6 +170,90 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
 }
 
 
+// ! only suit for the two orbital cases.
+VecReal CrrltFun::find_hd_exstate( Int position ) {
+#define ndiv new_nosp.ndivs
+    if (p.norbs > 6) ERR(NAV(p.norbs));
+    VecPartition vp(mm.np(), mm.id(), new_nosp.dim);
+    
+    VecReal hdex_state(ex_state);
+    VecBool imp(6, false);// the last one left for check the right.
+    for_Int(h_i, 0, vp.len()) {
+        StateStatistics a(vp.bgn() + h_i, new_nosp.wherein_NocSpace(vp.bgn() + h_i), new_nosp);
+        for_Int(i, 0, p.norbs) imp[i] = a.cfg.cf[(i)*ndiv].isocc(0) ? true : false;
+        bool check(true);
+        if (position == 0) check = !(imp[1]) && imp[0] && imp[3] && !(imp[2]);
+        if (position == 2) check = !(imp[0]) && !(imp[1]) && imp[2] && imp[3];
+        if (position == 4) check = !(imp[0]) && !(imp[1]) && imp[4] && imp[5];
+        if(mm && check) WRN(NAV(imp));
+        hdex_state[h_i] = check ? hdex_state[h_i] : 0.;
+    }
+    // if (position == 2) 	for_Int(h_i, vp.bgn(), vp.end()) {
+    //     StateStatistics a(h_i, new_nosp.wherein_NocSpace(h_i), new_nosp);
+    //     for_Int(i, 0, p.norbs) imp[i] = a.cfg.cf[(i)*ndiv].isocc(0) ? true : false;
+    //     bool check = !(imp[0]) && !(imp[1]) && imp[2] && imp[3];
+    //     if(mm && check) WRN(NAV(imp));
+    //     hdex_state[h_i] = check ? hdex_state[h_i] : 0.;
+    // }
+#undef ndiv
+
+    return hdex_state;
+}
+
+void CrrltFun::find_hd_greater(const Real& ge0, Green &g0, Int position) 
+{
+    VecReal hd_exstate(find_hd_exstate(position));
+    Real upper_fraction(mm.Allreduce(DOT(hd_exstate, hd_exstate)));
+    // if (mm) WRN(NAV(upper_fraction));
+    VEC<Real> ltd;	        // diagonal elements 
+    VEC<Real> lt_sd;	    // sub-diagonal elements
+    const SparseMatReal sep_h = find_hmlt(table);
+    VecReal v0(hd_exstate);
+    v0 *= INV(SQRT(mm.Allreduce(DOT(v0, v0))));
+    VecReal v0_saved(v0);
+    VecReal v1(sep_h * v0);
+    Real a_i(0.), b_i(0.);
+    a_i = mm.Allreduce(DOT(v1, v0));
+    ltd.push_back(a_i);
+    if(g0.type_info() == STR("ImGreen")){
+        for_Int(i, 0, 60) {
+        find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
+        ltd.push_back(a_i); lt_sd.push_back(b_i);
+        }
+    }
+    if(g0.type_info() == STR("ReGreen")){
+        for_Int(i, 0, 3000) {
+        find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
+        ltd.push_back(a_i); lt_sd.push_back(b_i);
+        }
+    }
+    // ImGreen last_green(1, p);
+    Cmplx zero(0.,0.);
+    VecCmplx green_pre(g0.nomgs, zero);
+    VecCmplx green_error(g0.nomgs, zero);
+    while (true) {
+        find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
+        ltd.push_back(a_i); lt_sd.push_back(b_i);
+        VecReal a(ltd), b(lt_sd);
+        Int n(a.size());
+        //ImGreen green_i(1, p);
+        for_Int(w, 0, g0.nomgs) {
+            Cmplx z = g0.z(w) + ge0;
+            Cmplx c(z - a[n - 2] - b[n - 2] * b[n - 2] / (z - a[n - 1]));
+            for (Int i = n; i >= 3; i--) c = z - a[i - 3] - b[i - 3] * b[i - 3] / c;
+            //Cmplx under_fraction(c);
+            Cmplx gaz = upper_fraction / c;
+            green_error[w] = gaz - green_pre[w];
+            green_pre[w] = gaz;
+        }
+        if (ABS(SUM(green_error)) < 1.E-10 * g0.nomgs) break;
+        // if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
+    }
+    for_Int(w, 0, g0.nomgs) g0[w][0][0] += green_pre[w];
+    if (mm) PIO("The size of a and b in greaer:" + NAV2(ltd.size(), lt_sd.size()));
+    // return last_green;
+}
+
 // void CrrltFun::find_gf_greater(const Real& ge0, Green &g0, Int kind) 
 // {
 //     Real upper_fraction(DOT(ex_state, ex_state));

@@ -389,6 +389,37 @@ void NORG::get_gimp_eigpairs(Green& imp_i, VecInt or_deg)
 	for_Int(i, 0, p.nband) for_Int(n, 0, imp_i.nomgs) imp_i[n][i][i] = imp_i[n][idx[or_deg[2 * i] - 1]][idx[or_deg[2 * i] - 1]];
 }
 
+void NORG::get_gimp_hdQPs(Green& imp_i)
+{
+	for_Int(i, 0, p.nband) 
+	{
+		// StdVecInt difference = {(i+1), -(i+1)};
+		// for(const auto ii: difference)
+		{
+			NocSpace scsp_sub(mm, p, nppso(p.npartical, i+1));
+			Operator opr_sub(mm, p, scsp_sub);
+			set_row_primeter_byimpH(uormat, impH, opr_sub.oper_value);
+			for_Int(egs_idx, 0, p.degel){
+				CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, final_ground_state[egs_idx], i * 2);
+				if(imp_i.type_info() == STR("ImGreen")) {
+					ImGreen green_function(1, p);
+					temp_green.find_hd_greater(groune_lst, green_function, i * 2);
+					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
+				}
+				if(imp_i.type_info() == STR("ReGreen")) {
+					ReGreen green_function(1, p);
+					temp_green.find_hd_greater(groune_lst, green_function, i * 2);
+					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
+				}
+			}
+		}
+		if (mm) PIO("finished the " + STR(i) + " find_g_norg   " + present());
+	}
+}
+
+
+
+
 void NORG::readmatrix(MatReal& m, const Str& file)
 {
 	IFS ifs(file);

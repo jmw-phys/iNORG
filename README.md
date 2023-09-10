@@ -346,3 +346,8 @@ Version: v1.2.7 @ 2023.08.26
     realized: fix the bug for mu in the 3 or 5 bands.
     next do : (same as prev)
     thinking: (same as prev)
+
+Version: v1.2.8 @ 2023.08.31
+    realized: find the hd exstate
+    next do : (same as prev)
+    thinking: (same as prev)

@@ -64,7 +64,7 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 			append_gloc_err(err_temp);														log("sigerr_update");
 			// se = (iter_cnt == 1) ? seimp : 0.5 * se + 0.5 * seimp;	
 			// se = seimp;
-			if (err_temp < 0.01) Flag_semix = 1;
+			if (iter_cnt > 1 && err_temp < 0.01) Flag_semix = 1;
 			pulay_mixing(seimp);
 			if (!Flag_semix) {
 				se = seimp;
@@ -90,8 +90,13 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 			ReGreen gfimp_re(p.nband, p);	norg.get_gimp_eigpairs(gfimp_re);				if (mm) gfimp_re.write("U" + STR(var_a) + "Re-gfimp");
 			ReGreen se_re = g0_imp_re.inverse() - gfimp_re.inverse();						if (mm) se_re.write("U" + STR(var_a) + "Re-seimp");
 			ReGreen g_loc_re(p.nband, p); g_loc_re = find_gloc_by_se(se_re);				if (mm) g_loc_re.write("U" + STR(var_a) + "Re-gfloc");
+
+
+			// excitation spectrum
+			ReGreen hd_exsp(p.nband, p);	norg.get_gimp_hdQPs(hd_exsp);					if (mm)	hd_exsp.write("U" + STR(var_a) + "Re-hdex");
+			
 			var_a -= 0.05;
-			if (var_a < 1.2)
+			// if (var_a < 1.2)
 				break;
 			set_parameter();
 			res_past.clear();

@@ -42,6 +42,7 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 		ReGreen g0imp_re(p.nband, p);	imp.find_g0(g0imp_re);													if (mm)	g0imp_re.write_zen("Re_g0imp");
 		ReGreen gfimp_re(p.nband, p);	norg.get_gimp_eigpairs(gfimp_re, or_deg_idx);							if (mm) gfimp_re.write_zen("Re_gfimp");
 		ReGreen seimp_re(p.nband, p);	seimp_re = g0imp_re.inverse() - gfimp_re.inverse();						if (mm) seimp_re.write_zen("Re_seimp");
+		ReGreen hd_exsp(p.nband, p);	norg.get_gimp_hdQPs(hd_exsp);											if (mm)	 hd_exsp.write_zen("Re-hdex");
 	// }
 */
 
@@ -457,8 +458,8 @@ void APIzen::auto_nooc(Str mode, const Impurity& imp) {
 			Int o(0), freze_o(0), e(0), freze_e(0), orb_rep(0), nooc_o(0), nooc_e(0);
 			for_Int(j, 0, p.norg_sets) {orb_rep = j; if(ordeg[j] == i + 1) break;}
 			o = nppso[orb_rep] - 1; e = p.nI2B[orb_rep] - nppso[orb_rep];
-			for_Int(j, 0, o) 							if(occweight[orb_rep][j] < 1e-8) freze_o++;
-			for_Int(j, nppso[orb_rep], p.nI2B[orb_rep])	if(occweight[orb_rep][j] < 1e-8) freze_e++;
+			for_Int(j, 0, o) 							if(occweight[orb_rep][j] < 1e-5) freze_o++;
+			for_Int(j, nppso[orb_rep], p.nI2B[orb_rep])	if(occweight[orb_rep][j] < 1e-5) freze_e++;
 			nooc_o = o - freze_o; nooc_e = e - freze_e;
 			controler[i+1] = p.if_norg_imp ?  VecInt{freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{1, freze_o, nooc_o, 1, nooc_e, freze_e };
 		}
