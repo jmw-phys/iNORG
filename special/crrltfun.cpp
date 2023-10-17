@@ -107,7 +107,8 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
             green_error[w] = gaz - green_pre[w];
             green_pre[w] = gaz;
         }
-        if (ABS(SUM(green_error)) < 1.E-10 * g0.nomgs) break;
+        VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
+        if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) break;
         // if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
     }
     for_Int(w, 0, g0.nomgs) g0[w][0][0] += green_pre[w];
@@ -161,7 +162,8 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
             green_error[w] = gaz - green_pre[w];
             green_pre[w] = gaz;
         }
-        if (ABS(SUM(green_error)) < 1.E-10 * g0.nomgs) break;
+        VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
+        if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) break;
         // if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
     }
     for_Int(w, 0, g0.nomgs) g0[w][0][0] += green_pre[w];

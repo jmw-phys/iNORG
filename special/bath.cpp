@@ -364,7 +364,7 @@ void Bath::write_ose_hop(Int iter_cnt, const Str& bath_name) const {
 	using namespace std;
 	OFS ofs;
 	if (iter_cnt < 0) {
-		if (bath_name.empty()) ofs.open("ose_hop.txt");
+		if (bath_name.empty()) ofs.open("ose_hop");
 		else ofs.open(bath_name + "ose_hop.out");
 	}
 	if (iter_cnt > 0) ofs.open(iox + "zic" + prefill0(iter_cnt, 3) + ".ose_hop.txt");

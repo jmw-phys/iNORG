@@ -178,15 +178,14 @@ MatReal DensityMat::find_imp_double_occupancy() const {
 				// four-fermion operator terms for C^+_i C^+_j C_k C_l; 
 				Int tensor_idx = abs(hop_op[2][pos]) - scsp.hopint.size() - 1;
 				Int row_n = Int(tensor_idx / scsp.hopint.size()) / p.norbit, col_n = Int(tensor_idx / scsp.hopint.size()) % p.norbit; // N_i:row_n;N_j:col_n;
-				if (row_n == (tensor_idx % scsp.hopint.size()) / p.norbit && col_n == (tensor_idx % scsp.hopint.size()) % p.norbit) {
-					if (row_n%p.nO2sets[0] == 0 && col_n%p.nO2sets[0] == 0) {
-						row_n = row_n / p.nO2sets[0]; col_n = col_n / p.nO2sets[0];
-						if(row_n>p.norbs||col_n>p.norbs)WRN(NAV5(tensor_idx, row_n, col_n, (tensor_idx % scsp.hopint.size()) / p.norbit, (tensor_idx % scsp.hopint.size()) % p.norbit));
-						Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
-						Real amplitude = coefficient_comm * state_eff[hop_op[0][pos] + row_H.bgn()] * state_eff[hop_op[1][pos]];
-						// WRN(NAV3(row_n, col_n,amplitude));
-						docc_splited[row_n][col_n] += amplitude / p.degel ;
-					}
+				// if (row_n == (tensor_idx % scsp.hopint.size()) / p.norbit && col_n == (tensor_idx % scsp.hopint.size()) % p.norbit) {
+				if (row_n%p.nO2sets[0] == 0 && col_n%p.nO2sets[0] == 0) {
+					row_n = row_n / p.nO2sets[0]; col_n = col_n / p.nO2sets[0];
+					if(row_n>p.norbs||col_n>p.norbs)WRN(NAV5(tensor_idx, row_n, col_n, (tensor_idx % scsp.hopint.size()) / p.norbit, (tensor_idx % scsp.hopint.size()) % p.norbit));
+					Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
+					Real amplitude = coefficient_comm * state_eff[hop_op[0][pos] + row_H.bgn()] * state_eff[hop_op[1][pos]];
+					// WRN(NAV3(row_n, col_n,amplitude));
+					docc_splited[row_n][col_n] += amplitude / p.degel ;
 				}
 			}
 		}
