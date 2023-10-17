@@ -203,7 +203,7 @@ public:
 
 	// print the Double Occupancy matrix
 	MatReal print_DO(const DensityMat& dm) const {
-		MatReal docc = dm.find_double_occupancy();
+		MatReal docc = dm.find_imp_double_occupancy();
 
 		// if (mm) PIO(NAV1(docc));
 		return docc;

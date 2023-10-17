@@ -698,11 +698,19 @@ VecReal NORG::write_impurtiy_occupation(Int iter_cnt, const Str& phy_name) const
 	using namespace std;
 	VecReal prtil(p.norg_sets, 0);				// particals.
 	MatReal dcoo, fluctuation_correlation_function(p.norbs, p.norbs, 0.);
-	if(!(p.if_norg_imp)) dcoo = print_DO(oneedm);
+	MatReal fulldcoo;
+	if(!(p.if_norg_imp)) {
+		dcoo = oneedm.find_imp_double_occupancy();
+		// fulldcoo = oneedm.find_full_double_occupancy();
+	} 
 	if (mm) {
+		// WRN(NAV2(dcoo, fulldcoo));
 		OFS ofs;
-		if(iter_cnt < 0) ofs.open(phy_name +"nmat.out");
-		if(iter_cnt > 0) ofs.open(iox + "zic" + prefill0(iter_cnt, 3) +".nmat.txt");
+		if (iter_cnt < 0) {
+			if (phy_name.empty()) ofs.open("nmat.txt");
+			else ofs.open(phy_name + "nmat.out");
+		}
+		if (iter_cnt > 0) ofs.open(iox + "zic" + prefill0(iter_cnt, 3) + ".nmat.txt");
 		if (p.if_norg_imp) {
 			VecReal counter(3);
 			MatReal dm_origional = see_MatReal(uormat).ct() * see_MatReal(oneedm.dm) * see_MatReal(uormat);

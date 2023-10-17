@@ -164,7 +164,7 @@ VEC<MatReal> DensityMat::find_one_electron_density_matrix(const MatReal& state, 
 	return D;
 }
 
-MatReal DensityMat::find_double_occupancy() const {
+MatReal DensityMat::find_imp_double_occupancy() const {
 	MatReal docc_splited(p.norbs, p.norbs, 0.);
 	for_Int(i, 0, ground_state.nrows()) {
 		VecReal state_eff = ground_state[i];
@@ -178,14 +178,45 @@ MatReal DensityMat::find_double_occupancy() const {
 				// four-fermion operator terms for C^+_i C^+_j C_k C_l; 
 				Int tensor_idx = abs(hop_op[2][pos]) - scsp.hopint.size() - 1;
 				Int row_n = Int(tensor_idx / scsp.hopint.size()) / p.norbit, col_n = Int(tensor_idx / scsp.hopint.size()) % p.norbit; // N_i:row_n;N_j:col_n;
-				// if (row_n == (tensor_idx % scsp.hopint.size()) / p.norbit && col_n == (tensor_idx % scsp.hopint.size()) % p.norbit) {
-				if (row_n%p.nO2sets[0] == 0 && col_n%p.nO2sets[0] == 0) {
-					row_n = row_n / p.nO2sets[0]; col_n = col_n / p.nO2sets[0];
-					if(row_n>p.norbs||col_n>p.norbs)WRN(NAV5(tensor_idx, row_n, col_n, (tensor_idx % scsp.hopint.size()) / p.norbit, (tensor_idx % scsp.hopint.size()) % p.norbit));
-					Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
-					Real amplitude = coefficient_comm * state_eff[hop_op[0][pos] + row_H.bgn()] * state_eff[hop_op[1][pos]];
-					// WRN(NAV3(row_n, col_n,amplitude));
-					docc_splited[row_n][col_n] += amplitude / p.degel ;
+				if (row_n == (tensor_idx % scsp.hopint.size()) / p.norbit && col_n == (tensor_idx % scsp.hopint.size()) % p.norbit) {
+					if (row_n%p.nO2sets[0] == 0 && col_n%p.nO2sets[0] == 0) {
+						row_n = row_n / p.nO2sets[0]; col_n = col_n / p.nO2sets[0];
+						if(row_n>p.norbs||col_n>p.norbs)WRN(NAV5(tensor_idx, row_n, col_n, (tensor_idx % scsp.hopint.size()) / p.norbit, (tensor_idx % scsp.hopint.size()) % p.norbit));
+						Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
+						Real amplitude = coefficient_comm * state_eff[hop_op[0][pos] + row_H.bgn()] * state_eff[hop_op[1][pos]];
+						// WRN(NAV3(row_n, col_n,amplitude));
+						docc_splited[row_n][col_n] += amplitude / p.degel ;
+					}
+				}
+			}
+		}
+	}
+	// MatReal DOcc(mm.Allreduce(docc_splited));
+	
+	MatReal DOcc(mm.Allreduce(docc_splited));
+	return DOcc;
+}
+
+MatReal DensityMat::find_full_double_occupancy() const {
+	MatReal docc_splited(p.norbit, p.norbit, 0.);
+	for_Int(i, 0, ground_state.nrows()) {
+		VecReal state_eff = ground_state[i];
+		state_eff.normalize();
+		VecPartition row_H(mm.np(), mm.id(), scsp.dim);
+
+		const Tab& hop_op(table);
+		for_Idx(pos, 0, hop_op[2].size()) {
+			if (abs(hop_op[2][pos]) > scsp.hopint.size()) {
+				// four-fermion operator terms for C^+_i C^+_j C_k C_l; 
+				Int tensor_idx = abs(hop_op[2][pos]) - scsp.hopint.size() - 1;
+				Int row_n = Int(tensor_idx / scsp.hopint.size()) / p.norbit, col_n = Int(tensor_idx / scsp.hopint.size()) % p.norbit; // N_i:row_n;N_j:col_n;
+				if (row_n == (tensor_idx % scsp.hopint.size()) / p.norbit && col_n == (tensor_idx % scsp.hopint.size()) % p.norbit) {
+						row_n = row_n / p.nO2sets[0]; col_n = col_n / p.nO2sets[0];
+						if(row_n>p.norbs||col_n>p.norbs)WRN(NAV5(tensor_idx, row_n, col_n, (tensor_idx % scsp.hopint.size()) / p.norbit, (tensor_idx % scsp.hopint.size()) % p.norbit));
+						Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
+						Real amplitude = coefficient_comm * state_eff[hop_op[0][pos] + row_H.bgn()] * state_eff[hop_op[1][pos]];
+						// WRN(NAV3(row_n, col_n,amplitude));
+						docc_splited[row_n][col_n] += amplitude / p.degel ;
 				}
 			}
 		}

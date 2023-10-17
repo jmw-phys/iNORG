@@ -70,8 +70,11 @@ public:
 		dm = correct_one_electron_density_matrix(state, corstate1_p, corstate1_m, corstate2_p, corstate2_m);
 	}
 
-	// Find the double occupancy, denoted as <n_i n_j>, according to the current status. 
-	MatReal find_double_occupancy() const;
+	// Find the double occupancy for imp, denoted as <n_i n_j>, according to the current status. 
+	MatReal find_imp_double_occupancy() const;
+
+	// Find the double occupancy for full-sit, denoted as <n_i n_j>, according to the current status. 
+	MatReal find_full_double_occupancy() const;
 
 
 

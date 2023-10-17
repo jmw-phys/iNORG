@@ -351,3 +351,8 @@ Version: v1.2.8 @ 2023.08.31
     realized: find the hd exstate
     next do : (same as prev)
     thinking: (same as prev)
+
+Version: v1.2.9 @ 2023.10.17
+    realized: find_full_double_occupancy still has PROBLEMS.
+    next do : testing for the Green function.
+    thinking: why would I always found the wrong in the first point?
