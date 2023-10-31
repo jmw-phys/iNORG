@@ -208,7 +208,9 @@ public:
 		// if (mm) PIO(NAV1(docc));
 		return docc;
 	}
-	// (Deprecated)
-	MatReal save_transform_uormat();
+
+	// For speed up reason, we need to save(read) the nature transform matrix(NTR).
+	MatReal save_NTR();
+	MatReal read_NTR();
 };
 

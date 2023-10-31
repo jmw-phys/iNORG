@@ -67,8 +67,8 @@ void Prmtr::set_values() {
     nO2sets = SUM(templet_control);                     // default value:
     iter_max_norg = 99;                                 // default
     // nooc_mode = STR("nooc");
-    nooc_mode = STR("cpnooc");
-    // nooc_mode = STR("cnooc");
+    // nooc_mode = STR("cpnooc");
+    nooc_mode = STR("cnooc");
     after_modify_prmtr();
     // control_divs[1] = {1,  2,  2,  1,  2,  2};
     // control_divs[2] = {1,  2,  2,  1,  2,  2};

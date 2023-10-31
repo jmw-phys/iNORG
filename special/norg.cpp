@@ -551,22 +551,21 @@ void NORG::show_the_nozero_number_of_tabel()
 	if(mm) PIO(NAV2(size_of_main_t, scsp.dim)+"   "+present());
 }
 
-MatReal NORG::save_transform_uormat(){
-	MatReal transform_uormat(dmat(p.norbit, 1.));
-	Int counter(0);
-	if (!uormat.empty())
-	{
-		for (const auto& uormat_ii : uormat)
-		{
-			counter++;
-			for_Int(i, 0, uormat_ii.nrows()) {
-				for_Int(j, 0, uormat_ii.ncols()) {
-					transform_uormat[i + counter][j + counter] = uormat_ii[i][j];
-				}
-			}
-			counter += uormat_ii.nrows();
-		}
+MatReal NORG::save_NTR() {
+	MatReal transform_uormat(see_MatReal(uormat));
+	if(mm) {
+		OFS ofs_a;
+		ofs_a.open("ru" + scsp.nppso_str() + ".bi");
+		for_Int(i, 0, uormat.size()) biwrite(ofs_a, CharP(uormat[i].p()), uormat[i].szof());
 	}
+	return transform_uormat;
+}
+
+MatReal NORG::read_NTR() {
+	IFS ifs_a("ru" + scsp.nppso_str() + ".bi"); 
+	if (ifs_a) for_Int(i, 0, uormat.size()) biread(ifs_a, CharP(uormat[i].p()), uormat[i].szof());
+
+	MatReal transform_uormat(see_MatReal(uormat));
 	return transform_uormat;
 }
 
