@@ -210,6 +210,10 @@ public:
 	}
 
 	// For speed up reason, we need to save(read) the nature transform matrix(NTR).
+	bool check_NTR() {
+		IFS checker("ru" + scsp.nppso_str() + ".bi");
+		return checker.good();
+	}
 	MatReal save_NTR();
 	MatReal read_NTR();
 };

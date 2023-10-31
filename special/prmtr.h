@@ -90,7 +90,7 @@ private:
 	}
 	void derive();
 
-	VEC<MatReal> uormat_initialize() {
+	VEC<MatReal> uormat_initialize() const {
 		VEC<MatReal> uormat_i;
 		for_Int(i, 0, nO2sets.size()) {
 			MatReal temp(dmat(nO2sets[i], 1.));

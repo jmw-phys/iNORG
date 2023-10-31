@@ -75,7 +75,6 @@ void Prmtr::set_values() {
     // control_divs[3] = {1,  3,  1,  1,  1,  3};
     // control_divs[4] = {1,  3,  1,  1,  1,  3};
     recalc_partical_number();
-    rotationU = uormat_initialize();
 }
 
 // we set first divison as impurity. The maximum number of cavity("-"); mean electron("+").
@@ -105,6 +104,7 @@ void Prmtr::after_modify_prmtr() const
         if (control_divs[0][0] != control_divs[0][ndiv / 2]) ERR("For only baths rotation mode, The restrain is not suit for" + NAV(control_divs[0]))
     }
     derive_ImGreen();
+    rotationU = uormat_initialize();
 }
 
 // we set first divison as impurity. The maximum number of cavity("-"); mean electron("+").

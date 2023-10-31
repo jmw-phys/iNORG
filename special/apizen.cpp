@@ -27,7 +27,8 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 	imp.update();																					if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 	ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_zen("hb_imp", "Fit");
 	auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
-	MatReal tmp_b = norg.read_NTR();
+	if (!norg.check_NTR()) norg.uormat = p.rotationU;
+	else MatReal tmp_b = norg.read_NTR();
 	norg.up_date_h0_to_solve(imp.impH, 1);															norg.write_impurtiy_occupation();
 	MatReal tmp_e = norg.save_NTR();
 	// MatReal local_multiplets_state = norg.oneedm.local_multiplets_state(norg.oneedm.ground_state);	if (mm)WRN(NAV(local_multiplets_state));
@@ -269,7 +270,6 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 			controler[i+1] = p.if_norg_imp ?  VecInt{freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{1, freze_o, nooc_o, 1, nooc_e, freze_e };
 		}
 		// if(mm) WRN(NAV(controler));
-		// p.if_norg_imp = true; p.after_modify_prmtr(); 
 		p.according_controler(controler, ordeg);
 		// {// WRN
 		// 	MatInt m_controler(MAX(or_deg_idx) + 1, p.ndiv);
@@ -467,7 +467,6 @@ void APIzen::auto_nooc(Str mode, const Impurity& imp) {
 			controler[i+1] = p.if_norg_imp ?  VecInt{freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{1, freze_o, nooc_o, 1, nooc_e, freze_e };
 		}
 		// if(mm) WRN(NAV(controler));
-		// p.if_norg_imp = true; p.after_modify_prmtr(); 
 		p.according_controler(controler, ordeg);
 	}
 }

@@ -89,8 +89,9 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_
                 NORG a(mm, tp);
                 // IFS ifs_a("ru" + nppso_str(a.scsp.nppso) + ".bi");
                 // if (ifs_a) for_Int(i, 0, a.uormat.size()) biread(ifs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());
-
                 std::cout.rdbuf(old);
+                a.read_NTR();
+                if(IFS("ru" + nppso_str(a.scsp.nppso) + ".bi")) if(mm) WRN("find it in the private space");
                 a.up_date_h0_to_solve(impH_i, sub_energy.truncate(0, counter)); sub_energy[counter] = a.groune_lst;
                 sub_energy_data[nppso.string()] = a.groune_lst;
                 if(mm) PIO("The subspace: "+nppso_str(nppso)+", and energy: "+STR(sub_energy[counter]));
