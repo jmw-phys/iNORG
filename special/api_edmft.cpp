@@ -2,50 +2,48 @@
 coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 */
 
-#include "apizen.h"
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <sstream>
 
-APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
+//for the stand C++ package ------------------------------------------------------------------------------------------------------------------------
+#include "api_edmft.h"
+
+
+APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 	mm(mm_i), p(prmtr_i),num_omg(prmtr_i.num_omg),
 	num_nondegenerate(-1), dmft_cnt(0)
 {
 	update(file);
 	Bath bth(mm, p);
 	Impurity imp(mm, p, bth, or_deg_idx);
-	// NORG norg(mm, prmtr_i);		// for test, not search the whole particle space.
-	// OFS ofs("norg.lock");
-	
-
-	// while(true) {
-	// 	if(IFS("norg.stop"))  break;
-	// 	if(if_lock("norg")) {
-	// if(mode == "table_mode") while(true) if(if_lock("norg")) {
 
 	dmft_cnt++; update(file);
 	ImGreen hb(nband, p);	
-	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)	hb.g[j][i][i] = -imfrq_hybrid_function[i][j];	if (mm) hb.write_zen("hb_zen", "Read");
+	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)	hb.g[j][i][i] = -imfrq_hybrid_function[i][j];	if (mm) hb.write_edmft("hb_read.txt");
 	bth.read_ose_hop();	bth.bath_fit(hb, or_deg_idx);												if (mm) bth.write_ose_hop();
 	imp.update();																					if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
-	ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_zen("hb_imp", "Fit");
+	ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_edmft("hb_fit.txt");
+
 	auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
 	if (!norg.check_NTR()) norg.uormat = p.rotationU;
 	else MatReal tmp_b = norg.read_NTR();
 	norg.up_date_h0_to_solve(imp.impH, 1);															norg.write_impurtiy_occupation();
 	MatReal tmp_e = norg.save_NTR();
 	// MatReal local_multiplets_state = norg.oneedm.local_multiplets_state(norg.oneedm.ground_state);	if (mm)WRN(NAV(local_multiplets_state));
-	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_zen("g0imp");
-	ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp, or_deg_idx);							if (mm) gfimp.write_zen("gfimp");
-	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();							if (mm) seimp.write_zen("seimp");
+	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_edmft("g0imp.txt");
+	ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp, or_deg_idx);							if (mm) gfimp.write_edmft("Gf.out");
+	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();							if (mm) seimp.write_edmft("Sig.out");
 
-	// 	if(mm)	std::remove("norg.lock");
-	// 	{ mm.barrier(); SLEEP(1); }
-	// 	}
-	// }
+//hold for checking-----------------------------------------------------------------------------------------------------------------------------------
 /*
 	// if(mode == "realf_mode"){
-		ReGreen g0imp_re(p.nband, p);	imp.find_g0(g0imp_re);													if (mm)	g0imp_re.write_zen("Re_g0imp");
-		ReGreen gfimp_re(p.nband, p);	norg.get_gimp_eigpairs(gfimp_re, or_deg_idx);							if (mm) gfimp_re.write_zen("Re_gfimp");
-		ReGreen seimp_re(p.nband, p);	seimp_re = g0imp_re.inverse() - gfimp_re.inverse();						if (mm) seimp_re.write_zen("Re_seimp");
-		ReGreen hd_exsp(p.nband, p);	norg.get_gimp_hdQPs(hd_exsp);											if (mm)	 hd_exsp.write_zen("Re-hdex");
+		ReGreen g0imp_re(p.nband, p);	imp.find_g0(g0imp_re);													if (mm)	g0imp_re.write_edmft("Re_g0imp");
+		ReGreen gfimp_re(p.nband, p);	norg.get_gimp_eigpairs(gfimp_re, or_deg_idx);							if (mm) gfimp_re.write_edmft("Re_gfimp");
+		ReGreen seimp_re(p.nband, p);	seimp_re = g0imp_re.inverse() - gfimp_re.inverse();						if (mm) seimp_re.write_edmft("Re_seimp");
+		ReGreen hd_exsp(p.nband, p);	norg.get_gimp_hdQPs(hd_exsp);											if (mm)	 hd_exsp.write_edmft("Re-hdex");
 	// }
 */
 
@@ -65,18 +63,18 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 			}
 		}
 		for_Int(i, 0, or_deg.size()) for_Int(n, 0, g_asnci.nomgs) g_asnci[n][i][i] = g_asnci[n][idx[or_deg[i] - 1]][idx[or_deg[i] - 1]];
-		if (mm) g_asnci.write_zen("g_asnci");
+		if (mm) g_asnci.write_edmft("g_asnci");
 	}
 */
 
 	// if(mm) gfimp.write_occupation_info();
 	// if(mm) WRN(NAV(gfimp.particle_number().diagonal()));
 	// ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();	
-	// if (mm) seimp.write_zen("before_fix_seimp");						seimp = fix_se(seimp);
-	// if (mm) seimp.write_zen("seimp");
+	// if (mm) seimp.write_edmft("before_fix_seimp");						seimp = fix_se(seimp);
+	// if (mm) seimp.write_edmft("seimp");
 }
 
-void APIzen::test_for_fitting(const Bath& bth, const ImGreen& hby_i, Int num)
+void APIedmft::test_for_fitting(const Bath& bth, const ImGreen& hby_i, Int num)
 { // test for fitting(fit_hb)
 	ImGreen fit_hb(1, p);
 	const VecCmplx E = cmplx(bth.ose);
@@ -93,157 +91,71 @@ void APIzen::test_for_fitting(const Bath& bth, const ImGreen& hby_i, Int num)
 	fit_hb.write("hb_fitting", num + 1);
 }
 
-void APIzen::read_ZEN(const Str& file)
+// For this function only suit for the t2g mode.
+void APIedmft::read_eDMFT(const Str& file)
 {
-	{// norg.in
-		Str norgdata(file+".norg.in");
-		IFS ifs(norgdata);
-		if (!ifs) {
-			ERR(STR("file opening failed with ") + NAV(norgdata))
-		}
-		else {
-			Str strr;
-			while (1){
-				ifs >> strr;
-				if(strr == "nband") { ifs >> strr; ifs >> nband; }
-				if(strr == "norbs") { ifs >> strr; ifs >> norbs; }
-				if(strr == "Uc") { ifs >> strr; ifs >> Uc; }
-				if(strr == "Jz") { ifs >> strr; ifs >> Jz; }
-				if(strr == "mune") { ifs >> strr; ifs >> mu; }
-				if(strr == "beta") { ifs >> strr; ifs >> p.beta; }
-				if(strr == "nmesh") { ifs >> strr; ifs >> p.nmesh; }
-				if (strr == "restrain") {
-					if(p.if_norg_imp){
-						ifs >> strr;
-						Int t_restrain(0);restrain.reset(p.ndiv);
-						for_Int(i, 0, restrain.size()){
-							ifs >> t_restrain;
-							restrain[i] = t_restrain;
-						}
-					} else 
-					{
-						Int l2, l1, r1, r2;
-						ifs >> strr; ifs >> strr;
-						ifs >> l2;	ifs >> l1; ifs >> strr; ifs >> r1; ifs >> r2;
-						restrain = { 0, l2, l1, 0, r1, r2 };
-					}
-					// if (mm) PIO("Finish the restrain input:" + NAV(restrain.mat(1,restrain.size())));
-				}
-				if (strr == "distribute") {
-					Int m0, l2, l1, m1, r1, r2;
-					ifs >> strr; ifs >> m0;
-					ifs >> l2;	ifs >> l1; ifs >> m1; ifs >> r1; ifs >> r2;
-					distribute = { m0, l2, l1, m1, r1, r2 };
-					// if (mm) PIO("Finish the division distribute input:" + NAV(distribute.mat(1,distribute.size())));
-				}
+	{
+		std::vector<double> Ed;
+		std::vector<int> Deg;
+		double J;
+		std::string CoulombF;
+		double beta;
+		double U;
+		std::vector<int> restrain_t;
+		std::vector<int> distribute_t;
+		read_norg_setting("PARAMS.norg", Ed, Deg, J, CoulombF, beta, U, restrain_t, distribute_t);
+		//--------------------------------------------------
+		// ! Here only suit for the t2g orbital.
+		nband = 3;	norbs = 6;	mu = 0;	
+		if (CoulombF != STR("'Ising'")) WRN("Now we only support for the Ising type interaction." + NAV(CoulombF))
+		Uc = U + (8.0/7.0) * J;	Jz= (632.0/819.0) * J;
+		p.beta = beta;
 
-				if (strr == "mode") { ifs >> strr; ifs >> mode;
-					if (mm) {
-						if (mode == "norm_mode") {		PIO("Dear customer, you are now in the normal mode. PLEASE modify the console file manually.");}
-						else if (mode == "test_mode") {	PIO("Dear customer, you are now in the test mode. PLEASE modify the console file manually.");}
-						else if (mode == "fast_mode") {	ERR("Sorry, the fast mode will be coming soon...");}
-						else {mode = "norm_mode";		WRN("Dear customer, you are now in the normal mode. PLEASE modify the console file manually.");}
-					}
-				}
+		p.eimp.reset(concat(VecReal(Ed), VecReal(Ed)).mat(2, Ed.size()).tr().vec());
+		or_deg_idx.reset(concat(VecInt(Deg), VecInt(Deg)).mat(2, Deg.size()).tr().vec());
+		num_nondegenerate = MAX(or_deg_idx);
+		restrain = VecInt(restrain_t);
+		distribute = VecInt(distribute_t);
+		// if (mm) WRN(NAV2(VecReal(Ed), VecInt(Deg)));
+		//--------------------------------------------------
 
-				if (mode == "test_mode" && strr == "bathose") {
-					bathose.reset(SUM(distribute) - 1);
-					Real input;
-					ifs >> strr;
-					for_Int(i, 0, bathose.size()) {
-						ifs >> input;
-						bathose[i] = input;
-					}
-				}
-				if (mode == "test_mode" && strr == "bathhop") {
-					bathhop.reset(SUM(distribute) - 1);
-					Real input;
-					ifs >> strr;
-					for_Int(i, 0, bathhop.size()) {
-						ifs >> input;
-						bathhop[i] = input;
-					}
-					if (mm) WRN("Finish the test_mode input: nimp = 2" + NAV4(Uc, Jz, bathose, bathhop));
-				}
-				if (!ifs) break;
-			}
-		}
-		ifs.close();
 	}
 
-	imfrq_hybrid_function.reset(norbs,num_omg,0.);
-	solver_eimp_data.reset(norbs,0.);
-	or_deg_idx.reset(nband, 0);
+	// if (mm) WRN(NAV5(restrain, restrain, Uc, Jz, p.beta))
 
-	{// hyb.in
-		Str hybdata(file + ".hyb.in");
+	// if (mm) WRN(NAV2(p.eimp, or_deg_idx))
+
+	imfrq_hybrid_function.reset(num_omg,num_nondegenerate,0.);
+
+	{// Delta.inp: to get the hyb function.
+		Str hybdata("Delta.inp");
 		IFS ifs(hybdata);
 		if (!ifs) {
 			ERR(STR("file opening failed with ") + NAV(hybdata))
 		}
 		else {
-			Int i(0);
-			bool swicher(true);
-			while (true) {
-				VecReal omg(num_omg, 0.), re(num_omg, 0.), im(num_omg, 0.);
-				Int drop_Int(0);
-				Real drop_omg(0.), drop_re(0.), drop_im(0.), drop_err1(0.), drop_err2(0.);
-				if (i >= norbs) break;
-				for_Int(j, 0, num_omg) {
-					if (swicher) {
-						ifs >> drop_Int;
-					}
-					ifs >> omg[j]; ifs >> re[j]; ifs >> im[j];
-					ifs >> drop_err1; ifs >> drop_err2;
-					//if(i==1)DBG(NAV2(re[j], im[j]));
-					if (!ifs) ERR(STR("read_ZEN-in error with ") + NAV(hybdata));
-					swicher = true;
+			for_Int(i, 0, p.nmesh) {
+				Real omg(0.);
+				ifs >> omg;
+				for_Int(m, 0, num_nondegenerate) {
+				Real re(0.), im(0.);
+					ifs >> re;
+					ifs >> im;
+					imfrq_hybrid_function[i][m] = cmplx(re, im);
+					// if (mm) WRN(NAV3(omg, real(imfrq_hybrid_function[i][m]), imag(imfrq_hybrid_function[i][m])))	
 				}
-				imfrq_hybrid_function[i] = cmplx(re, im);
-				while (true) {
-					ifs >> drop_Int;
-					if (drop_Int - 1 == i + 1) {
-						swicher = false;
-						break;
-					}
-					ifs >> drop_omg; ifs >> drop_re; ifs >> drop_im; ifs >> drop_err1; ifs >> drop_err2;
-					if (!ifs) break;
-				}
-				++i;
+			}
+			if (!ifs) {
+				ERR(STR("read-in error with ") + NAV(file))
 			}
 		}
-		ifs.close();
-	}
-
-	{// eimp.in
-		Str eimpdata(file + ".eimp.in");
-		p.eimp.reset(norbs);
-		IFS ifs(eimpdata);
-		if (!ifs) {
-			ERR(STR("file opening failed with ") + NAV(eimpdata))
-		}
-		else {
-			Int drop_Int(0), c(0);
-			VecReal temp_emps(nband, 0.);
-			for_Int(i, 0, nband) {
-				ifs >> drop_Int;
-				ifs >> temp_emps[i]; ifs >> or_deg_idx[i];
-				if (!ifs) ERR(STR("read_ZEN-in error with ") + NAV(eimpdata));
-			}
-			// for_Int(j, 0, nband) for_Int(i, 0, 2) p.eimp[c++] = temp_emps[j+nband*i];
-			or_deg_idx.reset(concat(or_deg_idx,or_deg_idx).mat(2,or_deg_idx.size()).tr().vec());
-			p.eimp.reset(concat(temp_emps,temp_emps).mat(2,temp_emps.size()).tr().vec());
-			// if (test_mode) num_nondegenerate = 1;
-			num_nondegenerate = MAX(or_deg_idx);
-		}
-		if (num_nondegenerate <= 0)ERR(STR("read_ZEN-in error with ") + NAV2(eimpdata, num_nondegenerate));
 		ifs.close();
 	}
 }
 
 
 
-NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
+NORG APIedmft::choose_cauculation_style(Str mode, Impurity &imp){
 	if(mode == "ful_pcl_sch"){
 		Occler opcler(mm, p);
 		VEC<MatReal> uormat;
@@ -343,7 +255,7 @@ NORG APIzen::choose_cauculation_style(Str mode, Impurity &imp){
 
 
 /*
-ImGreen APIzen::fix_se(const ImGreen& se) const{
+ImGreen APIedmft::fix_se(const ImGreen& se) const{
   using namespace std;
     ImGreen se_fix(se);
     MatReal mat_nfit(se.norbs, se.norbs);
@@ -410,10 +322,10 @@ ImGreen APIzen::fix_se(const ImGreen& se) const{
 //---------------------------------------------- private ----------------------------------------------
 
 // to up date the whole date for the impurity system
-void APIzen::update(const Str& file) {
-	{// modify the parameters from ZEN.in
-		read_ZEN(file);	p.U = Uc; p.mu = mu; p.jz = Jz; p.nband = nband; p.norg_sets = p.norbs = norbs;
-		p.templet_restrain = restrain; p.templet_control = distribute; p.project = NAV(nband) + "KVSb";
+void APIedmft::update(const Str& file) {
+	{// modify the parameters from edmft.in
+		read_eDMFT(file);	p.U = Uc; p.mu = mu; p.jz = Jz; p.nband = nband; p.norg_sets = p.norbs = norbs;
+		p.templet_restrain = restrain; p.templet_control = distribute; p.project = NAV(nband) + "SrVO3";
 		p.after_modify_prmtr(); p.recalc_partical_number();
 		p.Uprm = p.U - 2 * p.jz;
 		p.degel = 0;
@@ -423,7 +335,7 @@ void APIzen::update(const Str& file) {
 	// if (mm) std::cout << std::endl;						// blank line
 }
 
-bool APIzen::if_lock(const Str file) const {
+bool APIedmft::if_lock(const Str file) const {
 	Str lock_file = file + ".lock";
 
 	IFS ifs(lock_file);
@@ -437,7 +349,7 @@ bool APIzen::if_lock(const Str file) const {
 }
 
 
-void APIzen::auto_nooc(Str mode, const Impurity& imp) {
+void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 	if(mode == "ful_pcl_sch"){
 		Occler opcler(mm, p);
 		VEC<MatReal> uormat;
@@ -470,3 +382,113 @@ void APIzen::auto_nooc(Str mode, const Impurity& imp) {
 		p.according_controler(controler, ordeg);
 	}
 }
+
+
+//change for the stand C++----------------------------------------------------------------------------------------------------------------------------
+
+void APIedmft::read_norg_setting(
+    const std::string& filename,
+    std::vector<double>& Ed,
+    std::vector<int>& Deg,
+    double& J,
+    std::string& CoulombF,
+    double& beta,
+    double& U,
+    std::vector<int>& restrain,
+    std::vector<int>& distribute
+) {
+    std::ifstream file(filename);
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        std::string key;
+        iss >> key;
+        if (key == "Ed") {
+            char ch;
+            while (iss >> ch && ch != ']') {
+                if (ch != ',' && ch != '[') {
+                    double value;
+                    iss.unget();
+                    iss >> value;
+                    Ed.push_back(value);
+                }
+            }
+        } else if (key == "deg") {
+            char ch;
+            while (iss >> ch && ch != ']') {
+                if (ch != ',' && ch != '[') {
+                    int value;
+                    iss.unget();
+                    iss >> value;
+                    Deg.push_back(value);
+                }
+            }
+        } else if (key == "J") {
+            iss >> J;
+        } else if (key == "CoulombF") {
+            iss >> CoulombF;
+        } else if (key == "beta") {
+            iss >> beta;
+        } else if (key == "U") {
+            iss >> U;
+		}
+		else if (key == "restrain") {
+			char ch;
+			while (iss >> ch && ch != ']') {
+				if (ch == '0') {
+					restrain.push_back(0);
+				}
+				else if (ch == '-' || isdigit(ch)) {
+					iss.unget();
+					int value;
+					iss >> value;
+					restrain.push_back(value);
+				}
+			}
+		}
+		else if (key == "distribute") {
+			char ch;
+			while (iss >> ch && ch != ']') {
+				if (ch == '0') {
+					distribute.push_back(0);
+				}
+				else if (ch == '-' || isdigit(ch)) {
+					iss.unget();
+					int value;
+					iss >> value;
+					distribute.push_back(value);
+				}
+			}
+		}
+	}
+}
+
+/*
+int main() {
+    std::vector<double> Ed;
+    std::vector<int> Deg;
+    double J;
+    std::string CoulombF;
+    double beta;
+    double U;
+    std::vector<int> restrain;
+    std::vector<int> distribute;
+
+    read_data("data.txt", Ed, Deg, J, CoulombF, beta, U, restrain, distribute);
+
+
+	// Print the values
+    std::cout << "Ed: ";
+    for (double e : Ed) std::cout << e << " ";
+    std::cout << "\nDeg: ";
+    for (int d : Deg) std::cout << d << " ";
+    std::cout << "\nJ: " << J << "\nCoulombF: " << CoulombF << "\nbeta: " << beta << "\nU: " << U << std::endl;
+    std::cout << "restrain: ";
+    for (int r : restrain) std::cout << r << " ";
+    std::cout << "\ndistribute: ";
+    for (int d : distribute) std::cout << d << " ";
+    std::cout << std::endl;
+
+    return 0;
+}
+*/

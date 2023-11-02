@@ -361,3 +361,8 @@ Version: v1.2.10 @ 2023.10.31
     realized: read and save the nature transform matrix.
     next do : try to connect with the eDMFT soft.
     thinking: how to add the matrix calculation.
+
+Version: v1.2.11 @ 2023.11.02
+    realized: finish the API with the eDMFT. (!!! only for the t2g orbital system !!!)
+    next do : try to modify the eDMFT's python code.
+    thinking: (same as prev)
