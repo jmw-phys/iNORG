@@ -181,16 +181,20 @@ void Green::write(const Str& green_name, const Str& rowname, Int iter_cnt) const
 	}
 }
 
-void Green::write_edmft(const Str& green_name) const {
+void Green::write_edmft(const Str& green_name, const VecInt& or_deg) const {
 	OFS ofs;
 	ofs.open(green_name);
 	ofs << iofmt("sci");
 	for_Int(i, 0, nomgs) {
+		Int deg_idx(0);
 		// real part of green
 		ofs << setw(w_Real) << omg(i);
 		for_Int(m, 0, norbs) {
-			ofs << "  " << setw(w_Real) << real(g[i][m][m]);
-			ofs << "  " << setw(w_Real) << imag(g[i][m][m]);
+			if (deg_idx < or_deg[m * 2]) {
+				ofs << "  " << setw(w_Real) << real(g[i][m][m]);
+				ofs << "  " << setw(w_Real) << imag(g[i][m][m]);
+			}
+			deg_idx++;
 		}
 		ofs << endl;
 	}
