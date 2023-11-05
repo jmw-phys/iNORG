@@ -34,7 +34,9 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 	// MatReal local_multiplets_state = norg.oneedm.local_multiplets_state(norg.oneedm.ground_state);	if (mm)WRN(NAV(local_multiplets_state));
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_zen("g0imp");
 	ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp, or_deg_idx);							if (mm) gfimp.write_zen("gfimp");
-	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();							if (mm) seimp.write_zen("seimp");
+	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();	seimp_fixer(seimp);		if (mm) seimp.write_zen("seimp");
+
+	
 
 	// 	if(mm)	std::remove("norg.lock");
 	// 	{ mm.barrier(); SLEEP(1); }
@@ -96,79 +98,16 @@ void APIzen::test_for_fitting(const Bath& bth, const ImGreen& hby_i, Int num)
 void APIzen::read_ZEN(const Str& file)
 {
 	{// norg.in
-		Str norgdata(file+".norg.in");
-		IFS ifs(norgdata);
-		if (!ifs) {
-			ERR(STR("file opening failed with ") + NAV(norgdata))
-		}
-		else {
-			Str strr;
-			while (1){
-				ifs >> strr;
-				if(strr == "nband") { ifs >> strr; ifs >> nband; }
-				if(strr == "norbs") { ifs >> strr; ifs >> norbs; }
-				if(strr == "Uc") { ifs >> strr; ifs >> Uc; }
-				if(strr == "Jz") { ifs >> strr; ifs >> Jz; }
-				if(strr == "mune") { ifs >> strr; ifs >> mu; }
-				if(strr == "beta") { ifs >> strr; ifs >> p.beta; }
-				if(strr == "nmesh") { ifs >> strr; ifs >> p.nmesh; }
-				if (strr == "restrain") {
-					if(p.if_norg_imp){
-						ifs >> strr;
-						Int t_restrain(0);restrain.reset(p.ndiv);
-						for_Int(i, 0, restrain.size()){
-							ifs >> t_restrain;
-							restrain[i] = t_restrain;
-						}
-					} else 
-					{
-						Int l2, l1, r1, r2;
-						ifs >> strr; ifs >> strr;
-						ifs >> l2;	ifs >> l1; ifs >> strr; ifs >> r1; ifs >> r2;
-						restrain = { 0, l2, l1, 0, r1, r2 };
-					}
-					// if (mm) PIO("Finish the restrain input:" + NAV(restrain.mat(1,restrain.size())));
-				}
-				if (strr == "distribute") {
-					Int m0, l2, l1, m1, r1, r2;
-					ifs >> strr; ifs >> m0;
-					ifs >> l2;	ifs >> l1; ifs >> m1; ifs >> r1; ifs >> r2;
-					distribute = { m0, l2, l1, m1, r1, r2 };
-					// if (mm) PIO("Finish the division distribute input:" + NAV(distribute.mat(1,distribute.size())));
-				}
+		// std::vector<double> Ed;
+		// std::vector<int> Deg;
 
-				if (strr == "mode") { ifs >> strr; ifs >> mode;
-					if (mm) {
-						if (mode == "norm_mode") {		PIO("Dear customer, you are now in the normal mode. PLEASE modify the console file manually.");}
-						else if (mode == "test_mode") {	PIO("Dear customer, you are now in the test mode. PLEASE modify the console file manually.");}
-						else if (mode == "fast_mode") {	ERR("Sorry, the fast mode will be coming soon...");}
-						else {mode = "norm_mode";		WRN("Dear customer, you are now in the normal mode. PLEASE modify the console file manually.");}
-					}
-				}
-
-				if (mode == "test_mode" && strr == "bathose") {
-					bathose.reset(SUM(distribute) - 1);
-					Real input;
-					ifs >> strr;
-					for_Int(i, 0, bathose.size()) {
-						ifs >> input;
-						bathose[i] = input;
-					}
-				}
-				if (mode == "test_mode" && strr == "bathhop") {
-					bathhop.reset(SUM(distribute) - 1);
-					Real input;
-					ifs >> strr;
-					for_Int(i, 0, bathhop.size()) {
-						ifs >> input;
-						bathhop[i] = input;
-					}
-					if (mm) WRN("Finish the test_mode input: nimp = 2" + NAV4(Uc, Jz, bathose, bathhop));
-				}
-				if (!ifs) break;
-			}
-		}
-		ifs.close();
+		std::string CoulombF;
+		double U;
+		double J;
+		std::vector<int> restrain_t;
+		std::vector<int> distribute_t;
+		read_norg_setting("solver.norg.in", CoulombF, U, J,  restrain_t, distribute_t);
+		Uc = U;	Jz = J; restrain = VecInt(restrain_t); distribute = VecInt(distribute_t);
 	}
 
 	imfrq_hybrid_function.reset(norbs,num_omg,0.);
@@ -239,6 +178,11 @@ void APIzen::read_ZEN(const Str& file)
 		if (num_nondegenerate <= 0)ERR(STR("read_ZEN-in error with ") + NAV2(eimpdata, num_nondegenerate));
 		ifs.close();
 	}
+
+
+	if (mm) WRN(NAV5(restrain, distribute, Uc, Jz, p.beta))
+
+	if (mm) WRN(NAV2(p.eimp, or_deg_idx))
 }
 
 
@@ -468,5 +412,76 @@ void APIzen::auto_nooc(Str mode, const Impurity& imp) {
 		}
 		// if(mm) WRN(NAV(controler));
 		p.according_controler(controler, ordeg);
+	}
+}
+
+
+//change for the stand C++----------------------------------------------------------------------------------------------------------------------------
+
+void APIzen::read_norg_setting(
+	const std::string& filename,
+	std::string& CoulombF,
+	double& U,
+	double& J,
+	std::vector<int>& restrain,
+	std::vector<int>& distribute
+) {
+	std::ifstream file(filename);
+	std::string line;
+	while (std::getline(file, line)) {
+		std::istringstream iss(line);
+		std::string key, eq;
+		iss >> key >> eq;
+		// if (eq != "=") {
+		// 	ERR("Some problem here.")
+		//     continue; // 可以选择抛出一个错误或者以其他方式处理它
+		// }
+		if (key == "NOOC") {
+			iss >> p.nooc_mode;
+		}
+		else if (key == "CoulombF") {
+			iss >> CoulombF;
+		}
+		else if (key == "nband") {
+			iss >> nband;
+		}
+		else if (key == "norbs") {
+			iss >> norbs;
+		}
+		else if (key == "mune") {
+			iss >> mu;
+		}
+		else if (key == "beta") {
+			iss >> p.beta;
+		}
+		else if (key == "Uc") { // 修改为配置文件中使用的键
+			iss >> U;
+		}
+		else if (key == "Jz") { // 修改为配置文件中使用的键
+			iss >> J;
+		}
+		else if (key == "restrain") {
+            // 解析restrain的特殊格式
+            std::string value;
+            getline(iss, value); // 读取整行作为字符串
+            std::istringstream value_stream(value);
+            char ch;
+            while (value_stream >> ch) {
+                if (ch == '*') {
+                    restrain.push_back(0); // 使用特殊值代表 *
+                } else if (ch == '-' || isdigit(ch)) {
+                    value_stream.unget(); // 将字符放回流中
+                    int num;
+                    value_stream >> num;
+                    restrain.push_back(num);
+                }
+            }
+        } else if (key == "distribute") {
+            // 解析distribute的格式
+            int num;
+            while (iss >> num) {
+                distribute.push_back(num);
+            }
+        }
 	}
 }

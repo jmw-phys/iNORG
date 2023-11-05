@@ -121,9 +121,9 @@ void APIedmft::read_eDMFT(const Str& file)
 
 	}
 
-	// if (mm) WRN(NAV5(restrain, restrain, Uc, Jz, p.beta))
+	if (mm) WRN(NAV5(restrain, distribute, Uc, Jz, p.beta))
 
-	// if (mm) WRN(NAV2(p.eimp, or_deg_idx))
+	if (mm) WRN(NAV2(p.eimp, or_deg_idx))
 
 	imfrq_hybrid_function.reset(num_omg,num_nondegenerate,0.);
 
@@ -413,7 +413,7 @@ void APIedmft::read_norg_setting(
                     Ed.push_back(value);
                 }
             }
-        } else if (key == "deg") {
+        } else if (key == "Deg") {
             char ch;
             while (iss >> ch && ch != ']') {
                 if (ch != ',' && ch != '[') {
@@ -427,6 +427,8 @@ void APIedmft::read_norg_setting(
             iss >> J;
         } else if (key == "CoulombF") {
             iss >> CoulombF;
+        } else if (key == "NOOC") {
+            iss >> p.nooc_mode;
         } else if (key == "beta") {
             iss >> beta;
         } else if (key == "U") {

@@ -366,3 +366,8 @@ Version: v1.2.11 @ 2023.11.02
     realized: finish the API with the eDMFT. (!!! only for the t2g orbital system !!!)
     next do : try to modify the eDMFT's python code.
     thinking: (same as prev)
+
+Version: v1.2.12 @ 2023.11.05
+    realized: update for APIzen, add the function of seimp_fixer().
+    next do : testing.
+    thinking: (same as prev)
