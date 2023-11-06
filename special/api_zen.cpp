@@ -23,7 +23,7 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 	dmft_cnt++; update(file);
 	ImGreen hb(nband, p);	
 	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)	hb.g[j][i][i] = -imfrq_hybrid_function[i][j];	if (mm) hb.write_zen("hb_zen", "Read");
-	bth.read_ose_hop();	bth.bath_fit(hb, or_deg_idx);												if (mm) bth.write_ose_hop();
+	bth.read_ose_hop();	//bth.bath_fit(hb, or_deg_idx);												if (mm) bth.write_ose_hop();
 	imp.update();																					if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 	ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_zen("hb_imp", "Fit");
 	auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
@@ -414,6 +414,20 @@ void APIzen::auto_nooc(Str mode, const Impurity& imp) {
 		p.according_controler(controler, ordeg);
 	}
 }
+
+	void APIzen::seimp_fixer(ImGreen& seimp_in) {
+		for_Int(i, 0, seimp_in.nomgs) {
+			for_Int(m, 0, seimp_in.norbs) {
+				if (mm) WRN(NAV3(i, real(seimp_in.g[i][m][m]), imag(seimp_in.g[i][m][m])))	
+				if (imag(seimp_in.g[i][m][m]) > 0) {
+					for_Int(n, 0, seimp_in.norbs) {
+						seimp_in.g[i][n][m] -= I * imag(seimp_in.g[i][n][m]);
+						seimp_in.g[i][m][n] -= I * imag(seimp_in.g[i][m][n]);
+					}
+				}
+			}
+		}
+	}
 
 
 //change for the stand C++----------------------------------------------------------------------------------------------------------------------------

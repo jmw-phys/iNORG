@@ -68,18 +68,7 @@ private:
 /*
 	ImGreen fix_se(const ImGreen& se) const;
 */
-	void seimp_fixer(ImGreen& seimp_in) {
-		for_Int(i, 0, seimp_in.nomgs) {
-			for_Int(m, 0, norbs) {
-				if (imag(seimp_in.g[i][m][m]) > 0) {
-					for_Int(n, 0, norbs) {
-						seimp_in.g[i][n][m] -= imag(seimp_in.g[i][n][m]) * I;
-						seimp_in.g[i][m][n] -= imag(seimp_in.g[i][m][n]) * I;
-					}
-				}
-			}
-		}
-	}
+	void seimp_fixer(ImGreen& seimp_in);
 
 	void read_norg_setting( const std::string& filename, std::string& CoulombF, double& U, double& J, std::vector<int>& restrain, std::vector<int>& distribute );
 
