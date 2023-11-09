@@ -23,7 +23,7 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 	dmft_cnt++; update(file);
 	ImGreen hb(nband, p);	
 	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)	hb.g[j][i][i] = -imfrq_hybrid_function[i][j];	if (mm) hb.write_zen("hb_zen", "Read");
-	bth.read_ose_hop();	//bth.bath_fit(hb, or_deg_idx);												if (mm) bth.write_ose_hop();
+	bth.read_ose_hop();	bth.bath_fit(hb, or_deg_idx);												if (mm) bth.write_ose_hop();
 	imp.update();																					if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 	ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_zen("hb_imp", "Fit");
 	auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
@@ -418,7 +418,7 @@ void APIzen::auto_nooc(Str mode, const Impurity& imp) {
 	void APIzen::seimp_fixer(ImGreen& seimp_in) {
 		for_Int(i, 0, seimp_in.nomgs) {
 			for_Int(m, 0, seimp_in.norbs) {
-				if (mm) WRN(NAV3(i, real(seimp_in.g[i][m][m]), imag(seimp_in.g[i][m][m])))	
+				// if (mm) WRN(NAV3(i, real(seimp_in.g[i][m][m]), imag(seimp_in.g[i][m][m])))	
 				if (imag(seimp_in.g[i][m][m]) > 0) {
 					for_Int(n, 0, seimp_in.norbs) {
 						seimp_in.g[i][n][m] -= I * imag(seimp_in.g[i][n][m]);
@@ -448,7 +448,7 @@ void APIzen::read_norg_setting(
 		iss >> key >> eq;
 		// if (eq != "=") {
 		// 	ERR("Some problem here.")
-		//     continue; // 可以选择抛出一个错误或者以其他方式处理它
+		//     continue;
 		// }
 		if (key == "NOOC") {
 			iss >> p.nooc_mode;
@@ -468,30 +468,28 @@ void APIzen::read_norg_setting(
 		else if (key == "beta") {
 			iss >> p.beta;
 		}
-		else if (key == "Uc") { // 修改为配置文件中使用的键
+		else if (key == "Uc") { 
 			iss >> U;
 		}
-		else if (key == "Jz") { // 修改为配置文件中使用的键
+		else if (key == "Jz") { 
 			iss >> J;
 		}
 		else if (key == "restrain") {
-            // 解析restrain的特殊格式
             std::string value;
-            getline(iss, value); // 读取整行作为字符串
+            getline(iss, value); 
             std::istringstream value_stream(value);
             char ch;
             while (value_stream >> ch) {
                 if (ch == '*') {
-                    restrain.push_back(0); // 使用特殊值代表 *
+                    restrain.push_back(0); 
                 } else if (ch == '-' || isdigit(ch)) {
-                    value_stream.unget(); // 将字符放回流中
+                    value_stream.unget(); 
                     int num;
                     value_stream >> num;
                     restrain.push_back(num);
                 }
             }
         } else if (key == "distribute") {
-            // 解析distribute的格式
             int num;
             while (iss >> num) {
                 distribute.push_back(num);
