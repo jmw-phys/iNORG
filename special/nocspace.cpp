@@ -217,7 +217,8 @@ bool NocSpace::ifin_NocSpace(MatInt& spilss_div, const VecInt& nppso) const
 		Int start = p.if_norg_imp ? 0 : 1;
 		for_Int(i, start, ndivs) if(!check_each_column(i, spilsdiv_countvec)) return false;
 		if(p.nooc_mode == STR("nooc")) return true;
-		else if(p.nooc_mode == STR("cpnooc")) {for_Int(i, start, ndivs/2 - 1) if(check_correlated_column(i, spilsdiv_countvec)) return false;}
+		// Here we set middle of two were "nooc", and others were "cnooc".
+		else if(p.nooc_mode == STR("cpnooc")) {for_Int(i, start, ndivs/2 - 2) if(check_correlated_column(i, spilsdiv_countvec)) return false;}
 		else if(p.nooc_mode == STR("cnooc")) {for_Int(i, start, ndivs/2) if(check_correlated_column(i, spilsdiv_countvec)) return false;}
 		else ERR("nooc_mode in put was wrong!");
 		return true;

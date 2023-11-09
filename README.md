@@ -371,3 +371,8 @@ Version: v1.2.12 @ 2023.11.05
     realized: update for APIzen, add the function of seimp_fixer().
     next do : testing.
     thinking: (same as prev)
+
+Version: v1.2.13 @ 2023.11.09
+    realized: Change to the 8 divisions.
+    next do : test the norg in eDMFT
+    thinking: (same as prev)

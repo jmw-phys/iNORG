@@ -44,6 +44,7 @@ class APIzen{
 	// NORG coding console
 	Str mode;
 	VecInt restrain, distribute;
+	Real weight_nooc, weight_freze;
 
 	// NORG test part
 	//Int nimp;

@@ -34,6 +34,7 @@ class APIedmft{
 	// NORG coding console
 	Str mode;
 	VecInt restrain, distribute;
+	Real weight_nooc, weight_freze;
 
 	// NORG test part
 	//Int nimp;
@@ -51,7 +52,7 @@ private:
 
 	void read_eDMFT(const Str& file);
 
-	NORG choose_cauculation_style(Str mode, Impurity &imp);
+	// NORG choose_cauculation_style(Str mode, Impurity &imp);
 	// void fitting();
 
 	void test_for_fitting(const Bath& bth, const ImGreen& hby_i, Int num = 666);

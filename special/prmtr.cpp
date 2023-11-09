@@ -59,16 +59,16 @@ void Prmtr::set_values() {
     // NORG parameter.
     if_norg_imp = false;
     imp_backup = false;
-    templet_restrain = !if_norg_imp ? VecInt{0, -1, -2,  0,  2,  1} : VecInt{-1, -4, -4,  4,  4,  1};
-    templet_control  = !if_norg_imp ? VecInt{1,  3,  1,  1,  1,  3} : VecInt{ 0,  1,  1,  1,  1,  0};
+    templet_restrain = !if_norg_imp ? VecInt{0, -1, -2, -3,  0,  3,  2,  1} : VecInt{-1, -4, -4,  4,  4,  1};
+    templet_control  = !if_norg_imp ? VecInt{1,  3,  0,  0,  1,  0,  0,  3} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
     nI2B = SUM(templet_control) - templet_control[0];   // default value:
     nO2sets = SUM(templet_control);                     // default value:
     iter_max_norg = 99;                                 // default
-    // nooc_mode = STR("nooc");
+    nooc_mode = STR("nooc");
     // nooc_mode = STR("cpnooc");
-    nooc_mode = STR("cnooc");
+    // nooc_mode = STR("cnooc");
     after_modify_prmtr();
     // control_divs[1] = {1,  2,  2,  1,  2,  2};
     // control_divs[2] = {1,  2,  2,  1,  2,  2};

@@ -403,31 +403,39 @@ void APIzen::auto_nooc(Str mode, const Impurity& imp) {
 
 		for_Int(i, 0, MAX(ordeg)){
 			Int o(0), freze_o(0), e(0), freze_e(0), orb_rep(0), nooc_o(0), nooc_e(0);
+			Int keep_o(0), keep_e(0);
 			for_Int(j, 0, p.norg_sets) {orb_rep = j; if(ordeg[j] == i + 1) break;}
 			o = nppso[orb_rep] - 1; e = p.nI2B[orb_rep] - nppso[orb_rep];
-			for_Int(j, 0, o) 							if(occweight[orb_rep][j] < 1e-7) freze_o++;
-			for_Int(j, nppso[orb_rep], p.nI2B[orb_rep])	if(occweight[orb_rep][j] < 1e-7) freze_e++;
-			nooc_o = o - freze_o; nooc_e = e - freze_e;
-			controler[i+1] = p.if_norg_imp ?  VecInt{freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{1, freze_o, nooc_o, 1, nooc_e, freze_e };
+			for_Int(j, 0, o) {
+				if(occweight[orb_rep][j] < weight_freze) freze_o++;
+				else if(occweight[orb_rep][j] < weight_nooc) nooc_o++;
+			}
+			for_Int(j, nppso[orb_rep], p.nI2B[orb_rep]) {
+				if(occweight[orb_rep][j] < weight_freze) freze_e++;
+				else if(occweight[orb_rep][j] < weight_nooc) nooc_e++;
+			}
+			keep_o = o - nooc_o - freze_o; keep_e = e - nooc_e - freze_e;
+			controler[i+1] = p.if_norg_imp ?  VecInt{freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{1, freze_o, nooc_o, keep_o, 1, keep_e, nooc_e, freze_e };
 		}
 		// if(mm) WRN(NAV(controler));
+		p.nooc_mode = STR("cpnooc");
 		p.according_controler(controler, ordeg);
 	}
 }
 
-	void APIzen::seimp_fixer(ImGreen& seimp_in) {
-		for_Int(i, 0, seimp_in.nomgs) {
-			for_Int(m, 0, seimp_in.norbs) {
-				// if (mm) WRN(NAV3(i, real(seimp_in.g[i][m][m]), imag(seimp_in.g[i][m][m])))	
-				if (imag(seimp_in.g[i][m][m]) > 0) {
-					for_Int(n, 0, seimp_in.norbs) {
-						seimp_in.g[i][n][m] -= I * imag(seimp_in.g[i][n][m]);
-						seimp_in.g[i][m][n] -= I * imag(seimp_in.g[i][m][n]);
-					}
+void APIzen::seimp_fixer(ImGreen& seimp_in) {
+	for_Int(i, 0, seimp_in.nomgs) {
+		for_Int(m, 0, seimp_in.norbs) {
+			// if (mm) WRN(NAV3(i, real(seimp_in.g[i][m][m]), imag(seimp_in.g[i][m][m])))	
+			if (imag(seimp_in.g[i][m][m]) > 0) {
+				for_Int(n, 0, seimp_in.norbs) {
+					seimp_in.g[i][n][m] -= I * imag(seimp_in.g[i][n][m]);
+					seimp_in.g[i][m][n] -= I * imag(seimp_in.g[i][m][n]);
 				}
 			}
 		}
 	}
+}
 
 
 //change for the stand C++----------------------------------------------------------------------------------------------------------------------------
@@ -473,6 +481,12 @@ void APIzen::read_norg_setting(
 		}
 		else if (key == "Jz") { 
 			iss >> J;
+		}
+		else if (key == "weight_nooc") { 
+			iss >> weight_nooc;
+		}
+		else if (key == "weight_freze") { 
+			iss >> weight_nooc;
 		}
 		else if (key == "restrain") {
             std::string value;
