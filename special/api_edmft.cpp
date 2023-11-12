@@ -14,7 +14,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 
 APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 	mm(mm_i), p(prmtr_i),num_omg(prmtr_i.num_omg),
-	num_nondegenerate(-1), dmft_cnt(0), weight_nooc(1E-6), weight_freze(1E-10)
+	num_nondegenerate(-1), dmft_cnt(0), weight_nooc(1E-3), weight_freze(1E-7)
 {
 	update(file);
 	Bath bth(mm, p);
@@ -286,7 +286,7 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 			controler[i+1] = p.if_norg_imp ?  VecInt{freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{1, freze_o, nooc_o, keep_o, 1, keep_e, nooc_e, freze_e };
 		}
 		// if(mm) WRN(NAV(controler));
-		p.nooc_mode = STR("cpnooc");
+		// p.nooc_mode = STR("cpnooc");
 		p.according_controler(controler, ordeg);
 	}
 }
