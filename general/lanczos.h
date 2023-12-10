@@ -99,8 +99,8 @@ VecInt lanczos(VecReal& evals, Mat<T>& evecs, VecInt& ev_dgcy, Idx n, Int wish_n
         {
             a = mm.Allreduce(DOT(v1, v0));
             ltd.push_back(a);
-            if (!(fast_mode)) if (k >= n/10 || k >= 60 ) if (residual_method_for_b(ltd, lt_sd, b, k, fast_mode)) break;
-            if ((fast_mode))  if (k >= n/10 || k >= 60 ) if (residual_method_for_b(ltd, lt_sd, b, k, fast_mode)) break;
+            if (!(fast_mode)) if ( k >= 200 ) if (residual_method_for_b(ltd, lt_sd, b, k, fast_mode)) break;
+            if ((fast_mode))  if ( k >= 200 ) if (residual_method_for_b(ltd, lt_sd, b, k, fast_mode)) break;
             if (k >= max_krylov) {
                 if(mm) WRN("Getting Wrong with someting? krylov was too large!" + NAV2(e, k));
                 if (k >= 20 + max_krylov) break;
@@ -141,7 +141,7 @@ VecInt lanczos(VecReal& evals, Mat<T>& evecs, VecInt& ev_dgcy, Idx n, Int wish_n
             v1 += H * v0;  k++;
         }
         Krylovsize.push_back(k);
-        if (e > 0 && compare_error(eval[e - 1], va[0]) < 1.E-6) nev++;
+        if (e > 0 && compare_error(eval[e - 1], va[0]) < 1.E-4) nev++;
             // eval.reset(nev, eval.begin());
             // eval.push_back()
             // if(fast_mode) WRN("The eigen value may have degeneracy. This may take some attention.");

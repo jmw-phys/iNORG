@@ -82,15 +82,10 @@ private:
 		return false;
 	}
 
-	bool check_correlated_column(const Int& col_pos, const VecInt& div_colsum) const {
-		Int change_nhole = orbital_divcnt[col_pos] - div_colsum[col_pos], change_nelec = div_colsum[div_colsum.size() - col_pos - 1];
-		if (p.if_norg_imp) {
-			if (change_nhole + change_nelec <= control_divs[0][div_colsum.size() - col_pos - 1]) return false;
-		} else {
-			if (orbital_divcnt[col_pos] - div_colsum[col_pos] + div_colsum[div_colsum.size() - col_pos] <= control_divs[0][div_colsum.size() - col_pos]) return false;
-		}
-		return true;
-	}
+	bool check_correlated_column(const Int& col_pos, const VecInt& div_colsum) const;
+
+	// reference the 10.1103/PhysRevB.96.085139 FIG.1 algorithm
+	bool check_if_PHSs(const VecInt& div_colsum) const;
 
 	VecInt read_from_col_lable(const VEC<Int> x, const VEC<VEC<Int> > a) const;
 

@@ -8,8 +8,8 @@ norg  = ${WORK_DIR}/norg
 VPATH = ${DIRG}:${DIRR}:${DIRS}
 
 CC       = mpiicpc
-CPPFLAGS = -std=c++17 -qmkl -O3
-# CPPFLAGS = -std=c++17 -mkl -O3
+# CPPFLAGS = -std=c++17 -qmkl -O3
+CPPFLAGS = -std=c++17 -mkl -O3
 CFLAGS   =
 CXXFLAGS = $(CFLAGS)
 COMPILE  = $(CC) $(CPPFLAGS) $(CXXFLAGS) -c

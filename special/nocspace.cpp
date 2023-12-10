@@ -69,49 +69,88 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_
 
 //----------------------------- judge function -----------------------------
 
-Vec<MatInt> NocSpace::multi_judger_with_return(VEC<VEC<int> >& s, const VEC<VEC<int> >& a) const {
-	/*
-	VecPartition div_dim(mm.np(), mm.id(), s.size());
-	VecInt v_size_i(1); 
-	// Int counter(0);
-	VEC<MatInt> split_spilss_divs;
-	for_Int(i, div_dim.bgn(), div_dim.end()){
-		MatInt spilss_div(read_from_col_lable(s[i], a).mat(control_divs.ncols() - 2, control_divs.nrows() - 1).tr());
-		if (suit_NOOC(spilss_div, nppso)) {
-			// if (mm) WRN(NAV(spilss_div));
-			VecInt left_div_size(p.norg_sets), left_n(p.norg_sets);
-			VEC<VEC<VecInt>> left_ii(p.norg_sets);
-			for_Int(j, 0, p.norg_sets) {
-				Int n(nppso[j] - SUM(spilss_div[j])), sit_i(sit_mat[j][0]), sit_b(sit_mat[j][ndivs / 2]); left_n[j] = n;
-				Int possible = n < MIN(sit_i, sit_b) ? n+1 : n+1 - MAX(n-sit_b,0) - MAX(n-sit_i,0);	left_div_size[j] =  possible;
-				VecInt a_beg(2, 0);
-				a_beg = possible == n+1 ? Vec{0, n}:  Vec{n - sit_b, sit_b};
-				for_Int(k, 0, possible) {left_ii[j].push_back(a_beg); a_beg[0]++; a_beg[1]--;}
-				// if(mm) WRN(NAV(left_ii[j].size()));
-			}
-			
-			for (const auto &x : cart_product(left_ii))
-			{
-				MatInt unnooc(p.norg_sets, 2);
-				for_Int(j, 0, x.size()) unnooc[j] = x[j];
-				MatInt div(concat(concat(unnooc.tr()[0],spilss_div.tr().truncate_row(0,spilss_div.ncols()/2).vec()), \
-						   concat(unnooc.tr()[1],spilss_div.tr().truncate_row(spilss_div.ncols()/2,spilss_div.ncols()).vec())).\
-						   mat(sit_mat.ncols(),sit_mat.nrows()).tr());				
-				split_spilss_divs.push_back(div);
-			}			
-		}
+// here when return true, mean satisfy the PHSs rule.
+bool NocSpace::check_correlated_column(const Int& col_pos, const VecInt& div_colsum) const {
+	Int change_nhole(0), change_nelec(0);
+	if (p.if_norg_imp) {
+		change_nhole = orbital_divcnt[col_pos] - div_colsum[col_pos];
+		change_nelec = div_colsum[div_colsum.size() - col_pos - 1];
+		if (change_nhole + change_nelec <= control_divs[0][div_colsum.size() - col_pos - 1]) return true;
 	}
-	v_size_i[0] = split_spilss_divs.size();
-	Int size = mm.Allreduce(v_size_i[0]);
-	VecPartition split_v_size(mm.np(), mm.id(), mm.np());
-	VecInt v_size = mm.Allgatherv(v_size_i, split_v_size);
-	VecPartition split(mm.np(), mm.id(), size, v_size);
-	// ? Vec<MatInt> out = mm.Gatherv(Vec(split_spilss_divs), sit_mat.nrows(), sit_mat.ncols(), split);
-	// ? mm.Bcast(out);
-	// ? Vec<MatInt> out = mm.Allgatherv(Vec(split_spilss_divs), split);
-	return out;
-	*/
+	else {
+		change_nhole = orbital_divcnt[col_pos] - div_colsum[col_pos];
+		change_nelec = div_colsum[div_colsum.size() - col_pos];
+		if (change_nhole + change_nelec <= control_divs[0][div_colsum.size() - col_pos]) return true;
+	}
+	return false;
+}
 
+
+// here when return true, mean satisfy the PHSs rule.
+bool NocSpace::check_if_PHSs(const VecInt& div_colsum) const {
+	/*
+	Int change_nhole(0), change_nelec(0);
+	if (p.if_norg_imp) {
+		for_Int(col_idx, col_pos, div_colsum.size() / 2) {
+			change_nhole += orbital_divcnt[col_idx] - div_colsum[col_idx];
+			change_nelec += div_colsum[div_colsum.size() - 1 - col_idx];
+		}
+		if (change_nhole + change_nelec <= control_divs[0][div_colsum.size() - col_pos - 1]) return true;
+	}
+	else {
+		for_Int(col_idx, col_pos, div_colsum.size() / 2) {
+			change_nhole += orbital_divcnt[col_idx] - div_colsum[col_idx];
+			change_nelec += div_colsum[div_colsum.size() - col_idx];
+		}
+		if (change_nhole + change_nelec <= control_divs[0][div_colsum.size() - col_pos]) return true;
+	}
+	// if (mm) WRN(NAV2(col_pos, div_colsum));
+	// if (mm) WRN(NAV2(change_nhole, change_nelec));
+	*/
+	bool thought_NOOC(true);
+	if (p.if_norg_imp) {
+		ERR("Since this part was not in used, FOR here I have not test!");
+		return true;
+	}
+	else {
+		// In this part of code we consider the PHSs rule with out the "*" terms.
+		VecInt sum_hole_chages(div_colsum.size() / 2 - 1, 0), sum_elec_chages(div_colsum.size() / 2 - 1, 0);
+		VecInt temp_hole_chages(div_colsum.size() / 2 - 1, 0), temp_elec_chages(div_colsum.size() / 2 - 1, 0);
+
+		Int length = div_colsum.size() / 2 - 1;
+		for_Int(col_idx, 0, length) {
+			temp_hole_chages[col_idx] = orbital_divcnt[col_idx + 1] - div_colsum[col_idx + 1];
+			temp_elec_chages[col_idx] = div_colsum[div_colsum.size() - col_idx - 1];
+		}
+		for_Int(col_idx, 0, length) {
+			sum_hole_chages[col_idx] = SUM_0toX(temp_hole_chages.reverse(), col_idx);
+			sum_elec_chages[col_idx] = SUM_0toX(temp_elec_chages.reverse(), col_idx);
+		}
+
+		for_Int(col_pos, 0, length) if((temp_hole_chages[col_pos] + temp_elec_chages[col_pos]) > control_divs[0][div_colsum.size() - col_pos - 1]) thought_NOOC = false;
+
+		for_Int(col_pos, 0, length)
+			if (SUM(temp_hole_chages.truncate(col_pos, length)) + SUM(temp_elec_chages.truncate(col_pos, length)) > 0 \
+				&& (SUM_0toX(temp_hole_chages, col_pos) != 0 || SUM_0toX(temp_elec_chages, col_pos) != 0)) thought_NOOC = false;
+		
+		if((SUM(temp_hole_chages) + SUM(temp_elec_chages)) == 1) thought_NOOC = true;
+/* // way two
+		MatInt temp_div_orbital_elec_and_hole = orbital_divcnt.mat(2,orbital_divcnt.size() / 2).tr().truncate_row(1,orbital_divcnt.size() / 2).tr();
+		VecInt sum_div_orbital_elec_and_hole(temp_div_orbital_elec_and_hole.ncols(), 0);
+		for_Int(i, 0, length) sum_div_orbital_elec_and_hole[i] = temp_div_orbital_elec_and_hole[0][i] + temp_div_orbital_elec_and_hole[1][i];
+		for_Int(col_pos, 0, length)
+			if (SUM_0toX(sum_div_orbital_elec_and_hole.reverse(), col_pos) > SUM_0toX(sum_div_orbital_elec_and_hole, col_pos+1) \
+				&& sum_hole_chages[col_pos] + sum_elec_chages[col_pos] < SUM_0toX(temp_hole_chages, col_pos+1) + SUM_0toX(temp_elec_chages, col_pos+1)) return false;
+		// for_Int(col_pos, 0, length)
+		// 	if (sum_hole_chages[col_pos] + sum_elec_chages[col_pos] <= control_divs[0][div_colsum.size() - col_pos - 1] \
+		// 		&& SUM_0toX(temp_hole_chages, col_pos) == 0 && SUM_0toX(temp_elec_chages, col_pos) == 0) return true;
+*/
+	}
+	return thought_NOOC;
+}
+
+
+Vec<MatInt> NocSpace::multi_judger_with_return(VEC<VEC<int> >& s, const VEC<VEC<int> >& a) const {
 	VEC<MatInt> split_spilss_divs;
 	
 	if (p.if_norg_imp) {
@@ -128,10 +167,12 @@ Vec<MatInt> NocSpace::multi_judger_with_return(VEC<VEC<int> >& s, const VEC<VEC<
 		}
 	} else for_Int(i, 0, s.size()) {
 		MatInt spilss_div(read_from_col_lable(s[i], a).mat(control_divs.ncols() - 2, control_divs.nrows() - 1).tr());
-		if (suit_NOOC(spilss_div, nppso)) {
+		if (suit_NOOC(spilss_div, nppso)) { //!! here need to chage the restraint.
 			// if (mm) WRN(NAV(spilss_div));
 			VecInt left_div_size(p.norg_sets), left_n(p.norg_sets);
 			VEC<VEC<VecInt>> left_ii(p.norg_sets);
+
+			// for the two "*" terms.
 			for_Int(j, 0, p.norg_sets) {
 				Int n(nppso[j] - SUM(spilss_div[j])), sit_i(sit_mat[j][0]), sit_b(sit_mat[j][ndivs / 2]); left_n[j] = n;
 				Int possible = n < MIN(sit_i, sit_b) ? n+1 : n+1 - MAX(n-sit_b,0) - MAX(n-sit_i,0);	left_div_size[j] =  possible;
@@ -148,7 +189,7 @@ Vec<MatInt> NocSpace::multi_judger_with_return(VEC<VEC<int> >& s, const VEC<VEC<
 						   concat(unnooc.tr()[1],spilss_div.tr().truncate_row(spilss_div.ncols()/2,spilss_div.ncols()).vec())).\
 						   mat(sit_mat.ncols(),sit_mat.nrows()).tr());				
 				split_spilss_divs.push_back(div);
-			}			
+			}
 		}
 	}
 
@@ -217,14 +258,16 @@ bool NocSpace::ifin_NocSpace(MatInt& spilss_div, const VecInt& nppso) const
 		Int start = p.if_norg_imp ? 0 : 1;
 		for_Int(i, start, ndivs) if(!check_each_column(i, spilsdiv_countvec)) return false;
 		if(p.nooc_mode == STR("nooc")) return true;
-		else if(p.nooc_mode == STR("cpnooc")) {for_Int(i, start, ndivs/2 - 1) if(check_correlated_column(i, spilsdiv_countvec)) return false;}		// Here we set middle of one were "nooc", and others were "cnooc".
-		else if(p.nooc_mode == STR("cnooc")) {for_Int(i, start, ndivs/2) if(check_correlated_column(i, spilsdiv_countvec)) return false;}
+		else if(p.nooc_mode == STR("cpnooc")) {for_Int(i, start, ndivs/2 - 1) if(!check_correlated_column(i, spilsdiv_countvec)) return false;}		// Here we set middle of one were "nooc", and others were "cnooc".
+		else if(p.nooc_mode == STR("cnooc")) {for_Int(i, start, ndivs/2) if(!check_correlated_column(i, spilsdiv_countvec)) return false;}
+		else if (p.nooc_mode == STR("phess")) {return check_if_PHSs(spilsdiv_countvec);}
 		else ERR("nooc_mode in put was wrong!");
 		return true;
 	}
 	else return false;
 }
 
+// In here we only consider the impurity not rotate.
 bool NocSpace::suit_NOOC(MatInt& spilss_div, const VecInt& nppso) const
 {
 	if(ndivs%2) ERR("ndivs is not a even number!");
@@ -239,14 +282,21 @@ bool NocSpace::suit_NOOC(MatInt& spilss_div, const VecInt& nppso) const
 	for_Int(j, 0, spilss_div.ncols()) for_Int(i, 0, spilss_div.nrows()) spils_c[j] += spilss_div[i][j];
 	VecInt countvec = concat(concat(zero,spils_c.truncate(0, spils_c.size()/2)),concat(zero,spils_c.truncate(spils_c.size()/2, spils_c.size())));
 	// if(mm) WRN(NAV(countvec));
-	for_Int(i, 1, ndivs) if(!check_each_column(i, countvec)) return false;
-	if(p.nooc_mode == STR("nooc")) return true;
-	else if(p.nooc_mode == STR("cpnooc")) {for_Int(i, 1, ndivs/2 - 1) if(check_correlated_column(i, countvec)) return false;}
-	else if(p.nooc_mode == STR("cnooc")) {for_Int(i, 1, ndivs/2) if(check_correlated_column(i, countvec)) return false;}
+	Int countvec_length = countvec.size();
+	for_Int(i, 1, countvec_length) if (!check_each_column(i, countvec)) return false;
+	if (p.nooc_mode == STR("nooc")) return true;
+	else if (p.nooc_mode == STR("cpnooc")) { for_Int(i, 1, countvec_length / 2 - 1) if (!check_correlated_column(i, countvec)) return false; }
+	else if (p.nooc_mode == STR("cnooc")) { for_Int(i, 1, countvec_length / 2) if (!check_correlated_column(i, countvec)) return false; }
+	else if (p.nooc_mode == STR("phess")) {return check_if_PHSs(countvec);}
+	// else if (p.nooc_mode == STR("phess")) {if (mm && check_if_PHSs(countvec) == true) WRN(NAV2(spilss_div, countvec)); return check_if_PHSs(countvec);}
+	// else ERR("nooc_mode in put was wrong!");
+	
+	// if (mm) WRN(NAV2(spilss_div, countvec));
 	return true;
 	// else ERR("nooc_mode in put was wrong!");
 }
 
+/*
 bool NocSpace::ifin_NocSpace(const VecBool new_cfig, const VecInt& nppso) const
 {
 	MatInt spilss_div(sit_mat.nrows(), sit_mat.ncols(), 0);
@@ -270,11 +320,13 @@ bool NocSpace::ifin_NocSpace(const VecBool new_cfig, const VecInt& nppso) const
 	// if(mm) WRN(NAV(countvec));
 	for_Int(i, 1, ndivs) if(!check_each_column(i, countvec)) return false;
 	if(p.nooc_mode == STR("nooc")) return true;
-	else if(p.nooc_mode == STR("cpnooc")) {for_Int(i, 1, ndivs/2 - 1) if(check_correlated_column(i, countvec)) return false;}
-	else if(p.nooc_mode == STR("cnooc")) {for_Int(i, 1, ndivs/2) if(check_correlated_column(i, countvec)) return false;}
-	return true;
+	else if(p.nooc_mode == STR("cpnooc")) {for_Int(i, 1, ndivs/2 - 1) if(!check_correlated_column(i, countvec)) return false;}
+	else if(p.nooc_mode == STR("cnooc")) {for_Int(i, 1, ndivs/2) if(!check_correlated_column(i, countvec)) return false;}
+	else if (p.nooc_mode == STR("phess")) {return check_if_PHSs(countvec);}
+	else ERR("nooc_mode in put was wrong!");
 	// else ERR("nooc_mode in put was wrong!");
 }
+*/
 
 bool NocSpace::ifin_NocSpace_more_strict(MatInt& spilss_div, const VecInt& nppso) const
 {

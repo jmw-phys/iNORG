@@ -376,3 +376,8 @@ Version: v1.2.13 @ 2023.11.09
     realized: Change to the 8 divisions.
     next do : test the norg in eDMFT
     thinking: (same as prev)
+
+Version: v1.2.14 @ 2023.12.10
+    realized: add new short cut(phess) for the norg.
+    next do : test the new short cut functional in real material.
+    thinking: norg in 2/3/4 band models.(Literature research)

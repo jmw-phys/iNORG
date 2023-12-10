@@ -22,7 +22,8 @@ APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 
 	dmft_cnt++; update(file);
 	ImGreen hb(nband, p);	
-	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband) hb.g[j][i][i] = -imfrq_hybrid_function[j][or_deg_idx[i*2]]; if (mm) hb.write_edmft("hb_read.txt", or_deg_idx);
+	for_Int(j, 0, hb.nomgs) 
+		for_Int(i, 0, nband) hb.g[j][i][i] = -imfrq_hybrid_function[j][or_deg_idx[i * 2] - 1];		if (mm) hb.write_edmft("hb_read.txt", or_deg_idx);
 	bth.read_ose_hop();	bth.bath_fit(hb, or_deg_idx);												if (mm) bth.write_ose_hop();
 	imp.update();																					if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 	ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_edmft("hb_fit.txt", or_deg_idx);
@@ -287,7 +288,7 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 		}
 		// if(mm) WRN(NAV(controler));
 		// p.nooc_mode = STR("cpnooc");
-		controler[0][0] = controler[0][p.ndiv-1] = 1;
+		controler[0][1] = -1; controler[0][p.ndiv-1] = 1;
 		p.according_controler(controler, ordeg);
 	}
 }
