@@ -77,7 +77,7 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
     a_i = mm.Allreduce(DOT(v1, v0));
     ltd.push_back(a_i);
     if(g0.type_info() == STR("ImGreen")){
-        for_Int(i, 0, 60) {
+        for_Int(i, 0, 200) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
         ltd.push_back(a_i); lt_sd.push_back(b_i);
         }
@@ -132,7 +132,7 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
     a_i = mm.Allreduce(DOT(v1, v0));
     ltd.push_back(a_i);
     if(g0.type_info() == STR("ImGreen")){
-        for_Int(i, 0, 60) {
+        for_Int(i, 0, 200) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
         ltd.push_back(a_i); lt_sd.push_back(b_i);
         }
@@ -218,7 +218,7 @@ void CrrltFun::find_hd_greater(const Real& ge0, Green &g0, Int position)
     a_i = mm.Allreduce(DOT(v1, v0));
     ltd.push_back(a_i);
     if(g0.type_info() == STR("ImGreen")){
-        for_Int(i, 0, 60) {
+        for_Int(i, 0, 200) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
         ltd.push_back(a_i); lt_sd.push_back(b_i);
         }
@@ -248,7 +248,8 @@ void CrrltFun::find_hd_greater(const Real& ge0, Green &g0, Int position)
             green_error[w] = gaz - green_pre[w];
             green_pre[w] = gaz;
         }
-        if (ABS(SUM(green_error)) < 1.E-10 * g0.nomgs) break;
+        VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
+        if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) break;
         // if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
     }
     for_Int(w, 0, g0.nomgs) g0[w][0][0] += green_pre[w];

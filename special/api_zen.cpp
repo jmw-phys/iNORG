@@ -23,7 +23,7 @@ APIzen::APIzen(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 	dmft_cnt++; update(file);
 	ImGreen hb(nband, p);	
 	for_Int(j, 0, hb.nomgs) for_Int(i, 0, nband)	hb.g[j][i][i] = -imfrq_hybrid_function[i][j];	if (mm) hb.write_zen("hb_zen", "Read");
-	bth.read_ose_hop();	//bth.bath_fit(hb, or_deg_idx);												if (mm) bth.write_ose_hop();
+	bth.read_ose_hop();	bth.bath_fit(hb, or_deg_idx);												if (mm) bth.write_ose_hop();
 	imp.update();																					if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 	ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_zen("hb_imp", "Fit");
 	auto_nooc("ful_pcl_sch", imp);
@@ -418,10 +418,10 @@ void APIzen::auto_nooc(Str mode, const Impurity& imp) {
 			keep_o = o - nooc_o - freze_o; keep_e = e - nooc_e - freze_e;
 			controler[i+1] = p.if_norg_imp ?  VecInt{freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{1, freze_o, nooc_o, keep_o, 1, keep_e, nooc_e, freze_e };
 		}
-		if(mm) WRN(NAV3(p.nooc_mode, weight_nooc, weight_freze));
+		if(mm) WRN(NAV4(p.if_norg_degenerate, p.nooc_mode, weight_nooc, weight_freze));
 		// if(mm) WRN(NAV(controler));
 		// p.nooc_mode = STR("cpnooc");
-		controler[0][1] = -1; controler[0][p.ndiv-1] = 1;
+		controler[0][1] = -0; controler[0][p.ndiv-1] = 0;
 		p.according_controler(controler, ordeg);
 	}
 }
@@ -466,6 +466,9 @@ void APIzen::read_norg_setting(
 		}
 		else if (key == "CoulombF") {
 			iss >> CoulombF;
+		}
+		else if (key == "Minsulator") {
+			iss >> p.if_norg_degenerate;
 		}
 		else if (key == "nband") {
 			iss >> nband;

@@ -68,6 +68,7 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_
 {
     Int counter_norg(0);
     std::map<std::string, Real> sub_energy_data;
+    tp.nooc_mode = STR("cnooc");
     while(1){
             Int counter(0);
             VEC<VecInt> nppsos = list_all_posible_nppsos(tp.npartical, or_deg);

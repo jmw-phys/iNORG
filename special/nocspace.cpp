@@ -114,7 +114,7 @@ bool NocSpace::check_if_PHSs(const VecInt& div_colsum) const {
 	}
 	else {
 		// In this part of code we consider the PHSs rule with out the "*" terms.
-		VecInt sum_hole_chages(div_colsum.size() / 2 - 1, 0), sum_elec_chages(div_colsum.size() / 2 - 1, 0);
+		// VecInt sum_hole_chages(div_colsum.size() / 2 - 1, 0), sum_elec_chages(div_colsum.size() / 2 - 1, 0);
 		VecInt temp_hole_chages(div_colsum.size() / 2 - 1, 0), temp_elec_chages(div_colsum.size() / 2 - 1, 0);
 
 		Int length = div_colsum.size() / 2 - 1;
@@ -122,10 +122,12 @@ bool NocSpace::check_if_PHSs(const VecInt& div_colsum) const {
 			temp_hole_chages[col_idx] = orbital_divcnt[col_idx + 1] - div_colsum[col_idx + 1];
 			temp_elec_chages[col_idx] = div_colsum[div_colsum.size() - col_idx - 1];
 		}
-		for_Int(col_idx, 0, length) {
-			sum_hole_chages[col_idx] = SUM_0toX(temp_hole_chages.reverse(), col_idx);
-			sum_elec_chages[col_idx] = SUM_0toX(temp_elec_chages.reverse(), col_idx);
-		}
+		// for_Int(col_idx, 0, length) {
+		// 	sum_hole_chages[col_idx] = SUM_0toX(temp_hole_chages.reverse(), col_idx);
+		// 	sum_elec_chages[col_idx] = SUM_0toX(temp_elec_chages.reverse(), col_idx);
+		// }
+		// if((SUM(temp_hole_chages) + SUM(temp_elec_chages)) == 1) thought_NOOC = true;
+		if((SUM(temp_hole_chages) + SUM(temp_elec_chages)) <= control_divs[0][div_colsum.size() - 2]) return thought_NOOC = true; // Only suit for the 8 divisions.
 
 		for_Int(col_pos, 0, length) if((temp_hole_chages[col_pos] + temp_elec_chages[col_pos]) > control_divs[0][div_colsum.size() - col_pos - 1]) thought_NOOC = false;
 
@@ -133,7 +135,6 @@ bool NocSpace::check_if_PHSs(const VecInt& div_colsum) const {
 			if (SUM(temp_hole_chages.truncate(col_pos, length)) + SUM(temp_elec_chages.truncate(col_pos, length)) > 0 \
 				&& (SUM_0toX(temp_hole_chages, col_pos) != 0 || SUM_0toX(temp_elec_chages, col_pos) != 0)) thought_NOOC = false;
 		
-		if((SUM(temp_hole_chages) + SUM(temp_elec_chages)) == 1) thought_NOOC = true;
 /* // way two
 		MatInt temp_div_orbital_elec_and_hole = orbital_divcnt.mat(2,orbital_divcnt.size() / 2).tr().truncate_row(1,orbital_divcnt.size() / 2).tr();
 		VecInt sum_div_orbital_elec_and_hole(temp_div_orbital_elec_and_hole.ncols(), 0);

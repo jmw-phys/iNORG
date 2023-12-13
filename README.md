@@ -381,3 +381,8 @@ Version: v1.2.14 @ 2023.12.10
     realized: add new short cut(phess) for the norg.
     next do : test the new short cut functional in real material.
     thinking: norg in 2/3/4 band models.(Literature research)
+
+Version: v1.2.15 @ 2023.12.13
+    realized: finished the testing of the new short cut functional(phess).
+    next do : Using this version of code to calc the real material for ZEN.
+    thinking: (same as prev)

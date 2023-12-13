@@ -57,6 +57,7 @@ void Prmtr::set_values() {
     fit_rsd = 2; // default value: 2.
 
     // NORG parameter.
+    if_norg_degenerate = 1;
     if_norg_imp = false;
     imp_backup = false;
     templet_restrain = !if_norg_imp ? VecInt{0, -1, -2, -3,  0,  3,  2,  1} : VecInt{-1, -4, -4,  4,  4,  1};

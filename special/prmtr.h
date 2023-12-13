@@ -57,6 +57,7 @@ public:
 	Int norg_sets;					// number of norg sets (spinless orbital).
 	Int iter_max_norg;				// the max NORG iteration times.
 	bool if_norg_imp;				// if norg rotate NO with impurity orbitals, if true, the imp_orb will rotate, treated same as bath orbital.
+	Int if_norg_degenerate;			// set 0: the norg running  in the non-degenerate state; set 1: the norg running for finding the degenerate state.
 	mutable VecInt nI2B;			// the number of bath sites for each impurity.
 	mutable VecInt nO2sets;			// The number of orbital to each sets.
 	mutable VecInt npartical;		// number of particals.
