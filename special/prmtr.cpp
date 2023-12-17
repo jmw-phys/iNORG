@@ -37,7 +37,7 @@ void Prmtr::set_inert_values()
 
 void Prmtr::set_values() {
     //model related
-    U = 3.0;
+    U = 0.5;
     mu = 0.0;
 
     // jz = 0.5;
@@ -50,6 +50,7 @@ void Prmtr::set_values() {
     bethe_t.reset(nband, 0.5);
 	// if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] = 0.5 * bethe_t[i];
 	// if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] = 0.25;
+	if (nband == 2) bethe_t[1] = bethe_t[0] * 0.1;
     bsr = bethe_t * bethe_t;    // the vector of bath sum rule.
 
     // fitting related
@@ -60,8 +61,8 @@ void Prmtr::set_values() {
     if_norg_degenerate = 1;
     if_norg_imp = false;
     imp_backup = false;
-    templet_restrain = !if_norg_imp ? VecInt{0, -1, -2, -3,  0,  3,  2,  1} : VecInt{-1, -4, -4,  4,  4,  1};
-    templet_control  = !if_norg_imp ? VecInt{1,  2,  0,  1,  1,  1,  0,  2} : VecInt{ 0,  1,  1,  1,  1,  0};
+    templet_restrain = !if_norg_imp ? VecInt{0, -1, -2, -4,  0,  4,  2,  1} : VecInt{-1, -4, -4,  4,  4,  1};
+    templet_control  = !if_norg_imp ? VecInt{1,  0,  1,  2,  1,  2,  1,  0} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
     nI2B = SUM(templet_control) - templet_control[0];   // default value:

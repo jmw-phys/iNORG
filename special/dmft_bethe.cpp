@@ -95,8 +95,8 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 			// excitation spectrum
 			ReGreen hd_exsp(p.nband, p);	norg.get_gimp_hdQPs(hd_exsp);					if (mm)	hd_exsp.write("U" + STR(var_a) + "Re-hdex");
 			
-			var_a -= 0.05;
-			// if (var_a < 1.2)
+			var_a += 0.5;
+			if (var_a > 4.0)
 				break;
 			set_parameter();
 			res_past.clear();
