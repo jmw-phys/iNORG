@@ -12,8 +12,8 @@ void DMFT::set_parameter() {
 	bethe_t = p.bethe_t;
 	bethe_u = p.U;
 	// p.jz = 0.25 * p.U;
-	bethe_u12 = p.U - 2 * p.jz;
-	p.bandw = 2 * (2 * SQRT(SQR(bethe_u) + SQR(bethe_u12) + SQR(bethe_u12-p.jz) + SUM(bethe_t * bethe_t)));
+	p.Uprm = bethe_u12 = p.U - p.delta;
+	p.bandw = 2 * (2 * SQRT(SQR(bethe_u) + SQR(bethe_u12) + SQR(bethe_u12) + SUM(bethe_t * bethe_t)));
 	p.derive_ImGreen();
 	if (mm) { OFS ofss("log.parameters.txt", std::ios::app);  p.print(ofss); }
 }
@@ -44,7 +44,7 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 			hb = (mode == 1) ? find_hb_by_se(se):find_hb(g_loc);							if (mm) hb.write("hb", iter_cnt);
 			bth.bath_fit(hb,iter_cnt);														if (mm) bth.write_ose_hop(iter_cnt);
 		}
-		imp.update("behte");																if (mm) imp.write_H0info(bth, -1, iter_cnt);
+		imp.update("behte_alpha");																if (mm) imp.write_H0info(bth, -1, iter_cnt);
 		ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 								if (mm) hb_imp.write("hb-fit", iter_cnt);
 		// auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
 		if (iter_cnt > 1) norg.uormat = norg_tempU;	norg.up_date_h0_to_solve(imp.impH, 1);	n_eles = norg.write_impurtiy_occupation(iter_cnt);
@@ -93,12 +93,12 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 
 
 			// excitation spectrum
-			ReGreen hd_exsp(p.nband, p);	norg.get_gimp_hdQPs(hd_exsp);					if (mm)	hd_exsp.write("U" + STR(var_a) + "Re-hdex");
+			// ReGreen hd_exsp(p.nband, p);	norg.get_gimp_hdQPs(hd_exsp);					if (mm)	hd_exsp.write("U" + STR(var_a) + "Re-hdex");
 			
 			var_a += 0.5;
+			set_parameter();
 			if (var_a > 4.0)
 				break;
-			set_parameter();
 			res_past.clear();
 			se_input.clear();
 			Flag_semix = iter_cnt = 0;

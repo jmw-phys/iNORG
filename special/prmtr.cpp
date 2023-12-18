@@ -16,7 +16,7 @@ Prmtr::Prmtr(const MyMpi& mm) : np(mm.np())
 
 void Prmtr::set_inert_values()
 {
-    nband = 2;         
+    nband = 3;         
     norbs = nband * 2;
     project = STR(nband)+"band_KH";
     
@@ -29,7 +29,7 @@ void Prmtr::set_inert_values()
     freq_upp = 5.;
     freq_low = -5.;
 
-    beta = pi_Real*100;
+    beta = pi_Real*50;
     unit_omg = pi_Real/beta;
     nmesh = 8193;
     // unit_omg = 0.01;
@@ -37,32 +37,38 @@ void Prmtr::set_inert_values()
 
 void Prmtr::set_values() {
     //model related
-    U = 0.5;
+    U = 1;
     mu = 0.0;
+
+    //Parameter for the hhd function(arXiv:2209.14178v1)
+    alpha = 1.0;
+    delta = 0.2;
 
     // jz = 0.5;
     // Uprm = U - 2 * jz;
     jz = 0;
-    Uprm = U - 0.3;
-    bandw = 50.;                    //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
+    Uprm = U - delta;
+    bandw = 50.;                                        //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
     eimp = VecReal(norbs, 0.);
-    degel = 1;                      // Degenerate energy levels
+    degel = 1;                                          // Degenerate energy levels
     bethe_t.reset(nband, 0.5);
 	// if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] = 0.5 * bethe_t[i];
 	// if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] = 0.25;
 	if (nband == 2) bethe_t[1] = bethe_t[0] * 0.1;
-    bsr = bethe_t * bethe_t;    // the vector of bath sum rule.
+	if (nband == 3) bethe_t[2] = bethe_t[0] * 0.1;      // set for the 3 band hhd (arXiv:2209.14178v1)
+    bsr = bethe_t * bethe_t;                            // the vector of bath sum rule.
 
     // fitting related
     fit_pow = 2.; // default value: 2.
     fit_rsd = 2; // default value: 2.
 
+
     // NORG parameter.
     if_norg_degenerate = 1;
     if_norg_imp = false;
     imp_backup = false;
-    templet_restrain = !if_norg_imp ? VecInt{0, -1, -2, -4,  0,  4,  2,  1} : VecInt{-1, -4, -4,  4,  4,  1};
-    templet_control  = !if_norg_imp ? VecInt{1,  0,  1,  2,  1,  2,  1,  0} : VecInt{ 0,  1,  1,  1,  1,  0};
+    templet_restrain = !if_norg_imp ? VecInt{0, -1, -4, -6,  0,  6,  4,  1} : VecInt{-1, -4, -4,  4,  4,  1};
+    templet_control  = !if_norg_imp ? VecInt{1,  0,  3,  0,  1,  0,  3,  0} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
     nI2B = SUM(templet_control) - templet_control[0];   // default value:
@@ -239,7 +245,7 @@ void Prmtr::print(std::ostream &os) const {
     prmtr_print(Uprm, "The U^' term");
     prmtr_print(jz, "The hund coupling");
     prmtr_print(mu, "The chemical potential");
-    // for_Int(i,0,t.size()) prmtr_print(t[i], "quarter bandwidth");
+    for_Int(i,0,bethe_t.size()) prmtr_print(bethe_t[i], "quarter bandwidth(0 to t.size())");
     prmtr_print(max_omg, "max_omg of imgreen");
     prmtr_print(eta_freq, "eta of omega + i * eta");
     prmtr_print(dlt_freq, "The real x-axis unit for retarded green function");

@@ -97,6 +97,13 @@ void Impurity::update(Str mode) {
         impH = std::make_pair(h0, set_interaction());
         modify_Impdata_for_half_fill(impH);
     }
+    else if (mode == "behte_alpha") {
+        for_Int(i, 0, ni) imp_lvl[i] = p.eimp[i] - p.mu;
+        set_factor();
+        impH = std::make_pair(h0, set_3band_interaction_withalpha());
+        // modify_Impdata_for_half_fill(impH);
+        modify_Impdata_for_half_fill_hhd(impH);
+    }
     // if(mm) WRN(NAV(h0));
 }
 
@@ -202,3 +209,64 @@ void Impurity::modify_Impdata_for_half_fill(Impdata& impH_i){
         else ERR("impurity input is wrong");
 	}
 }
+
+//--------------------------------------------------------special for the hhd function(arXiv:2209.14178v1)-----------------------------------------------------------------
+
+
+// four-fermion operator terms for C^+_i C^+_j C_k C_l; 
+// C^+_i C^+_j C_k C_l h_inter from [i][l][j][k] to [alpha][eta][beta][gamma]
+VecReal Impurity::set_3band_interaction_withalpha() {
+    Int n = p.norbit;
+    VecReal interaction(std::pow(n, 4), 0.);
+    if (p.nband != 3) ERR("this function is only for 3-band model");
+    // Mat<MatReal> imp_interact(p.norbs, p.norbs, MatReal(p.norbs, p.norbs, 0.));
+    MatReal imp_dd_interact(p.norbs, p.norbs,  0.);
+
+    for_Int(b1, 0, p.nband) {// NO double counting term for impurity
+        imp_dd_interact[2 * b1][2 * b1 + 1] = p.U;
+        for_Int(b2, b1, p.nband) if (b1 != b2) { // same spin orientation
+            imp_dd_interact[2 * b1][2 * b2] = p.Uprm - p.jz;
+            imp_dd_interact[2 * b1 + 1][2 * b2 + 1] = p.Uprm - p.jz;
+        }
+        for_Int(b2, 0, p.nband) if (b1 != b2) {
+            imp_dd_interact[2 * b1][2 * b2 + 1] = p.Uprm;
+        }
+    // setting the interation between two wide bands.
+        for_Int(b2, b1, p.nband) if (b1 == 0 && b2 == 1) { // same spin orientation
+            imp_dd_interact[2 * b1][2 * b2] *= p.alpha;
+            imp_dd_interact[2 * b1 + 1][2 * b2 + 1] *= p.alpha;
+        }
+        for_Int(b2, 0, p.nband) if (b1 == 0 && b2 == 1 || b2 == 0 && b1 == 1 ) {
+            imp_dd_interact[2 * b1][2 * b2 + 1] *= p.alpha;
+        }
+    }
+
+
+
+    if(mm) WRN(NAV(imp_dd_interact));
+    for_Int(N_i, 0, p.norbs)for_Int(N_j, 0, p.norbs) {
+        // if (imp_dd_interact[N_i][N_j] != 0)
+            interaction[SUM_0toX(p.nO2sets, N_i) * std::pow(n, 3) + SUM_0toX(p.nO2sets, N_j) * std::pow(n, 2) + SUM_0toX(p.nO2sets, N_j) * std::pow(n, 1) + SUM_0toX(p.nO2sets, N_i)] = imp_dd_interact[N_i][N_j];
+
+    }
+    // if (mm) WRN(NAV5(p.U, p.Uprm ,p.nO2sets, interaction.size(), SUM(interaction[0][0])));
+    return interaction;
+}
+
+void Impurity::modify_Impdata_for_half_fill_hhd(Impdata& impH_i){
+    //! modify the non-interacting part of impurity Hamiltonian
+	MatReal& h0 = impH_i.first;
+	Int norb2set = p.nO2sets[0];
+	for_Int(i, 0, p.norg_sets) {
+        h0[i * norb2set][i * norb2set] -= p.U * 0.5;
+        // interorbital part
+        // special chage for the 3 band hhd case. (arXiv:2209.14178v1)
+        Real iner_part_per_band = ((p.nband - 1) * (p.Uprm * 0.5) + (p.nband - 1) * (p.Uprm - p.jz) * 0.5) / (p.nband - 1);
+        if (i/2 < 2) h0[i * norb2set][i * norb2set] -= (iner_part_per_band * p.alpha) + iner_part_per_band * (p.nband - 2);
+        if (i/2 >= 2) h0[i * norb2set][i * norb2set] -= iner_part_per_band * (p.nband - 1);
+	}
+}
+
+
+
+//---------------------------------------------------------------------------------------------------------------------------------------

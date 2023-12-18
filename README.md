@@ -386,3 +386,8 @@ Version: v1.2.15 @ 2023.12.13
     realized: finished the testing of the new short cut functional(phess).
     next do : Using this version of code to calc the real material for ZEN.
     thinking: (same as prev)
+
+Version: v1.2.16 @ 2023.12.18
+    realized: finished coding for the 3band model, add the alpha to control band 1 and band 2.
+    next do : Using this version of code to calc 3band model (arXiv:2209.14178v1).
+    thinking: (same as prev)

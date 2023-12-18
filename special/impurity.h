@@ -37,6 +37,11 @@ private:
 	void set_factor();
 	//interaction  factors
 	VecReal set_interaction();
+	//---------------------------------------special for the hhd function(arXiv:2209.14178v1)------------------------------------------------
+	VecReal set_3band_interaction_withalpha();
+	void modify_Impdata_for_half_fill_hhd(Impdata& impH_i);
+	//---------------------------------------------------------------------------------------------------------------------------------------
+
 public:
 	Impurity(const MyMpi& mm_i, const Prmtr& prmtr_i, const Bath& bth_i, const Str& file = empty_str);
 	Impurity(const MyMpi& mm_i, const Prmtr& prmtr_i, const Bath& bth_i, const VecInt or_deg);
