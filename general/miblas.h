@@ -44,9 +44,6 @@ inline MKL_Complex16 DOT(const Vec<MKL_Complex16> &lhs, const Vec<MKL_Complex16>
 // cblas_?scal x = a * x, where a is a scalar, x is an n-element vector.
 inline void SCAL(const double &a, Vec<double> &x)
 {
-#ifdef _CHECK_DIMENSION_MATCH_
-	ASSERT_EQ(y.size(), x.size());
-#endif
 	if (!x.size()) return;
 	MKL_INT N = (MKL_INT)x.size();
 	double *X = x.p();
@@ -57,9 +54,6 @@ inline void SCAL(const double &a, Vec<double> &x)
 // cblas_?scal x = a * x, where a is a scalar, x is an n-element vector.
 inline void SCAL(const float &a, Vec<float> &x)
 {
-#ifdef _CHECK_DIMENSION_MATCH_
-	ASSERT_EQ(y.size(), x.size());
-#endif
 	if (!x.size()) return;
 	MKL_INT N = (MKL_INT)x.size();
 	float *X = x.p();
