@@ -85,7 +85,8 @@ private:
 	bool check_correlated_column(const Int& col_pos, const VecInt& div_colsum) const;
 
 	// reference the 10.1103/PhysRevB.96.085139 FIG.1 algorithm
-	bool check_if_PHSs(const VecInt& div_colsum) const;
+	bool check_if_PHSs(const VecInt& div_colsum) const;	
+	bool check_if_PHSs_v2(const VecInt& div_colsum) const;
 
 	VecInt read_from_col_lable(const VEC<Int> x, const VEC<VEC<Int> > a) const;
 

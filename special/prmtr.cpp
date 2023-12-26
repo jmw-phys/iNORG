@@ -77,7 +77,8 @@ void Prmtr::set_values() {
     // nooc_mode = STR("nooc");
     // nooc_mode = STR("cpnooc");
     // nooc_mode = STR("cnooc");
-    nooc_mode = STR("phess");
+    // nooc_mode = STR("phess");
+    nooc_mode = STR("phss_v2");
     after_modify_prmtr();
     // control_divs[1] = {1,  0,  3,  0,  1,  0,  3,  0};
     // control_divs[2] = {1,  0,  3,  0,  1,  0,  3,  0};

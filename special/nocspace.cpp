@@ -85,28 +85,42 @@ bool NocSpace::check_correlated_column(const Int& col_pos, const VecInt& div_col
 	return false;
 }
 
-
-// here when return true, mean satisfy the PHSs rule.
-bool NocSpace::check_if_PHSs(const VecInt& div_colsum) const {
-	/*
-	Int change_nhole(0), change_nelec(0);
+// here when return true, mean satisfy the PHSs version.2's rule.
+bool NocSpace::check_if_PHSs_v2(const VecInt& div_colsum) const {
+	// bool thought_NOOC(true);
 	if (p.if_norg_imp) {
-		for_Int(col_idx, col_pos, div_colsum.size() / 2) {
-			change_nhole += orbital_divcnt[col_idx] - div_colsum[col_idx];
-			change_nelec += div_colsum[div_colsum.size() - 1 - col_idx];
-		}
-		if (change_nhole + change_nelec <= control_divs[0][div_colsum.size() - col_pos - 1]) return true;
+		ERR("Since this part was not in used, FOR here I have not test!");
+		return true;
 	}
 	else {
-		for_Int(col_idx, col_pos, div_colsum.size() / 2) {
-			change_nhole += orbital_divcnt[col_idx] - div_colsum[col_idx];
-			change_nelec += div_colsum[div_colsum.size() - col_idx];
+		// In this part of code we consider the PHSs rule with out the "*" terms.
+		Int length = div_colsum.size() / 2 - 1;
+		VecInt temp_hole_chages(length, 0), temp_elec_chages(length, 0), sum_hole_chages(length, 0), sum_elec_chages(length, 0);
+		/*
+		// count the division from inside to outside.
+		for_Int(col_idx, 0, length) {
+			temp_hole_chages[col_idx] = orbital_divcnt[div_colsum.size() / 2 - 1 - col_idx] - div_colsum[div_colsum.size() / 2 - 1 - col_idx];
+			temp_elec_chages[col_idx] = div_colsum[div_colsum.size() / 2 + 1 + col_idx];
 		}
-		if (change_nhole + change_nelec <= control_divs[0][div_colsum.size() - col_pos]) return true;
+		*/
+		// count the division from outside to inside.
+		for_Int(col_idx, 0, length) {
+			temp_hole_chages[col_idx] = orbital_divcnt[col_idx + 1] - div_colsum[col_idx + 1];
+			temp_elec_chages[col_idx] = div_colsum[div_colsum.size() - col_idx - 1];
+		}
+		for_Int(col_idx, 0, length) {
+			sum_hole_chages[col_idx] = SUM_0toX(temp_hole_chages, length - col_idx);
+			sum_elec_chages[col_idx] = SUM_0toX(temp_elec_chages, length - col_idx);
+		}
+
+		for_Int(col_pos, 0, length) if((sum_hole_chages[col_pos] + sum_elec_chages[col_pos]) > control_divs[0][(div_colsum.size() / 2) + 1 + col_pos]) return false;
 	}
-	// if (mm) WRN(NAV2(col_pos, div_colsum));
-	// if (mm) WRN(NAV2(change_nhole, change_nelec));
-	*/
+	return true;
+}
+
+
+// here when return true, mean satisfy the PHSs rule. //!Only suit for the 8 divisions.
+bool NocSpace::check_if_PHSs(const VecInt& div_colsum) const {
 	bool thought_NOOC(true);
 	if (p.if_norg_imp) {
 		ERR("Since this part was not in used, FOR here I have not test!");
@@ -134,18 +148,6 @@ bool NocSpace::check_if_PHSs(const VecInt& div_colsum) const {
 		for_Int(col_pos, 0, length)
 			if (SUM(temp_hole_chages.truncate(col_pos, length)) + SUM(temp_elec_chages.truncate(col_pos, length)) > 0 \
 				&& (SUM_0toX(temp_hole_chages, col_pos) != 0 || SUM_0toX(temp_elec_chages, col_pos) != 0)) return false;
-		
-/* // way two
-		MatInt temp_div_orbital_elec_and_hole = orbital_divcnt.mat(2,orbital_divcnt.size() / 2).tr().truncate_row(1,orbital_divcnt.size() / 2).tr();
-		VecInt sum_div_orbital_elec_and_hole(temp_div_orbital_elec_and_hole.ncols(), 0);
-		for_Int(i, 0, length) sum_div_orbital_elec_and_hole[i] = temp_div_orbital_elec_and_hole[0][i] + temp_div_orbital_elec_and_hole[1][i];
-		for_Int(col_pos, 0, length)
-			if (SUM_0toX(sum_div_orbital_elec_and_hole.reverse(), col_pos) > SUM_0toX(sum_div_orbital_elec_and_hole, col_pos+1) \
-				&& sum_hole_chages[col_pos] + sum_elec_chages[col_pos] < SUM_0toX(temp_hole_chages, col_pos+1) + SUM_0toX(temp_elec_chages, col_pos+1)) return false;
-		// for_Int(col_pos, 0, length)
-		// 	if (sum_hole_chages[col_pos] + sum_elec_chages[col_pos] <= control_divs[0][div_colsum.size() - col_pos - 1] \
-		// 		&& SUM_0toX(temp_hole_chages, col_pos) == 0 && SUM_0toX(temp_elec_chages, col_pos) == 0) return true;
-*/
 	}
 	return thought_NOOC;
 }
@@ -262,6 +264,7 @@ bool NocSpace::ifin_NocSpace(MatInt& spilss_div, const VecInt& nppso) const
 		else if(p.nooc_mode == STR("cpnooc")) {for_Int(i, start, ndivs/2 - 1) if(!check_correlated_column(i, spilsdiv_countvec)) return false;}		// Here we set middle of one were "nooc", and others were "cnooc".
 		else if(p.nooc_mode == STR("cnooc")) {for_Int(i, start, ndivs/2) if(!check_correlated_column(i, spilsdiv_countvec)) return false;}
 		else if (p.nooc_mode == STR("phess")) {return check_if_PHSs(spilsdiv_countvec);}
+		else if (p.nooc_mode == STR("phss_v2")) {return check_if_PHSs_v2(spilsdiv_countvec);}
 		else ERR("nooc_mode in put was wrong!");
 		return true;
 	}
@@ -289,8 +292,8 @@ bool NocSpace::suit_NOOC(MatInt& spilss_div, const VecInt& nppso) const
 	else if (p.nooc_mode == STR("cpnooc")) { for_Int(i, 1, countvec_length / 2 - 1) if (!check_correlated_column(i, countvec)) return false; }
 	else if (p.nooc_mode == STR("cnooc")) { for_Int(i, 1, countvec_length / 2) if (!check_correlated_column(i, countvec)) return false; }
 	else if (p.nooc_mode == STR("phess")) {return check_if_PHSs(countvec);}
-	// else if (p.nooc_mode == STR("phess")) {if (mm && check_if_PHSs(countvec) == true) WRN(NAV2(spilss_div, countvec)); return check_if_PHSs(countvec);}
-	// else ERR("nooc_mode in put was wrong!");
+	else if (p.nooc_mode == STR("phss_v2")) {return check_if_PHSs_v2(countvec);}
+	else ERR("nooc_mode in put was wrong!");
 	
 	// if (mm) WRN(NAV2(spilss_div, countvec));
 	return true;
@@ -298,7 +301,7 @@ bool NocSpace::suit_NOOC(MatInt& spilss_div, const VecInt& nppso) const
 }
 
 /*
-bool NocSpace::ifin_NocSpace(const VecBool new_cfig, const VecInt& nppso) const
+bool NocSpace::ifin_NocSpace(const VecBool new_cfig, const VecInt& nppso) const //! The input is VecBool type.
 {
 	MatInt spilss_div(sit_mat.nrows(), sit_mat.ncols(), 0);
 	{//chnage new_cfig to spilss_div
