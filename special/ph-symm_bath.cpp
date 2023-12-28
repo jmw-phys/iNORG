@@ -1,4 +1,4 @@
-#include "bath.h"
+#include "ph-symm_bath.h"
 /*
 Bath::Bath(const MyMpi& mm_i, const Prmtr& prmtr_i) :
 	mm(mm_i), p(prmtr_i), nb(p.nbath), hb(1, p), uur(mm.id()), ose(p.nbath), hop(p.nbath)
@@ -279,16 +279,66 @@ MatReal Bath::find_hop() const
     return h0;
 }
 
-void Bath::write_ose_hop(Int iter_cnt) const {
+//rely on imp model's frame
+MatReal Bath::find_hop() const
+{
+    MatReal h0(0, 0, 0.);
+    for_Int(i, 0, p.nband) {
+        const Int nb_i = p.nI2B[i * 2];
+        MatReal h0_i(1 + nb_i, 1 + nb_i, 0.);
+        for_Int(j, 0, nb_i) {
+            h0_i[0][j + 1] = vec_hop[i][j];
+            h0_i[j + 1][0] = vec_hop[i][j];
+            h0_i[j + 1][j + 1] = vec_ose[i][j];
+        }
+        h0_i.reset(direct_sum(h0_i, h0_i));
+        h0.reset(direct_sum(h0, h0_i));
+    }
+    return h0;
+}
+
+void Bath::write_ose_hop(Int iter_cnt, const Str& bath_name) const {
 	using namespace std;
-	OFS ofs_app(p.ofx + ".ose.hop.txt", std::ios::app);
-	ofs_app << iofmt("sci");
-	for_Int(orb_i, 0, p.norbs)
-	{
-		ofs_app << setw(4) << iter_cnt << setw(4) << orb_i;
-		for_Int(i, 0, p.nI2B[2 * orb_i]) { ofs_app << "\t" << setw(w_Real) << vec_ose[orb_i][i]; }
-		for_Int(i, 0, p.nI2B[2 * orb_i]) { ofs_app << "\t" << setw(w_Real) << vec_hop[orb_i][i]; }
-		ofs_app << endl;
+	OFS ofs;
+	if (iter_cnt < 0) {
+		if (bath_name.empty()) ofs.open("ose_hop");
+		else ofs.open(bath_name + "ose_hop.out");
 	}
-	ofs_app.close();
+	if (iter_cnt > 0) ofs.open(iox + "zic" + prefill0(iter_cnt, 3) + ".ose_hop.txt");
+	for_Int(band_i, 0, p.nband)	{
+		ofs << iofmt("sci");
+		ofs << setw(4) << band_i;
+		for_Int(i, 0, p.nI2B[2 * band_i]) { ofs << "\t" << setw(w_Real) << vec_ose[band_i][i]; }
+		ofs << endl;
+	}
+	for_Int(band_i, 0, p.nband)	{
+		ofs << iofmt("sci");
+		ofs << setw(4) << band_i;
+		for_Int(i, 0, p.nI2B[2 * band_i]) { ofs << "\t" << setw(w_Real) << vec_hop[band_i][i]; }
+		ofs << endl;
+	}
+	ofs << endl;ofs << endl;
+}
+
+void Bath::read_ose_hop() {
+	using namespace std;
+	// IFS ifs_ose;ifs_ose.open("ose.txt");
+	IFS ifs("ose_hop");
+	Str strr;
+	if(ifs)for_Int(band_i, 0, p.nband)	{
+		ifs >> strr;
+		VecReal ose_t(p.nI2B[2 * band_i], 0);
+		for_Int(i, 0, p.nI2B[2 * band_i]) { ifs >> ose_t[i]; }
+		// vec_ose.push_back(ose_t);
+		vec_ose[band_i] = ose_t;
+		// if(mm) WRN(NAV(ose_t));
+	}		
+	if(ifs)for_Int(band_i, 0, p.nband)	{
+		ifs >> strr;
+		VecReal hop_t(p.nI2B[2 * band_i], 0);
+		for_Int(i, 0, p.nI2B[2 * band_i]) { ifs >> hop_t[i]; }
+		// vec_hop.push_back(hop_t);
+		vec_hop[band_i] = hop_t;
+		// if(mm) WRN(NAV(hop_t));
+	}
 }

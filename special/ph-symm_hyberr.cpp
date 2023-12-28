@@ -2,7 +2,7 @@
 code	by	Rong-Qiang He (rqhe@ruc.edu.cn, RUC, China) date 2013 - 2017
 modify	by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
 */
-#include "hyberr.h"
+#include "ph-symm_hyberr.h"
 
 HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i) :
 	p(p_i), hb(hb_i), nw(p.fit_num_omg), nb(p.nbath),

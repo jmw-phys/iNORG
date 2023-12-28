@@ -8,7 +8,7 @@ date 2021-02-19
 #include "specs.h"
 #include "prmtr.h"
 #include "green.h"
-#include "hyberr.h"
+#include "ph-symm_hyberr.h"
 
 class Bath {
 public:
