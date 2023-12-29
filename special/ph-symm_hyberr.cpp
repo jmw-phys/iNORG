@@ -3,7 +3,7 @@ code	by	Rong-Qiang He (rqhe@ruc.edu.cn, RUC, China) date 2013 - 2017
 modify	by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
 */
 #include "ph-symm_hyberr.h"
-
+/*
 HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i) :
 	p(p_i), hb(hb_i), nw(p.fit_num_omg), nb(p.nbath),
 	x(2 * nw + 1), y(2 * nw + 1), sig(2 * nw + 1)
@@ -44,6 +44,7 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i) :
 		sig[2 * nw] = 0.1 * (1 + ABS(p.bsr));  //Change to the part of ose regularization
 	}
 }
+*/
 
 HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int& nb_i, Int orb_i, Int mode_i) :
 	p(p_i), hb(hb_i), nw(p.fit_num_omg), nb(nb_i), mode(mode_i),
@@ -91,8 +92,8 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int& nb_i, Int orb_i
 		{
 			//sig[2 * nw + 0] = nb * std::pow(8 * p.fit_max_omg, 4);
 			x[2 * nw + 0] = 2 * nw + 0;
-			y[2 * nw + 0] = p.t[orb_i] * p.t[orb_i];
-    			sig[2 * nw + 0] = 0.1 * (1 + p.t[orb_i] * p.t[orb_i]);
+			y[2 * nw + 0] = p.bsr[orb_i];
+    			sig[2 * nw + 0] = 0.1 * (1 + p.bsr[orb_i]);
 		}
 		else if (nb > 1)
 		{
@@ -105,8 +106,8 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int& nb_i, Int orb_i
 	
 	// the part of bath sum rule
 	x[2 * nw + 1] = 2 * nw + 1;
-	y[2 * nw + 1] = p.t[orb_i] * p.t[orb_i];
-    sig[2 * nw + 1] = 0.1 * (1 + p.t[orb_i] * p.t[orb_i]);
+	y[2 * nw + 1] = p.bsr[orb_i];
+    sig[2 * nw + 1] = 0.1 * (1 + p.bsr[orb_i]);
     
 }
 
@@ -125,17 +126,18 @@ d(S_{i,i}) / d(E_i) = d(1/(E_i - i * omgn)) / d(E_i) = -(E_i - i * omgn)^{-2} = 
 */
 void HybErr::operator()(const Int x, const VecReal& a, Real& y, VecReal& dyda) const
 {
+	VecReal temp;
 	if (x < 2 * nw) {
 		const Int n = x < nw ? x : x - nw;
-		const Cmplx iomgn = p.mbiomg(n);
+		const Cmplx iomgn = p.Imz(n);
 
 		if (mode == 1)
 		{
 			Int nb_tmp = nb / 2;
 			if (nb % 2 == 0)
 			{
-				const VecReal E_tmp = VecReal(nb_tmp, a.p());
-				const VecReal V_tmp = VecReal(nb_tmp, a.p() + nb_tmp);
+				const VecReal E_tmp = temp.sm(nb_tmp, a.p());
+				const VecReal V_tmp = temp.sm(nb_tmp, a.p() + nb_tmp);
 
 				const VecCmplx E = cmplx(concat(E_tmp, -E_tmp));
 				const VecCmplx S = INV(E - VecCmplx(2 * nb_tmp, iomgn));
@@ -165,9 +167,9 @@ void HybErr::operator()(const Int x, const VecReal& a, Real& y, VecReal& dyda) c
 				}
 				else if (nb > 1)
 				{
-					const VecReal E_tmp = VecReal(nb_tmp, a.p());
-					const VecReal V_tmp_left = VecReal(nb_tmp + 1, a.p() + nb_tmp);
-					const VecReal V_tmp_right = VecReal(nb_tmp, a.p() + nb_tmp);
+					const VecReal E_tmp = temp.sm(nb_tmp, a.p());
+					const VecReal V_tmp_left = temp.sm(nb_tmp + 1, a.p() + nb_tmp);
+					const VecReal V_tmp_right = temp.sm(nb_tmp, a.p() + nb_tmp);
 
 					VecReal tmp0(1, 0.);
 					const VecCmplx E = cmplx(concat(concat(E_tmp, tmp0), -E_tmp));
@@ -190,9 +192,9 @@ void HybErr::operator()(const Int x, const VecReal& a, Real& y, VecReal& dyda) c
 		}
 		else if (mode == 0)
 		{
-			const VecCmplx E = cmplx(VecReal(nb, a.p()));
+			const VecCmplx E = cmplx(temp.sm(nb, a.p()));
 			const VecCmplx S = INV(E - VecCmplx(nb, iomgn));
-			const VecCmplx V = cmplx(VecReal(nb, a.p() + nb));
+			const VecCmplx V = cmplx(temp.sm(nb, a.p() + nb));
 			const VecCmplx Vco = V.co();
 			Cmplx hyb = DOT(Vco, S * Vco);
 			y = x < nw ? real(hyb) : imag(hyb);
@@ -208,7 +210,7 @@ void HybErr::operator()(const Int x, const VecReal& a, Real& y, VecReal& dyda) c
 			Int nb_tmp = nb / 2;
 			if (nb % 2 == 0)
 			{
-				const VecReal E_tmp = VecReal(nb_tmp, a.p());
+				const VecReal E_tmp = temp.sm(nb_tmp, a.p());
 				const VecReal E = concat(E_tmp, -E_tmp);
 				const VecReal E2 = E * E;
 				y = DOT(E2, E2);
@@ -230,7 +232,7 @@ void HybErr::operator()(const Int x, const VecReal& a, Real& y, VecReal& dyda) c
 				}
 				else if (nb > 1)
 				{
-					const VecReal E_tmp = VecReal(nb_tmp, a.p());
+					const VecReal E_tmp = temp.sm(nb_tmp, a.p());
 					VecReal tmp0(1, 0.);
 					const VecReal E = concat(concat(E_tmp, tmp0), -E_tmp);
 					const VecReal E2 = E * E;
@@ -244,7 +246,7 @@ void HybErr::operator()(const Int x, const VecReal& a, Real& y, VecReal& dyda) c
 		}
 		else if (mode == 0)
 		{
-			const VecReal E = VecReal(nb, a.p());
+			const VecReal E = temp.sm(nb, a.p());
 			const VecReal E2 = E * E;
 			y = DOT(E2, E2);
 			VecReal D_E = 4. * E2 * E;
@@ -259,7 +261,7 @@ void HybErr::operator()(const Int x, const VecReal& a, Real& y, VecReal& dyda) c
 			Int nb_tmp = nb / 2;
 			if (nb % 2 == 0)
 			{
-				const VecReal V_tmp = VecReal(nb_tmp, a.p() + nb_tmp);
+				const VecReal V_tmp = temp.sm(nb_tmp, a.p() + nb_tmp);
 				const VecReal V = concat(V_tmp, V_tmp);
 				const VecReal Vco = V.co();
 				Real hyb = DOT(Vco, Vco);
@@ -282,8 +284,8 @@ void HybErr::operator()(const Int x, const VecReal& a, Real& y, VecReal& dyda) c
 				}
 				else if (nb > 1)
 				{
-					const VecReal V_tmp_left = VecReal(nb_tmp + 1, a.p() + nb_tmp);
-					const VecReal V_tmp_right = VecReal(nb_tmp, a.p() + nb_tmp);
+					const VecReal V_tmp_left = temp.sm(nb_tmp + 1, a.p() + nb_tmp);
+					const VecReal V_tmp_right = temp.sm(nb_tmp, a.p() + nb_tmp);
 					const VecReal V = concat(V_tmp_left, V_tmp_right);
 					const VecReal Vco = V.co();
 					Real hyb = DOT(Vco, Vco);
@@ -298,7 +300,7 @@ void HybErr::operator()(const Int x, const VecReal& a, Real& y, VecReal& dyda) c
 		}
 		else if (mode == 0)
 		{
-			const VecReal V = VecReal(nb, a.p() + nb);
+			const VecReal V = temp.sm(nb, a.p() + nb);
 			const VecReal Vco = V.co();
 			Real hyb = DOT(Vco, Vco);
 			y = hyb;

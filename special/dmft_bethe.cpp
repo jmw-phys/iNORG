@@ -42,14 +42,14 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 		++iter_cnt;ImGreen hb(p.nband, p);
 		if (!(fitdata && iter_cnt == 1)) {
 			hb = (mode == 1) ? find_hb_by_se(se):find_hb(g_loc);							if (mm) hb.write("hb", iter_cnt);
-			bth.bath_fit(hb,iter_cnt);														if (mm) bth.write_ose_hop(iter_cnt);
+			bth.number_bath_fit(hb, iter_cnt, 1);											if (mm) bth.write_ose_hop(iter_cnt);
 		}
 		imp.update("behte_alpha");																if (mm) imp.write_H0info(bth, -1, iter_cnt);
 		ImGreen hb_imp(p.nband, p);   	imp.find_hb(hb_imp); 								if (mm) hb_imp.write("hb-fit", iter_cnt);
 		// auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
 		if (iter_cnt > 1) norg.uormat = norg_tempU;	norg.up_date_h0_to_solve(imp.impH, 1);	n_eles = norg.write_impurtiy_occupation(iter_cnt);
 		ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);										if (mm)	g0imp.write("g0imp", iter_cnt);
-		ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
+		ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp,VecInt{1,1,1,1,2,2});		if (mm) gfimp.write("gfimp", iter_cnt);
 		ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();				if (mm) seimp.write("seimp", iter_cnt);
 
 		if (mode == 0) {
@@ -64,7 +64,7 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 			append_gloc_err(err_temp);														log("sigerr_update");
 			// se = (iter_cnt == 1) ? seimp : 0.5 * se + 0.5 * seimp;	
 			// se = seimp;
-			if (iter_cnt > 1 && err_temp < 0.01) Flag_semix = 1;
+			if (iter_cnt > 1 && err_temp < 1E-3) Flag_semix = 1;
 			pulay_mixing(seimp);
 			if (!Flag_semix) {
 				se = seimp;
@@ -86,18 +86,18 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 				bth.write_ose_hop(-1, "U" + STR(var_a));
 			}
 			norg.write_impurtiy_occupation(-1, "U" + STR(var_a));
-			ReGreen g0_imp_re(p.nband, p);	imp.find_g0(g0_imp_re);							if (mm) g0_imp_re.write("U" + STR(var_a) + "Re-g0fimp");
-			ReGreen gfimp_re(p.nband, p);	norg.get_gimp_eigpairs(gfimp_re);				if (mm) gfimp_re.write("U" + STR(var_a) + "Re-gfimp");
-			ReGreen se_re = g0_imp_re.inverse() - gfimp_re.inverse();						if (mm) se_re.write("U" + STR(var_a) + "Re-seimp");
-			ReGreen g_loc_re(p.nband, p); g_loc_re = find_gloc_by_se(se_re);				if (mm) g_loc_re.write("U" + STR(var_a) + "Re-gfloc");
+			ReGreen g0_imp_re(p.nband, p);	imp.find_g0(g0_imp_re);									if (mm) g0_imp_re.write("U" + STR(var_a) + "Re-g0fimp");
+			ReGreen gfimp_re(p.nband, p);	norg.get_gimp_eigpairs(gfimp_re,VecInt{1,1,1,1,2,2});	if (mm) gfimp_re.write("U" + STR(var_a) + "Re-gfimp");
+			ReGreen se_re = g0_imp_re.inverse() - gfimp_re.inverse();								if (mm) se_re.write("U" + STR(var_a) + "Re-seimp");
+			ReGreen g_loc_re(p.nband, p); g_loc_re = find_gloc_by_se(se_re);						if (mm) g_loc_re.write("U" + STR(var_a) + "Re-gfloc");
 
 
 			// excitation spectrum
 			// ReGreen hd_exsp(p.nband, p);	norg.get_gimp_hdQPs(hd_exsp);					if (mm)	hd_exsp.write("U" + STR(var_a) + "Re-hdex");
 			
-			var_a += 0.5;
+			var_a += 0.1;
 			set_parameter();
-			if (var_a > 4.0)
+			if (var_a > 3.6)
 				break;
 			res_past.clear();
 			se_input.clear();

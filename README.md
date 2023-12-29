@@ -396,3 +396,8 @@ Version: v1.2.17 @ 2023.12.26
     realized: finished the testing of the new noc-space functional(phss_v2).
     next do : fix the fitting with p-h symmetry.
     thinking: how to change the NORG to calculate SOC case.
+
+Version: v1.2.18.p1 @ 2023.12.28
+    realized: add the new fitting for the partical-hole symmary: ph-symm_*; modify for the {1,1,1,1,2,2} case.
+    next do : testing in the 3band model.
+    thinking: (same as prev)

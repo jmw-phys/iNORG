@@ -20,23 +20,24 @@ public:
 	VecReal sig;
 	Int mode;
 public:
-	HybErr(const Prmtr& p_i, const ImGreen& hb_i);
+	// HybErr(const Prmtr& p_i, const ImGreen& hb_i);
 
 	HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int& nb_i, Int orb_i,Int mode);
 
 	// return y = f(x; a);
 	Real operator()(const Int x, const VecReal& a) const {
+		VecReal temp;
 		if (x < 2 * nw) {
 			const Int n = x < nw ? x : x - nw;
-			const Real omgn = p.mbomg(n);
+			const Real omgn = p.Imomg(n);
 			if (mode == 1)
 			{
 				Int nb_tmp = nb / 2;
 				if (nb % 2 == 0)
 				{
-					const VecCmplx E = cmplx(concat(VecReal(nb_tmp, a.p()), -VecReal(nb_tmp, a.p())));
+					const VecCmplx E = cmplx(concat(temp.sm(nb_tmp, a.p()), -temp.sm(nb_tmp, a.p())));
 					const VecCmplx S = INV(E - VecCmplx(2 * nb_tmp, I * omgn));
-					const VecCmplx V = cmplx(concat(VecReal(nb_tmp, a.p() + nb_tmp), VecReal(nb_tmp, a.p() + nb_tmp)));
+					const VecCmplx V = cmplx(concat(temp.sm(nb_tmp, a.p() + nb_tmp), temp.sm(nb_tmp, a.p() + nb_tmp)));
 					const VecCmplx Vco = V.co();
 					Cmplx hyb = DOT(Vco, S * Vco);
 					return x < nw ? real(hyb) : imag(hyb);
@@ -53,9 +54,9 @@ public:
 					}
 					else if (nb > 1)
 					{
-						const VecReal E_tmp = VecReal(nb_tmp, a.p());
-						const VecReal V_tmp_left = VecReal(nb_tmp + 1, a.p() + nb_tmp);
-						const VecReal V_tmp_right = VecReal(nb_tmp, a.p() + nb_tmp);
+						const VecReal E_tmp = temp.sm(nb_tmp, a.p());
+						const VecReal V_tmp_left = temp.sm(nb_tmp + 1, a.p() + nb_tmp);
+						const VecReal V_tmp_right = temp.sm(nb_tmp, a.p() + nb_tmp);
 
 						VecReal tmp0(1, 0.);
 						const VecCmplx E = cmplx(concat(concat(E_tmp, tmp0), -E_tmp));
@@ -70,9 +71,9 @@ public:
 			}
 			else if (mode == 0)
 			{
-				const VecCmplx E = cmplx(VecReal(nb, a.p()));
+				const VecCmplx E = cmplx(temp.sm(nb, a.p()));
 				const VecCmplx S = INV(E - VecCmplx(nb, I * omgn));
-				const VecCmplx V = cmplx(VecReal(nb, a.p() + nb));
+				const VecCmplx V = cmplx(temp.sm(nb, a.p() + nb));
 				const VecCmplx Vco = V.co();
 				Cmplx hyb = DOT(Vco, S * Vco);
 				return x < nw ? real(hyb) : imag(hyb);
@@ -88,7 +89,7 @@ public:
 				Int nb_tmp = nb / 2;
 				if (nb % 2 == 0)
 				{
-					const VecReal E = concat(VecReal(nb_tmp, a.p()), -VecReal(nb_tmp, a.p()));
+					const VecReal E = concat(temp.sm(nb_tmp, a.p()), -temp.sm(nb_tmp, a.p()));
 					const VecReal E2 = E * E;
 					return DOT(E2, E2);
 				}
@@ -106,7 +107,7 @@ public:
 					}
 					else if (nb > 1)
 					{
-						const VecReal E_tmp = VecReal(nb_tmp, a.p());
+						const VecReal E_tmp = temp.sm(nb_tmp, a.p());
 						VecReal tmp0(1, 0.);
 						const VecReal E = concat(concat(E_tmp, tmp0), -E_tmp);
 						const VecReal E2 = E * E;
@@ -117,7 +118,7 @@ public:
 			}
 			else if (mode == 0)
 			{
-				const VecReal E = VecReal(nb, a.p());
+				const VecReal E = temp.sm(nb, a.p());
 				const VecReal E2 = E * E;
 				return DOT(E2, E2);
 			}
@@ -130,7 +131,7 @@ public:
 				Int nb_tmp = nb / 2;
 				if (nb % 2 == 0)
 				{
-					const VecReal V = concat(VecReal(nb_tmp, a.p() + nb_tmp), VecReal(nb_tmp, a.p() + nb_tmp));
+					const VecReal V = concat(temp.sm(nb_tmp, a.p() + nb_tmp), temp.sm(nb_tmp, a.p() + nb_tmp));
 					const VecReal Vco = V.co();
 					Real hyb = DOT(Vco, Vco);
 					return hyb;
@@ -148,8 +149,8 @@ public:
 					}
 					else if (nb > 1)
 					{
-						const VecReal V_tmp_left = VecReal(nb_tmp + 1, a.p() + nb_tmp);
-						const VecReal V_tmp_right = VecReal(nb_tmp, a.p() + nb_tmp);
+						const VecReal V_tmp_left = temp.sm(nb_tmp + 1, a.p() + nb_tmp);
+						const VecReal V_tmp_right = temp.sm(nb_tmp, a.p() + nb_tmp);
 						const VecReal V = concat(V_tmp_left, V_tmp_right);
 						const VecReal Vco = V.co();
 						Real hyb = DOT(Vco, Vco);
@@ -160,7 +161,7 @@ public:
 			}
 			else if (mode == 0)
 			{
-				const VecReal V = VecReal(nb, a.p() + nb);
+				const VecReal V = temp.sm(nb, a.p() + nb);
 				const VecReal Vco = V.co();
 				Real hyb = DOT(Vco, Vco);
 				return hyb;

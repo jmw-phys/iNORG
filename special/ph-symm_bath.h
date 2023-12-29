@@ -1,8 +1,8 @@
 #pragma once
 
 /*
-coded by Rong-Qiang He (rqhe@ruc.edu.cn, RUC, China)
-date 2021-02-19
+coded by Rong-Qiang He (rqhe@ruc.edu.cn, RUC, China) date 2021-02-19
+coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2023
 */
 
 #include "specs.h"
@@ -19,7 +19,8 @@ public:
 	VecReal ose;			// on-site energies for bath sites
 	VecReal hop;			// hopping coefficients between impurity site and bath sites
 
-	Vec<VecReal> vec_ose,vec_hop;
+	VEC<VecReal> vec_ose,vec_hop;
+	MatReal info;			// save the print out the NAV5(nmin, err, err_crv, err_reg, /*err_bsr,*/ a_norm)
 
 private:
 	void regularize_ose_hop() {
@@ -50,37 +51,17 @@ private:
 	}
 
 public:
-	// Bath(const MyMpi& mm_i, const Prmtr& prmtr_i);
-
 	Bath(const MyMpi& mm_i, const Prmtr& prmtr_i);
 	void number_bath_fit(const ImGreen& hb_i, Int iter, Int mode = 1);
 	
 	void init_vec_ose_hop();
 
-	void write_ose_hop(Int iter_cnt) const;
+	void write_ose_hop(Int iter_cnt = -1, const Str& bath_name = empty_str) const;
+	void read_ose_hop();
 
 	std::tuple<Real, VecReal, Int> bath_fit_number_contest(const VecReal& a0, Int nb, const ImGreen&hb_i, Int orb_i,Int mode);
 	MatReal find_hop() const;
 
 
-
 	void bath_fit(const ImGreen& hb_i, Int iter);
-
-	// void write_ose_hop(Int iter_cnt) const {
-	// 	using namespace std;
-	// 	OFS ofs_app(p.ofx + ".ose.hop.txt", std::ios::app);
-	// 	ofs_app << iofmt("sci");
-	// 	ofs_app << setw(4) << iter_cnt;
-	// 	for_Int(i, 0, nb) { ofs_app << "\t" << setw(w_Real) << ose[i]; }
-	// 	for_Int(i, 0, nb) { ofs_app << "\t" << setw(w_Real) << hop[i]; }
-	// 	ofs_app << endl;
-	// 	ofs_app.close();
-
-	// 	OFS ofs(iox + "zic" + prefill0(iter_cnt, 3) + ".ose.hop.txt");
-	// 	ofs << iofmt("sci");
-	// 	for_Int(i, 0, nb) {
-	// 		ofs << setw(3) << i << "\t" << setw(w_Real) << ose[i] << "\t" << setw(w_Real) << hop[i] << endl;;
-	// 	}
-	// 	ofs.close();
-	// }
 };

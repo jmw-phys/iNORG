@@ -68,7 +68,7 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 			if(mm) std::cout << "The "<<i<<"-th impurity occupation number: "<<iofmt()<<dm[i][0][0]<< std::endl;
 		}
 		// if (mm) WRN(NAV3(dm[0], dm[1], dm[2]));
-		// for_Int(spin, 0, 2) rotaionU_bath[0 + spin] = rotaionU_bath[2 + spin] = 0.5 * (rotaionU_bath[0 + spin] + rotaionU_bath[2 + spin]); //! set two orbital were same.
+		for_Int(spin, 0, 2) rotaionU_bath[0 + spin] = rotaionU_bath[2 + spin] = 0.5 * (rotaionU_bath[0 + spin] + rotaionU_bath[2 + spin]); //! set two band 0 and band 1 were same.
 		for_Int(i, 0, p.nband) rotaionU_bath[i*2] = rotaionU_bath[i*2 + 1] = 0.5 * (rotaionU_bath[i*2] + rotaionU_bath[i*2 + 1]); //! using the spin inversion symmetry(suit for SC).
 
 		VEC<VecReal> evalue;

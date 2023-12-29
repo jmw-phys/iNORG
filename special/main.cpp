@@ -2,8 +2,8 @@
 #include "specs.h"
 #include "prmtr.h"
 #include "model.h"
-#include "api_zen.h"
-#include "api_edmft.h"
+// #include "api_zen.h"
+// #include "api_edmft.h"
 #include "dmft_bethe.h"
 
 int main(int argc, char* argv[])
@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
 	using namespace std;
 	MPI_Init(&argc, &argv);
 	MyMpi mm;
-	if (mm) cout << "\n\nVersion: v1.2.17 @ 2023.12.28\
+	if (mm) cout << "\n\nVersion: v1.2.18 @ 2023.12.28\
 (running "<< present() <<")\n\n" << endl;
 	if (mm) cout << NAV(pwd()) << endl; 
 	use_mkl(mm);
@@ -22,6 +22,7 @@ int main(int argc, char* argv[])
 
 	// APIzen norg(mm, prmtr, "solver");
 	// APIedmft norg(mm, prmtr, "solver");
+	if(mm) WRN(NAV(prmtr.control_divs));
 	DMFT dmft(mm, prmtr, 1);
 	
     if (mm)	TIME_END("program", t_program_bgn);
