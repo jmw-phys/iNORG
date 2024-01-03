@@ -37,7 +37,7 @@ void Prmtr::set_inert_values()
 
 void Prmtr::set_values() {
     //model related
-    U = 3.0;
+    U = 3.4;
     mu = 0.0;
 
     //Parameter for the hhd function(arXiv:2209.14178v1)
@@ -67,8 +67,8 @@ void Prmtr::set_values() {
     if_norg_degenerate = 1;
     if_norg_imp = false;
     imp_backup = false;
-    templet_restrain = !if_norg_imp ? VecInt{0, -0, -1, -2,  0,  2,  1,  0} : VecInt{-1, -4, -4,  4,  4,  1};
-    templet_control  = !if_norg_imp ? VecInt{1,  1,  1,  3,  1,  3,  1,  1} : VecInt{ 0,  1,  1,  1,  1,  0};
+    templet_restrain = !if_norg_imp ? VecInt{0, -0, -1, -3,  0,  3,  1,  0} : VecInt{-1, -4, -4,  4,  4,  1};
+    templet_control  = !if_norg_imp ? VecInt{1,  0,  1,  3,  1,  3,  1,  0} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
     nI2B = SUM(templet_control) - templet_control[0];   // default value:
@@ -80,7 +80,7 @@ void Prmtr::set_values() {
     // nooc_mode = STR("phess");
     nooc_mode = STR("phss_v2");
     after_modify_prmtr();
-    control_divs[6] = control_divs[5] = {1,  1,  2,  2,  1,  2,  2,  1};
+    control_divs[6] = control_divs[5] = {1,  0,  2,  2,  1,  2,  2,  0};
     // control_divs[1] = {1,  0,  3,  0,  1,  0,  3,  0};
     // control_divs[2] = {1,  0,  3,  0,  1,  0,  3,  0};
     // control_divs[3] = {1,  1,  2,  0,  1,  0,  2,  1};

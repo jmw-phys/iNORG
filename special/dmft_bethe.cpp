@@ -64,7 +64,7 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 			append_gloc_err(err_temp);														log("sigerr_update");
 			// se = (iter_cnt == 1) ? seimp : 0.5 * se + 0.5 * seimp;	
 			// se = seimp;
-			if (iter_cnt > 1 && err_temp < 1E-3) Flag_semix = 1;
+			if (iter_cnt > 1 && err_temp < 5E-3) Flag_semix = 1;
 			pulay_mixing(seimp);
 			if (!Flag_semix) {
 				se = seimp;
