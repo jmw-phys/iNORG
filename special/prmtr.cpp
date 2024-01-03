@@ -80,13 +80,7 @@ void Prmtr::set_values() {
     // nooc_mode = STR("phess");
     nooc_mode = STR("phss_v2");
     after_modify_prmtr();
-    control_divs[6] = control_divs[5] = {1,  1,  2,  2,  1,  2,  2,  1};
-    // control_divs[1] = {1,  0,  3,  0,  1,  0,  3,  0};
-    // control_divs[2] = {1,  0,  3,  0,  1,  0,  3,  0};
-    // control_divs[3] = {1,  1,  2,  0,  1,  0,  2,  1};
-    // control_divs[4] = {1,  1,  2,  0,  1,  0,  2,  1};
-    // control_divs[3] = {1,  0,  3,  0,  1,  0,  3,  0};
-    // control_divs[4] = {1,  0,  3,  0,  1,  0,  3,  0};
+    // control_divs[6] = control_divs[5] = {1,  1,  2,  2,  1,  2,  2,  1};
     recalc_partical_number();
 }
 

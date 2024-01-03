@@ -14,7 +14,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 
 APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 	mm(mm_i), p(prmtr_i),num_omg(prmtr_i.num_omg),
-	num_nondegenerate(-1), dmft_cnt(0), weight_nooc(1E-4), weight_freze(1E-9)
+	num_nondegenerate(-1), dmft_cnt(0), weight_nooc(1E-4), weight_freze(1E-13)
 {
 	update(file);
 	Bath bth(mm, p);
@@ -106,10 +106,16 @@ void APIedmft::read_eDMFT(const Str& file)
 		std::vector<int> distribute_t;
 		read_norg_setting("PARAMS.norg", Ed, Deg, J, CoulombF, beta, U, restrain_t, distribute_t);
 		//--------------------------------------------------
+		if(nband = 3) {
 		// ! Here only suit for the t2g orbital.
-		nband = 3;	norbs = 6;	mu = 0;	
+		// nband = 3;	norbs = 6;	mu = 0;	
 		if (CoulombF != STR("'Ising'")) WRN("Now we only support for the Ising type interaction." + NAV(CoulombF))
 		Uc = U + (8.0/7.0) * J;	Jz= (632.0/819.0) * J;
+		} else if(nband = 2) {
+		Uc = U + (8.0/7.0) * J; Jz= (726.0/819.0) * J;
+		} else {
+			ERR("Now we only support for the t2g and eg orbital.")
+		}
 		p.beta = beta;
 
 		p.eimp.reset(concat(VecReal(Ed), VecReal(Ed)).mat(2, Ed.size()).tr().vec());
@@ -286,9 +292,10 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 			keep_o = o - nooc_o - freze_o; keep_e = e - nooc_e - freze_e;
 			controler[i+1] = p.if_norg_imp ?  VecInt{freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{1, freze_o, nooc_o, keep_o, 1, keep_e, nooc_e, freze_e };
 		}
+		if(mm) WRN(NAV4(p.if_norg_degenerate, p.nooc_mode, weight_nooc, weight_freze));
 		// if(mm) WRN(NAV(controler));
 		// p.nooc_mode = STR("cpnooc");
-		controler[0][1] = -1; controler[0][p.ndiv-1] = 1;
+		controler[0][1] = -0; controler[0][p.ndiv-1] = 0;
 		p.according_controler(controler, ordeg);
 	}
 }
@@ -333,6 +340,8 @@ void APIedmft::read_norg_setting(
                     Deg.push_back(value);
                 }
             }
+			nband = Deg.size();
+			norbs = 2 * nband;
         } else if (key == "J") {
             iss >> J;
         } else if (key == "CoulombF") {
@@ -343,6 +352,9 @@ void APIedmft::read_norg_setting(
             iss >> beta;
         } else if (key == "U") {
             iss >> U;
+		}
+		else if (key == "Minsulator") {
+			iss >> p.if_norg_degenerate;
 		}
 		else if (key == "weight_nooc") { 
 			iss >> weight_nooc;

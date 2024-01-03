@@ -8,8 +8,8 @@ date 2021-02-25
 #include "specs.h"
 #include "prmtr.h"
 #include "green.h"
-// #include "bath.h"
-#include "ph-symm_bath.h"
+#include "bath.h"
+// #include "ph-symm_bath.h"
 #include "model.h"
 
 // a basis state (i.e., a configuration) is represented by an integer.

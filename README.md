@@ -397,7 +397,7 @@ Version: v1.2.17 @ 2023.12.26
     next do : fix the fitting with p-h symmetry.
     thinking: how to change the NORG to calculate SOC case.
 
-Version: v1.2.18.p1 @ 2023.12.28
-    realized: add the new fitting for the partical-hole symmary: ph-symm_*; modify for the {1,1,1,1,2,2} case.
-    next do : testing in the 3band model.
+Version: v1.2.18p3.0 @ 2024.01.03
+    realized: finished the eg orbital calculation.
+    next do : testin on La4Ni3O10.
     thinking: (same as prev)
