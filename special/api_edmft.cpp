@@ -106,13 +106,14 @@ void APIedmft::read_eDMFT(const Str& file)
 		std::vector<int> distribute_t;
 		read_norg_setting("PARAMS.norg", Ed, Deg, J, CoulombF, beta, U, restrain_t, distribute_t);
 		//--------------------------------------------------
-		if(nband = 3) {
 		// ! Here only suit for the t2g orbital.
 		// nband = 3;	norbs = 6;	mu = 0;	
-		if (CoulombF != STR("'Ising'")) WRN("Now we only support for the Ising type interaction." + NAV(CoulombF))
-		Uc = U + (8.0/7.0) * J;	Jz= (632.0/819.0) * J;
-		} else if(nband = 2) {
-		Uc = U + (8.0/7.0) * J; Jz= (726.0/819.0) * J;
+		if (CoulombF != STR("'Ising'")) {
+			 WRN("Now we only support for the Ising type interaction." + NAV(CoulombF))
+		} else if(nband == 3) {
+			Uc = U + (8.0/7.0) * J;	Jz= (632.0/819.0) * J;
+		} else if(nband == 2) {
+			Uc = U + (8.0/7.0) * J; Jz= (726.0/819.0) * J;
 		} else {
 			ERR("Now we only support for the t2g and eg orbital.")
 		}
@@ -232,7 +233,7 @@ ImGreen APIedmft::fix_se(const ImGreen& se) const{
 void APIedmft::update(const Str& file) {
 	{// modify the parameters from edmft.in
 		read_eDMFT(file);	p.U = Uc; p.mu = mu; p.jz = Jz; p.nband = nband; p.norg_sets = p.norbs = norbs;
-		p.templet_restrain = restrain; p.templet_control = distribute; p.project = NAV(nband) + "SrVO3";
+		p.templet_restrain = restrain; p.templet_control = distribute; p.project = NAV(nband) + "band";
 		p.after_modify_prmtr(); p.recalc_partical_number();
 		p.Uprm = p.U - 2 * p.jz;
 		p.degel = 0;
