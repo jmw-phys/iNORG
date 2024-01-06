@@ -253,6 +253,7 @@ VecReal Impurity::set_3band_interaction_withalpha() {
     return interaction;
 }
 
+//! special chage for the 3 band hhd case.
 void Impurity::modify_Impdata_for_half_fill_hhd(Impdata& impH_i){
     //! modify the non-interacting part of impurity Hamiltonian
 	MatReal& h0 = impH_i.first;
@@ -260,10 +261,11 @@ void Impurity::modify_Impdata_for_half_fill_hhd(Impdata& impH_i){
 	for_Int(i, 0, p.norg_sets) {
         h0[i * norb2set][i * norb2set] -= p.U * 0.5;
         // interorbital part
-        // special chage for the 3 band hhd case. (arXiv:2209.14178v1)
+            // else if (p.nband  > 3)h0[i * norb2set][i * norb2set] -= p.U * 0.5 + (p.nband-1) * (p.Uprm * 0.5) + (p.nband-1) * (p.Uprm - p.jz) * 0.5;
+        //! special chage for the 3 band hhd case. (arXiv:2209.14178v1) 
         Real iner_part_per_band = ((p.nband - 1) * (p.Uprm * 0.5) + (p.nband - 1) * (p.Uprm - p.jz) * 0.5) / (p.nband - 1);
-        if (i/2 < 2) h0[i * norb2set][i * norb2set] -= (iner_part_per_band * p.alpha) + iner_part_per_band * (p.nband - 2);
-        if (i/2 >= 2) h0[i * norb2set][i * norb2set] -= iner_part_per_band * (p.nband - 1);
+        if (i/2 < 2) h0[i * norb2set][i * norb2set] -= (iner_part_per_band * p.alpha) + iner_part_per_band * (3 - 2); //! set band 0 same as band 1.
+        if (i/2 >= 2) h0[i * norb2set][i * norb2set] -= iner_part_per_band * (3 - 1);
 	}
 }
 

@@ -43,7 +43,7 @@ void Bath::init_vec_ose_hop()
 
 void Bath::number_bath_fit(const ImGreen& hb_i, Int iter,Int mode)
 {
-	for_Int(band_i, 1, p.nband)
+	for_Int(band_i, 1, 3) //! set band 0 same as band 1.
 	{
 		ImGreen hb(hb_i,band_i,band_i);
 
@@ -151,7 +151,7 @@ void Bath::number_bath_fit(const ImGreen& hb_i, Int iter,Int mode)
 			cout << setw(4) << iter << "  " << NAV7(band_i, nmin, err, err_crv, err_reg, err_bsr, a_norm) << "  " << present() << endl;
 			NAV7(Int(info[band_i][0]=Real(nmin)), info[band_i][1]=err, info[band_i][2]=err_crv, info[band_i][3]=err_reg, info[band_i][4]=0, info[band_i][5]=err_bsr, info[band_i][6]=a_norm);
 		}
-	{vec_ose[0] = vec_ose[1]; vec_hop[0] = vec_hop[1];} // set band 0 same as band 1.
+	{vec_ose[0] = vec_ose[1]; vec_hop[0] = vec_hop[1];} //! set band 0 same as band 1.
 	}
 }
 
