@@ -64,7 +64,7 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 			append_gloc_err(err_temp);														log("sigerr_update");
 			// se = (iter_cnt == 1) ? seimp : 0.5 * se + 0.5 * seimp;	
 			// se = seimp;
-			if (iter_cnt > 1 && err_temp < 5E-3) Flag_semix = 1;
+			if (iter_cnt > 1 && err_temp < 8E-3) Flag_semix = 1;
 			pulay_mixing(seimp);
 			if (!Flag_semix) {
 				se = seimp;
@@ -77,26 +77,26 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 		norg_tempU = norg.uormat;
 
 		if (converged()) {
-			Real& var_a(p.U);
+			Real& var_a(p.alpha);
 			if(mm) {
-				g0imp.write("U" + STR(var_a) + "mb.g0imp");
-				gfimp.write("U" + STR(var_a) + "mb.gfimp");
-				seimp.write("U" + STR(var_a) + "mb.seimp");
-				g_loc.write("U" + STR(var_a) + "mb.gfloc");
-				bth.write_ose_hop(-1, "U" + STR(var_a));
+				g0imp.write("alpha" + STR(var_a) + "mb.g0imp");
+				gfimp.write("alpha" + STR(var_a) + "mb.gfimp");
+				seimp.write("alpha" + STR(var_a) + "mb.seimp");
+				g_loc.write("alpha" + STR(var_a) + "mb.gfloc");
+				bth.write_ose_hop(-1, "alpha" + STR(var_a));
 			}
-			norg.write_impurtiy_occupation(-1, "U" + STR(var_a));
-			ReGreen g0_imp_re(p.nband, p);	imp.find_g0(g0_imp_re);									if (mm) g0_imp_re.write("U" + STR(var_a) + "Re-g0fimp");
-			ReGreen gfimp_re(p.nband, p);	norg.get_gimp_eigpairs(gfimp_re,VecInt{1,1,1,1,2,2});	if (mm) gfimp_re.write("U" + STR(var_a) + "Re-gfimp");//! set band 0 same as band 1.
-			ReGreen se_re = g0_imp_re.inverse() - gfimp_re.inverse();								if (mm) se_re.write("U" + STR(var_a) + "Re-seimp");
-			ReGreen g_loc_re(p.nband, p); g_loc_re = find_gloc_by_se(se_re);						if (mm) g_loc_re.write("U" + STR(var_a) + "Re-gfloc");
+			norg.write_impurtiy_occupation(-1, "alpha" + STR(var_a));
+			ReGreen g0_imp_re(p.nband, p);	imp.find_g0(g0_imp_re);									if (mm) g0_imp_re.write("alpha" + STR(var_a) + "Re-g0fimp");
+			ReGreen gfimp_re(p.nband, p);	norg.get_gimp_eigpairs(gfimp_re,VecInt{1,1,1,1,2,2});	if (mm) gfimp_re.write("alpha" + STR(var_a) + "Re-gfimp");//! set band 0 same as band 1.
+			ReGreen se_re = g0_imp_re.inverse() - gfimp_re.inverse();								if (mm) se_re.write("alpha" + STR(var_a) + "Re-seimp");
+			ReGreen g_loc_re(p.nband, p); g_loc_re = find_gloc_by_se(se_re);						if (mm) g_loc_re.write("alpha" + STR(var_a) + "Re-gfloc");
 
 
 			// excitation spectrum
-			// ReGreen hd_exsp(p.nband, p);	norg.get_gimp_hdQPs(hd_exsp);					if (mm)	hd_exsp.write("U" + STR(var_a) + "Re-hdex");
-			
-			var_a += 0.1;
-			if (var_a > 3.6)
+			// ReGreen hd_exsp(p.nband, p);	norg.get_gimp_hdQPs(hd_exsp);					if (mm)	hd_exsp.write("alpha" + STR(var_a) + "Re-hdex");
+			// break;
+			var_a -= 0.20;
+			if (var_a < 0.0)
 				break;
 			set_parameter();
 			res_past.clear();

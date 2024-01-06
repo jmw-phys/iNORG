@@ -46,6 +46,7 @@ void orthogonalization_one_to_multiple(const MyMpi& mm, Vec<T>& v, const VEC<Vec
 //template<typename T>
 //inline void orthonormalize_one_to_multiple(Vec<T>& v, const VEC<Vec<T>>& m, Int e){ for_Idx(i, 0, e) v -= DOT(m[i], v) * m[i]; }
 
+/*
 template<typename T, typename F>
 VecInt lanczos(VecReal& evals, Mat<T>& evecs, VecInt& ev_dgcy, Idx n, Int wish_nev, F& H,
     VecReal& inital_state, const MyMpi& mm, bool fast_mode = false, Int max_krylov = 9999)
@@ -162,12 +163,117 @@ VecInt lanczos(VecReal& evals, Mat<T>& evecs, VecInt& ev_dgcy, Idx n, Int wish_n
     VecInt krylov_size(Krylovsize);
     return krylov_size;
 }
+*/
 
-//template<typename T, typename F>
-//void lanczos(VecReal& eval, Mat<T>& evec, VecInt& ev_dgcy, Int wish_nev, F& H, Int max_krylov = 999)
-//{
-//    UURandomSFMT uur;
-//    Vec <T> ev(evec[e]);
-//    if (giv <= e) { uur(ev); ev -= 0.5;}
-//}
 
+template<typename T, typename F>
+VecInt lanczos(VecReal& evals, Mat<T>& evecs, Int& gs_dgcy, Idx n, Int evals_size, F& H,
+    VecReal& inital_state, const MyMpi& mm, bool fast_mode = false, Int max_krylov = 9999)
+    //	Lanczos algorithm to find several lowest eigenpairs of a Hermitian matrix
+    //  only typename F(matrix) H needed with well define operator*(which to returns H * |p>)
+    //	typename T can only be Real or Cmplx(NOT USED/TESTED)
+    //Output:
+    //  eval                is the eigenvalues                              (Dynamic size)
+    //  evec                is the eigenvectors, one row contains one vector(Dynamic nrow)
+    //  gs_dgcy             ground states's degeneracy
+    //Input:
+    //  n                   is the dimension of the H's space.
+    //  evals_size          is the fix eigenstates to be found.
+    //  H                   typename F(matrix) H needed with well define operator*(which to returns H * |p>)
+    //  inital_state        (not necessary) if set it as blank, Then we will generate a random vector.
+    //  max_krylov          (not necessary) is the maximum size of the Krylov space
+
+{
+    // if (fast_mode) PIO("Dear customer, you are now in the fast mode, in this mode you only can find the ONE eigen pair.");
+#ifdef _CHECK_DIMENSION_MATCH_
+    //ASSERT_EQ(n, evec[].());
+#endif
+    using namespace std;
+    Int e(0);
+    gs_dgcy = 1;
+    VEC<VecReal> evec;
+    VEC<Real> eval;
+    VEC<Int> Krylovsize;
+    VecPartition vp(mm.np(), mm.id(), inital_state.size());
+    while (e < evals_size)
+    {
+        // for tridiagonal matrix
+        VEC<Real> ltd;	    // diagonal elements / eigenvalues
+        VEC<Real> lt_sd;	// sub-diagonal elements
+        // prepare an initial Lanczos vector
+        VecReal inital_state_p(vp.len());
+        for_Int(i, 0, vp.len()) inital_state_p[i] = inital_state[i + vp.bgn()];
+        Real norm_inv = INV(SQRT(mm.Allreduce(DOT(inital_state_p, inital_state_p))));
+        VecReal temp = norm_inv * inital_state_p;
+        if (e > 0) {
+            orthogonalization_one_to_multiple(mm, temp, evec, e);
+            temp *= INV(SQRT(mm.Allreduce(DOT(temp, temp))));
+        }
+        VecReal v0 = temp;
+        VecReal v1(H * v0);
+        Idx k = 0;
+        Real a(0.), b(0.);
+        while (true)
+        {
+            a = mm.Allreduce(DOT(v1, v0));
+            ltd.push_back(a);
+            if (!(fast_mode)) if ( k >= 200 ) if (residual_method_for_b(ltd, lt_sd, b, k, fast_mode)) break;
+            if ((fast_mode))  if ( k >= 200 ) if (residual_method_for_b(ltd, lt_sd, b, k, fast_mode)) break;
+            if (k >= max_krylov) {
+                if(mm) WRN("Getting Wrong with someting? krylov was too large!" + NAV2(e, k));
+                if (k >= 20 + max_krylov) break;
+            }
+            k++;
+            v1 -= a * v0;
+            b = SQRT(mm.Allreduce(DOT(v1, v1)));
+            lt_sd.push_back(b);
+            if (e > 0) orthogonalization_one_to_multiple(mm, v1, evec, e);
+            v1 *= INV(SQRT(mm.Allreduce(DOT(v1, v1)))); //v1 *= (1 / b);
+            SWAP(v0, v1);
+            v1 *= -b;
+            v1 += H * v0;
+        }
+        // WRN(NAV(k) + "The iteration" + NAV(e));
+        VecReal va(ltd), vb(lt_sd);
+#ifdef _ASSERTION_
+        if (va.size() - 1 != vb.size())ERR("Wrong with lanczos" + NAV3(e, va.size(), vb.size()));
+#endif
+        MatReal ev(ltd.size(), ltd.size(), 0.);
+        trd_heevr_qr(va, vb, ev);
+        VecReal gs_kvsp(ev.tr()[0]);                //ground state at Krylov space.
+        VecReal gs(v0.size(), 0.);
+        v0 = temp;
+        gs += gs_kvsp[0] * v0;
+        v1 = H * v0;
+        k = 1;
+        while (true)
+        {
+            v1 -= ltd[k - 1] * v0;
+            if (e > 0) orthogonalization_one_to_multiple(mm, v1, evec, e);
+            // for_Idx(i, 0, e) v1 -= DOT(evec[i], v1) * evec[i];
+            if (k == gs_kvsp.size() - 1) break;
+            v1 *= INV(SQRT(mm.Allreduce(DOT(v1, v1))));
+            gs += gs_kvsp[k] * v1;
+            SWAP(v0, v1);
+            v1 *= -lt_sd[k - 1];
+            v1 += H * v0;  k++;
+        }
+        Krylovsize.push_back(k);
+        evec.push_back(gs);
+        eval.push_back(va[0]);
+        e++;
+        if (fast_mode) break;
+    }
+    evecs.reset(evec.size(),n);
+    for_Int(i, 0, evec.size()) evecs[i] = mm.Allgatherv(evec[i], vp);
+    evals.reset(eval);
+
+    slctsort(evals, evecs);
+    for_Int(i, 1, evals.size()) {
+        if(compare_error(evals[0], evals[i]) < 1.E-7) gs_dgcy++;
+        // if(ABS(evals[i]-evals[0]) < 1.E-4) gs_dgcy++;
+    }
+    // if(mm) WRN(NAV(evals))    
+    VecInt krylov_size(Krylovsize);
+    return krylov_size;
+}

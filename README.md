@@ -401,3 +401,8 @@ Version: v1.2.18.p1 @ 2023.12.28
     realized: add the new fitting for the partical-hole symmary: ph-symm_*; modify for the {1,1,1,1,2,2} case.
     next do : testing in the 3band model.
     thinking: (same as prev)
+
+Version: v1.2.19p1.1 @ 2024.01.06
+    realized: Chage the lanczos Style for finding the degenerate ground state.
+    next do : testing for the different alpha in 3band model.
+    thinking: (same as prev)

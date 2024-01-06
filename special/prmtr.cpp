@@ -22,7 +22,7 @@ void Prmtr::set_inert_values()
     
 	gauss_n_max = 512;		        // default value: 2048
 	gauss_n_min = 64;		        // default value: 64
-    iter_max = 99;                   // default value: 99
+    iter_max = 200;                   // default value: 99
 
     dlt_freq = 0.005;
     eta_freq = 0.02;
@@ -37,7 +37,7 @@ void Prmtr::set_inert_values()
 
 void Prmtr::set_values() {
     //model related
-    U = 3.0;
+    U = 5.0;
     mu = 0.0;
 
     //Parameter for the hhd function(arXiv:2209.14178v1)
@@ -67,7 +67,7 @@ void Prmtr::set_values() {
     if_norg_degenerate = 1;
     if_norg_imp = false;
     imp_backup = false;
-    templet_restrain = !if_norg_imp ? VecInt{0, -0, -1, -3,  0,  3,  1,  0} : VecInt{-1, -4, -4,  4,  4,  1};
+    templet_restrain = !if_norg_imp ? VecInt{0, -0, -2, -3,  0,  3,  2,  0} : VecInt{-1, -4, -4,  4,  4,  1};
     templet_control  = !if_norg_imp ? VecInt{1,  0,  0,  3,  1,  3,  0,  0} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
@@ -81,7 +81,6 @@ void Prmtr::set_values() {
     nooc_mode = STR("phss_v2");
     after_modify_prmtr();
     control_divs[6] = control_divs[5] = {1,  0,  1,  2,  1,  2,  1,  0};//! set band 0 same as band 1.
-    control_divs[4] = control_divs[3] = {1,  0,  1,  2,  1,  2,  1,  0};
     // control_divs[1] = {1,  0,  3,  0,  1,  0,  3,  0};
     // control_divs[2] = {1,  0,  3,  0,  1,  0,  3,  0};
     // control_divs[3] = {1,  1,  2,  0,  1,  0,  2,  1};
