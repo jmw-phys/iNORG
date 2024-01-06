@@ -22,8 +22,8 @@ bool residual_method_for_b(VEC<T> ltd, VEC<T> lt_sd, Real b, Int k, bool fast_mo
     Vec<T> va(ltd);
     Vec<T> vb(lt_sd);
     Int info = trd_heevr_qr(va, vb, ev); if (info != 0)ERR("the i-th parameter had an illegal value." + NAV3(info, va, vb));
-    if ((fast_mode) && ABS(b * ev[k][0]) < 1.E-10) return true;
-    if (!(fast_mode) && ABS(b * ev[k][0]) < 1.E-12) return true;
+    if ((fast_mode) && ABS(b * ev[k][0]) < 1.E-8) return true;
+    if (!(fast_mode) && ABS(b * ev[k][0]) < 1.E-9) return true;
     return false;
 }
 
@@ -217,8 +217,8 @@ VecInt lanczos(VecReal& evals, Mat<T>& evecs, Int& gs_dgcy, Idx n, Int evals_siz
         {
             a = mm.Allreduce(DOT(v1, v0));
             ltd.push_back(a);
-            if (!(fast_mode)) if ( k >= 200 ) if (residual_method_for_b(ltd, lt_sd, b, k, fast_mode)) break;
-            if ((fast_mode))  if ( k >= 200 ) if (residual_method_for_b(ltd, lt_sd, b, k, fast_mode)) break;
+            if (!(fast_mode)) if ( k >= 60 ) if (residual_method_for_b(ltd, lt_sd, b, k, fast_mode)) break;
+            if ((fast_mode))  if ( k >= 60 ) if (residual_method_for_b(ltd, lt_sd, b, k, fast_mode)) break;
             if (k >= max_krylov) {
                 if(mm) WRN("Getting Wrong with someting? krylov was too large!" + NAV2(e, k));
                 if (k >= 20 + max_krylov) break;
@@ -263,6 +263,11 @@ VecInt lanczos(VecReal& evals, Mat<T>& evecs, Int& gs_dgcy, Idx n, Int evals_siz
         eval.push_back(va[0]);
         e++;
         if (fast_mode) break;
+        if (e == evals_size) {// verify if finding all the degeneracy
+            Int ndeg = 1;
+            for_Int(i, 1, eval.size()) if (compare_error(eval[0], eval[i]) < 1.E-6) ndeg++;
+            if (evals_size == ndeg) evals_size++;
+        }
     }
     evecs.reset(evec.size(),n);
     for_Int(i, 0, evec.size()) evecs[i] = mm.Allgatherv(evec[i], vp);

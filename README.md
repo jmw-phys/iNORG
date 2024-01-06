@@ -406,3 +406,8 @@ Version: v1.2.19p1.1 @ 2024.01.06
     realized: Chage the lanczos Style for finding the degenerate ground state.
     next do : testing for the different alpha in 3band model.
     thinking: (same as prev)
+
+Version: v1.3.00 @ 2024.01.06
+    realized: Fix the lanczos Style for finding the degenerate ground state.
+    next do : (same as prev)
+    thinking: (same as prev)
