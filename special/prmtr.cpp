@@ -16,7 +16,7 @@ Prmtr::Prmtr(const MyMpi& mm) : np(mm.np())
 
 void Prmtr::set_inert_values()
 {
-    nband = 3;         
+    nband = 3;
     norbs = nband * 2;
     project = STR(nband)+"band_KH";
     
@@ -37,11 +37,11 @@ void Prmtr::set_inert_values()
 
 void Prmtr::set_values() {
     //model related
-    U = 5.0;
+    U = 3.3;
     mu = 0.0;
 
     //Parameter for the hhd function(arXiv:2209.14178v1)
-    alpha = 1.0;
+    alpha = 0.5;
     delta = 0.3;
 
     // jz = 0.5;
@@ -50,7 +50,7 @@ void Prmtr::set_values() {
     Uprm = U - delta;
     bandw = 50.;                                        //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
     eimp = VecReal(norbs, 0.);
-    degel = 1;                                          // Degenerate energy levels
+    degel = 2;                                          // Degenerate energy levels
     bethe_t.reset(nband, 0.5);
 	// if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] = 0.5 * bethe_t[i];
 	// if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] = 0.25;
@@ -80,7 +80,8 @@ void Prmtr::set_values() {
     // nooc_mode = STR("phess");
     nooc_mode = STR("phss_v2");
     after_modify_prmtr();
-    control_divs[6] = control_divs[5] = {1,  0,  1,  2,  1,  2,  1,  0};//! set band 0 same as band 1.
+    // control_divs[4] = control_divs[3] = {1,  0,  1,  2,  1,  2,  1,  0};
+    // control_divs[6] = control_divs[5] = {1,  0,  1,  2,  1,  2,  1,  0};//! set band 0 same as band 1.
     // control_divs[1] = {1,  0,  3,  0,  1,  0,  3,  0};
     // control_divs[2] = {1,  0,  3,  0,  1,  0,  3,  0};
     // control_divs[3] = {1,  1,  2,  0,  1,  0,  2,  1};

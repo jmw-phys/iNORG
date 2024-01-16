@@ -67,10 +67,10 @@ public:
 
 	void find_gf_lesser(const Real& ge0, Green &g0);
 
-	void find_hd_greater(const Real& ge0, Green &g0, Int position);
-	VecReal find_hd_exstate(Int position);
+	void find_hd_greater(const Real& ge0, Green &g0, Int position, Int ex_idx = -1);
+	VecReal find_hd_exstate(Int position,  Int ex_idx = -1);
 	
-	void find_gf_greater(const Real& ge0, Green &g0, Int kind);
+	// void find_gf_greater(const Real& ge0, Green &g0, Int kind);
 
-	void find_gf_lesser(const Real& ge0, Green &g0, Int kind);
+	// void find_gf_lesser(const Real& ge0, Green &g0, Int kind);
 };

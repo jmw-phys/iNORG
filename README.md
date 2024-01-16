@@ -411,3 +411,8 @@ Version: v1.3.00 @ 2024.01.06
     realized: Fix the lanczos Style for finding the degenerate ground state.
     next do : (same as prev)
     thinking: (same as prev)
+
+Version: v1.3.00p1.1-3band @ 2024.01.16
+    realized: Add the ex-state calc(get_gimp_hdQPs()) for the 3band model.
+    next do : (same as prev)
+    thinking: (same as prev)

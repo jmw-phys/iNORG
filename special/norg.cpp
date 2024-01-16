@@ -389,7 +389,8 @@ void NORG::get_gimp_eigpairs(Green& imp_i, VecInt or_deg)
 	for_Int(i, 0, p.nband) for_Int(n, 0, imp_i.nomgs) imp_i[n][i][i] = imp_i[n][idx[or_deg[2 * i] - 1]][idx[or_deg[2 * i] - 1]];
 }
 
-void NORG::get_gimp_hdQPs(Green& imp_i)
+// special modify for the HHD case.(arXiv:2209.14178v1)
+void NORG::get_gimp_hdQPs(Green& imp_i, Int ex_idx)
 {
 	for_Int(i, 0, p.nband) 
 	{
@@ -403,17 +404,17 @@ void NORG::get_gimp_hdQPs(Green& imp_i)
 				CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, final_ground_state[egs_idx], i * 2);
 				if(imp_i.type_info() == STR("ImGreen")) {
 					ImGreen green_function(1, p);
-					temp_green.find_hd_greater(groune_lst, green_function, i * 2);
+					temp_green.find_hd_greater(groune_lst, green_function, i * 2, ex_idx);
 					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
 				}
 				if(imp_i.type_info() == STR("ReGreen")) {
 					ReGreen green_function(1, p);
-					temp_green.find_hd_greater(groune_lst, green_function, i * 2);
+					temp_green.find_hd_greater(groune_lst, green_function, i * 2, ex_idx);
 					for_Int(n, 0, green_function.nomgs) imp_i[n][i][i] += green_function[n][0][0] / p.degel;
 				}
 			}
 		}
-		if (mm) PIO("finished the " + STR(i) + " find_g_norg   " + present());
+		// if (mm) PIO("finished the " + STR(i) + " find_g_norg   " + present());
 	}
 }
 

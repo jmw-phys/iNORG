@@ -108,6 +108,11 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
             green_pre[w] = gaz;
         }
         VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
+        // if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) {
+        //     MatReal ev(ltd.size(), ltd.size(), 0.);
+        //     trd_heevr_qr(a, b, ev);
+        //     if (mm) WRN(NAV(a.truncate(0,200)));
+        // }
         if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) break;
         // if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
     }
@@ -163,6 +168,11 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
             green_pre[w] = gaz;
         }
         VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
+        // if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) {
+        //     MatReal ev(ltd.size(), ltd.size(), 0.);
+        //     trd_heevr_qr(a, b, ev);
+        //     if (mm) WRN(NAV(a.truncate(0,200)));
+        // }
         if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) break;
         // if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
     }
@@ -172,10 +182,31 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
 }
 
 
-// ! only suit for the two orbital cases.
-VecReal CrrltFun::find_hd_exstate( Int position ) {
+// ! only suit for the three orbital cases.
+VecReal CrrltFun::find_hd_exstate(Int position, Int ex_idx) {
+    VEC<VecBool> ex_VecBools;
+    {
+        ex_VecBools.push_back(VecBool({false, false, false, false, true, true}));// 0
+        ex_VecBools.push_back(VecBool({false, false, false,  true, true, true}));// 1
+        ex_VecBools.push_back(VecBool({false, false,  true, false, true, true}));// 2
+        ex_VecBools.push_back(VecBool({false, false,  true,  true, true, true}));// 3
+        ex_VecBools.push_back(VecBool({false,  true, false, false, true, true}));// 4
+        ex_VecBools.push_back(VecBool({false,  true, false,  true, true, true}));// 5
+        ex_VecBools.push_back(VecBool({false,  true,  true, false, true, true}));// 6
+        ex_VecBools.push_back(VecBool({false,  true,  true,  true, true, true}));// 7
+        ex_VecBools.push_back(VecBool({ true, false, false, false, true, true}));// 8
+        ex_VecBools.push_back(VecBool({ true, false, false,  true, true, true}));// 9
+        ex_VecBools.push_back(VecBool({ true, false,  true, false, true, true}));// 10
+        ex_VecBools.push_back(VecBool({ true, false,  true,  true, true, true}));// 11
+        ex_VecBools.push_back(VecBool({ true,  true, false, false, true, true}));// 12
+        ex_VecBools.push_back(VecBool({ true,  true, false,  true, true, true}));// 13
+        ex_VecBools.push_back(VecBool({ true,  true,  true, false, true, true}));// 14
+        ex_VecBools.push_back(VecBool({ true,  true,  true,  true, true, true}));// 15
+        //for special case
+        ex_VecBools.push_back(VecBool()); // 16
+    }
 #define ndiv new_nosp.ndivs
-    if (p.norbs > 6) ERR(NAV(p.norbs));
+    if (p.norbs != 6) ERR(NAV(p.norbs));
     VecPartition vp(mm.np(), mm.id(), new_nosp.dim);
     
     VecReal hdex_state(ex_state);
@@ -184,10 +215,23 @@ VecReal CrrltFun::find_hd_exstate( Int position ) {
         StateStatistics a(vp.bgn() + h_i, new_nosp.wherein_NocSpace(vp.bgn() + h_i), new_nosp);
         for_Int(i, 0, p.norbs) imp[i] = a.cfg.cf[(i)*ndiv].isocc(0) ? true : false;
         bool check(true);
-        if (position == 0) check = !(imp[1]) && imp[0] && imp[3] && !(imp[2]);
-        if (position == 2) check = !(imp[0]) && !(imp[1]) && imp[2] && imp[3];
-        if (position == 4) check = !(imp[0]) && !(imp[1]) && imp[4] && imp[5];
-        if(mm && check) WRN(NAV(imp));
+        // if (position == 0) check = !(imp[1]) && imp[0] && imp[3] && !(imp[2]);
+        // if      (position == 0) check = !(imp[2]) && !(imp[3]) && imp[0] && imp[1];
+        if (position == 0) check = (imp[0]) && (!imp[1]) && (!imp[4]) && (imp[5]); //kondo peak
+        else if (position == 2) check = !(imp[0]) && !(imp[1]) && imp[2] && imp[3];//hd peak
+        else if (ex_idx < 16 && position == 4) check = imp == ex_VecBools[ex_idx] ? true : false;
+        else if (ex_idx == 16 && position == 4) check = ((!imp[2]) && (!imp[3]) && (imp[4]) && (imp[5])) || ((!imp[0]) && (!imp[1]) && (imp[4]) && (imp[5])); // #16 h*d+*hd
+        else if (ex_idx == 17 && position == 4) check = ((imp == ex_VecBools[1]) || (imp == ex_VecBools[2]) || (imp == ex_VecBools[4]) || (imp == ex_VecBools[8])) ? true : false; // #17
+        else if (ex_idx == 18 && position == 4) check = ((imp == ex_VecBools[5]) || (imp == ex_VecBools[6]) || (imp == ex_VecBools[9]) || (imp == ex_VecBools[10])) ? true : false; // #18
+        else if (ex_idx == 19 && position == 4) check = ((imp == ex_VecBools[7]) || (imp == ex_VecBools[11]) || (imp == ex_VecBools[13]) || (imp == ex_VecBools[14])) ? true : false; // #19
+        else if (ex_idx == 20 && position == 4) check = ((imp == ex_VecBools[3]) || (imp == ex_VecBools[12])) ? true : false; // hdd+dhd
+        else if (ex_idx == 21 && position == 4) check = ((imp == ex_VecBools[1]) || (imp == ex_VecBools[2]) || (imp == ex_VecBools[4]) || (imp == ex_VecBools[8]) || (imp == ex_VecBools[5]) || (imp == ex_VecBools[6]) || (imp == ex_VecBools[9]) || (imp == ex_VecBools[10])) ? true : false; // #17 || #18
+        // else if (position == 4) check = !(imp[0]) && !(imp[1]) && !(imp[2]) && !(imp[3]) && imp[4] && imp[5];
+        // else if (position == 4) check = !(imp[0]) && !(imp[1]) &&  (imp[2]) &&  (imp[3]) && imp[4] && imp[5];
+        // else if (position == 4) check = (!(imp[0]) && !(imp[1]) && imp[4] && imp[5]) || (!(imp[2]) && !(imp[3]) && imp[4] && imp[5]);
+        // else if (position == 4) check = (!(imp[0]) && !(imp[1]) && imp[4] && imp[5] && (imp[2]) && imp[3]) || (!(imp[0]) && !(imp[1]) && imp[4] && imp[5] && !(imp[3]) && !(imp[2]));
+        else {ERR("The position is wrong!" + NAV(position));}
+        // if(mm && check) WRN(NAV(imp));
         hdex_state[h_i] = check ? hdex_state[h_i] : 0.;
     }
     // if (position == 2) 	for_Int(h_i, vp.bgn(), vp.end()) {
@@ -202,9 +246,9 @@ VecReal CrrltFun::find_hd_exstate( Int position ) {
     return hdex_state;
 }
 
-void CrrltFun::find_hd_greater(const Real& ge0, Green &g0, Int position) 
+void CrrltFun::find_hd_greater(const Real& ge0, Green &g0, Int position, Int ex_idx) 
 {
-    VecReal hd_exstate(find_hd_exstate(position));
+    VecReal hd_exstate(find_hd_exstate(position, ex_idx));
     Real upper_fraction(mm.Allreduce(DOT(hd_exstate, hd_exstate)));
     // if (mm) WRN(NAV(upper_fraction));
     VEC<Real> ltd;	        // diagonal elements 

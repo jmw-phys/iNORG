@@ -43,6 +43,7 @@ void Bath::init_vec_ose_hop()
 
 void Bath::number_bath_fit(const ImGreen& hb_i, Int iter,Int mode)
 {
+	// for_Int(band_i, 0, p.nband)
 	for_Int(band_i, 1, 3) //! set band 0 same as band 1.
 	{
 		ImGreen hb(hb_i,band_i,band_i);
