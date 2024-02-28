@@ -364,7 +364,7 @@ MatReal Operator::lowest_eigpairs(const Idx n, bool if_need_fast, Int wish_nev)
 	VecReal eval(wish_nev, 0.);				// is the eigenvalues
 	// VEC < VecReal> eigenvec_i;			// a VEC to contain all the eigenvector.
 	MatReal eigenvec_i(wish_nev, n);		// a VEC to contain all the eigenvector.
-	VecInt ev_dgcy(wish_nev, 0.);			// cotain all the degeneracy eigenvector's number for each eigenvalue.
+	Int gs_dgcy(1);							// cotain ground state degeneracy.
 	// if (mm)PIO("find_hmlt BEGIN :::");
 	SparseMatReal sep_hmltoperator = find_hmlt(table);
 	// if(mm) WRN("finished fiding the hmlt")
@@ -376,11 +376,11 @@ MatReal Operator::lowest_eigpairs(const Idx n, bool if_need_fast, Int wish_nev)
 //	}
 //#endif
 	VecReal inital_state(n, 0.); uur(inital_state); inital_state -= 0.5;
-	VecInt krylov_space_size = lanczos(eval, eigenvec_i, ev_dgcy, n, wish_nev, sep_hmltoperator, inital_state, mm, if_need_fast, 1000);
+	VecInt krylov_space_size = lanczos(eval, eigenvec_i, gs_dgcy, n, wish_nev, sep_hmltoperator, inital_state, mm, if_need_fast, 1000);
 	if(mm) {cout <<"PIO: krylov_space_size = ";cout <<iofmt("sci"); for_Int(i, 0, krylov_space_size.size()) cout << eval[i] << ","<< krylov_space_size[i] << "; "; cout << std::endl;}
 	// if(mm) std::cout << "The eigenvalue" << iofmt("sci") << eval << std::endl;
 	groundstate_energy = eval[0];
-	if(ev_dgcy[0] != p.degel) {p.degel = ev_dgcy[0]; if(mm) WRN(NAV2(p.degel,ev_dgcy.mat(1,ev_dgcy.size())))}
+	if(gs_dgcy != p.degel) {p.degel = gs_dgcy; if(mm) WRN(NAV(p.degel))}
 	// MatReal eigenvec(eigenvec_i.size(),n);
 	// for_Int(i, 0, eigenvec_i.size()) eigenvec[i] = eigenvec_i[i];
 	// ground_state = eigenvec_i[0];

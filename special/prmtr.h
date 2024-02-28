@@ -77,8 +77,8 @@ public:
 	mutable Str nooc_mode;
 
 	//--------------------------------------------------------special for the hhd function(arXiv:2209.14178v1)-----------------------------------------------------------------
-	Real alpha;						// the parameter for the hhd function(arXiv:2209.14178v1) to control the strength of the interaction in two wide band.
-	Real delta;						// the parameter for the hhd function(arXiv:2209.14178v1) to control the strength of the interaction in two wide band.
+	mutable Real alpha;						// the parameter for the hhd function(arXiv:2209.14178v1) to control the strength of the interaction in two wide band.
+	Real delta;								// the parameter for the hhd function(arXiv:2209.14178v1) to control the strength of the interaction in two wide band.
 
 
 	//---------------------------------------------------------------------------------------------------------------------------------------

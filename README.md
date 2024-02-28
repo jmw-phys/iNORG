@@ -400,4 +400,28 @@ Version: v1.2.17 @ 2023.12.26
 Version: v1.2.18p3.0 @ 2024.01.03
     realized: finished the eg orbital calculation.
     next do : testin on La4Ni3O10.
+
+Version: v1.2.18.p1 @ 2023.12.28
+    realized: add the new fitting for the partical-hole symmary: ph-symm_*; modify for the {1,1,1,1,2,2} case.
+    next do : testing in the 3band model.
     thinking: (same as prev)
+
+Version: v1.2.19p1.1 @ 2024.01.06
+    realized: Chage the lanczos Style for finding the degenerate ground state.
+    next do : testing for the different alpha in 3band model.
+    thinking: (same as prev)
+
+Version: v1.3.00 @ 2024.01.06
+    realized: Fix the lanczos Style for finding the degenerate ground state.
+    next do : (same as prev)
+    thinking: (same as prev)
+
+Version: v1.3.00p1.1-3band @ 2024.01.16
+    realized: Add the ex-state calc(get_gimp_hdQPs()) for the 3band model.
+    next do : (same as prev)
+    thinking: (same as prev)
+
+Version: v1.3.00.p3 @ 2024.02.28
+    realized: merge p3 to newest mode.
+    next do : (none)
+    thinking: (none)

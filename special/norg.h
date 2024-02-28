@@ -168,7 +168,7 @@ public:
 	void find_g0(Green& imp_i);
 
 	// To calc the excitation spectrum for quasiparticle of holon-doublon bound states.
-	void get_gimp_hdQPs(Green& imp_i);
+	void get_gimp_hdQPs(Green& imp_i, Int ex_idx = -1);
 //--------------------------------------- for the io---------------------------------
 	void write_norg_info(Int iter_cnt) const;
 	

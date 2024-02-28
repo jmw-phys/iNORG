@@ -22,8 +22,8 @@ bool residual_method_for_b(VEC<T> ltd, VEC<T> lt_sd, Real b, Int k, bool fast_mo
     Vec<T> va(ltd);
     Vec<T> vb(lt_sd);
     Int info = trd_heevr_qr(va, vb, ev); if (info != 0)ERR("the i-th parameter had an illegal value." + NAV3(info, va, vb));
-    if ((fast_mode) && ABS(b * ev[k][0]) < 1.E-10) return true;
-    if (!(fast_mode) && ABS(b * ev[k][0]) < 1.E-12) return true;
+    if ((fast_mode) && ABS(b * ev[k][0]) < 1.E-8) return true;
+    if (!(fast_mode) && ABS(b * ev[k][0]) < 1.E-9) return true;
     return false;
 }
 
@@ -43,11 +43,9 @@ void orthogonalization_one_to_multiple(const MyMpi& mm, Vec<T>& v, const VEC<Vec
         mag1 = sqrt(mm.Allreduce(real(DOT(v, v))));		// mag1 != 0 is supposed
     }
 }
-//template<typename T>
-//inline void orthonormalize_one_to_multiple(Vec<T>& v, const VEC<Vec<T>>& m, Int e){ for_Idx(i, 0, e) v -= DOT(m[i], v) * m[i]; }
 
 template<typename T, typename F>
-VecInt lanczos(VecReal& evals, Mat<T>& evecs, VecInt& ev_dgcy, Idx n, Int wish_nev, F& H,
+VecInt lanczos(VecReal& evals, Mat<T>& evecs, Int& gs_dgcy, Idx n, Int evals_size, F& H,
     VecReal& inital_state, const MyMpi& mm, bool fast_mode = false, Int max_krylov = 9999)
     //	Lanczos algorithm to find several lowest eigenpairs of a Hermitian matrix
     //  only typename F(matrix) H needed with well define operator*(which to returns H * |p>)
@@ -55,10 +53,10 @@ VecInt lanczos(VecReal& evals, Mat<T>& evecs, VecInt& ev_dgcy, Idx n, Int wish_n
     //Output:
     //  eval                is the eigenvalues                              (Dynamic size)
     //  evec                is the eigenvectors, one row contains one vector(Dynamic nrow)
-    //  ev_dgcy             a set of energy level's degeneracy              (size fixed)
+    //  gs_dgcy             ground states's degeneracy
     //Input:
     //  n                   is the dimension of the H's space.
-    //  wish_nev            is the expected maximum eigenstates to be found (suggest: 1).
+    //  evals_size          is the fix eigenstates to be found.
     //  H                   typename F(matrix) H needed with well define operator*(which to returns H * |p>)
     //  inital_state        (not necessary) if set it as blank, Then we will generate a random vector.
     //  max_krylov          (not necessary) is the maximum size of the Krylov space
@@ -67,17 +65,15 @@ VecInt lanczos(VecReal& evals, Mat<T>& evecs, VecInt& ev_dgcy, Idx n, Int wish_n
     // if (fast_mode) PIO("Dear customer, you are now in the fast mode, in this mode you only can find the ONE eigen pair.");
 #ifdef _CHECK_DIMENSION_MATCH_
     //ASSERT_EQ(n, evec[].());
-    //ASSERT_EQ(eval.size(), wish_nev);
-    //ASSERT_EQ(evec.size(), wish_nev);
-    ASSERT_EQ(ev_dgcy.size(), wish_nev);
 #endif
     using namespace std;
-    Int nev(wish_nev), e(0);
+    Int e(0);
+    gs_dgcy = 1;
     VEC<VecReal> evec;
     VEC<Real> eval;
     VEC<Int> Krylovsize;
     VecPartition vp(mm.np(), mm.id(), inital_state.size());
-    while (true)
+    while (e < evals_size)
     {
         // for tridiagonal matrix
         VEC<Real> ltd;	    // diagonal elements / eigenvalues
@@ -99,8 +95,8 @@ VecInt lanczos(VecReal& evals, Mat<T>& evecs, VecInt& ev_dgcy, Idx n, Int wish_n
         {
             a = mm.Allreduce(DOT(v1, v0));
             ltd.push_back(a);
-            if (!(fast_mode)) if ( k >= 200 ) if (residual_method_for_b(ltd, lt_sd, b, k, fast_mode)) break;
-            if ((fast_mode))  if ( k >= 200 ) if (residual_method_for_b(ltd, lt_sd, b, k, fast_mode)) break;
+            if (!(fast_mode)) if ( k >= 60 ) if (residual_method_for_b(ltd, lt_sd, b, k, fast_mode)) break;
+            if ((fast_mode))  if ( k >= 60 ) if (residual_method_for_b(ltd, lt_sd, b, k, fast_mode)) break;
             if (k >= max_krylov) {
                 if(mm) WRN("Getting Wrong with someting? krylov was too large!" + NAV2(e, k));
                 if (k >= 20 + max_krylov) break;
@@ -141,33 +137,23 @@ VecInt lanczos(VecReal& evals, Mat<T>& evecs, VecInt& ev_dgcy, Idx n, Int wish_n
             v1 += H * v0;  k++;
         }
         Krylovsize.push_back(k);
-        if (e > 0 && compare_error(eval[e - 1], va[0]) < 1.E-4) nev++;
-            // eval.reset(nev, eval.begin());
-            // eval.push_back()
-            // if(fast_mode) WRN("The eigen value may have degeneracy. This may take some attention.");
-        //WRN(NAV5(wish_nev,e, nev,eval.size(),evec.size()));
-        // std::cout << "The eigenvalue" << iofmt("sci") << va[0] << std::endl;
-        Idx level = wish_nev + e - nev;
-        // evec.push_back(mm.Allgatherv(gs, vp));
         evec.push_back(gs);
         eval.push_back(va[0]);
-        if (e >= nev) break;
-        ev_dgcy[level]++;
         e++;
         if (fast_mode) break;
+        if (e == evals_size) {// verify if finding all the degeneracy
+            Int ndeg = 1;
+            for_Int(i, 1, eval.size()) if (compare_error(eval[0], eval[i]) < 2E-6) ndeg++;
+            if (evals_size == ndeg) evals_size++;
+        }
     }
     evecs.reset(evec.size(),n);
     for_Int(i, 0, evec.size()) evecs[i] = mm.Allgatherv(evec[i], vp);
     evals.reset(eval);
+
+    slctsort(evals, evecs);
+    for_Int(i, 1, evals.size()) if(compare_error(evals[0], evals[i]) < 1E-6) gs_dgcy++;
+    // if(mm) WRN(NAV(evals))    
     VecInt krylov_size(Krylovsize);
     return krylov_size;
 }
-
-//template<typename T, typename F>
-//void lanczos(VecReal& eval, Mat<T>& evec, VecInt& ev_dgcy, Int wish_nev, F& H, Int max_krylov = 999)
-//{
-//    UURandomSFMT uur;
-//    Vec <T> ev(evec[e]);
-//    if (giv <= e) { uur(ev); ev -= 0.5;}
-//}
-
