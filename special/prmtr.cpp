@@ -41,7 +41,7 @@ void Prmtr::set_values() {
     mu = 0.0;
 
     //Parameter for the hhd function(arXiv:2209.14178v1)
-    alpha = 0.5;
+    alpha = 1.0;
     delta = 0.3;
 
     // jz = 0.5;

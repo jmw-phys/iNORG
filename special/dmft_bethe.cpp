@@ -77,7 +77,7 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 		}
 		norg_tempU = norg.uormat;
 
-		// if (converged()) 
+		if (converged() || IFS("norg.stop")) 
 		{
 			Real& var_a(p.U);
 			if(mm) {
@@ -114,9 +114,6 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 			gloc_err = { 1.e99,1.e98,1.e97 ,1.e96 ,1.e95};
 			if(mm) norg.scsp.print();
 		}
-
-		{ mm.barrier(); SLEEP(1); }
-		if(IFS("norg.stop"))  break;
 	}
 
 /*

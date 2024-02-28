@@ -181,11 +181,58 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
 	// return last_green;
 }
 
+/*
+// ! only suit for the two orbital cases.
+VecReal CrrltFun::find_hd_exstate(Int position, Int ex_idx) {
+    VEC<VecBool> ex_VecBools;
+    {
+        ex_VecBools.push_back(VecBool({false, false}));// 0  , true, true
+        ex_VecBools.push_back(VecBool({false,  true}));// 1  , true, true
+        ex_VecBools.push_back(VecBool({ true, false}));// 2  , true, true
+        ex_VecBools.push_back(VecBool({ true,  true}));// 3  , true, true
+        //for special case
+        ex_VecBools.push_back(VecBool());// 4
+    }
+#define ndiv new_nosp.ndivs
+    if (p.norbs > 4) ERR(NAV(p.norbs));
+    VecPartition vp(mm.np(), mm.id(), new_nosp.dim);
+    
+    VecReal hdex_state(ex_state);
+    VecBool imp(4, false), imp_t(2, false);// the last one left for check the right.
+    for_Int(h_i, 0, vp.len()) {
+        StateStatistics a(vp.bgn() + h_i, new_nosp.wherein_NocSpace(vp.bgn() + h_i), new_nosp);
+        for_Int(i, 0, p.norbs) imp[i] = a.cfg.cf[(i)*ndiv].isocc(0) ? true : false;
+        bool check(true);
+        if (position == 0) {
+            imp_t = imp.truncate(2,4);
+            if (ex_idx < 4) check = (imp_t == ex_VecBools[ex_idx]) && imp.truncate(0,2) == VecBool({ true,  true}) ? true : false;
+            else if (ex_idx == 4) check = ((imp_t == ex_VecBools[1]) || (imp_t == ex_VecBools[2])) && imp.truncate(0,2) == VecBool({ true,  true}) ? true : false;                            // #4 = |1> + |2>
+            else if (ex_idx == 5) check = ((imp_t == ex_VecBools[0]) || (imp_t == ex_VecBools[1]) || (imp_t == ex_VecBools[2])) && imp.truncate(0,2) == VecBool({ true,  true}) ? true : false; // #5 = |0> + |1> + |2> 
+            else if (ex_idx == 6) check = imp[0] && (!imp[1]) && (!imp[2]) && imp[3];// kondo peak
+        }
+        if (position == 2) {
+            imp_t = imp.truncate(0,2);
+            if (ex_idx < 4) check = (imp_t == ex_VecBools[ex_idx]) && imp.truncate(2,4) == VecBool({ true,  true}) ? true : false;
+            else if (ex_idx == 4) check = ((imp_t == ex_VecBools[1]) || (imp_t == ex_VecBools[2])) && imp.truncate(2,4) == VecBool({ true,  true}) ? true : false;                            // #4 = |1> + |2>
+            else if (ex_idx == 5) check = ((imp_t == ex_VecBools[0]) || (imp_t == ex_VecBools[1]) || (imp_t == ex_VecBools[2])) && imp.truncate(2,4) == VecBool({ true,  true}) ? true : false; // #5 = |0> + |1> + |2> 
+        }
+        hdex_state[h_i] = check ? hdex_state[h_i] : 0.;
+    }
+#undef ndiv
+
+    return hdex_state;
+}
+*/
 
 // ! only suit for the three orbital cases.
 VecReal CrrltFun::find_hd_exstate(Int position, Int ex_idx) {
     VEC<VecBool> ex_VecBools;
     {
+        //       |00> |01> |10> |11>
+        //  |00>  #0   #1   #2   #3
+        //  |01>  #4   #5   #6   #7
+        //  |10>  #8   #9  #10  #11
+        //  |11> #12  #13  #14  #15
         ex_VecBools.push_back(VecBool({false, false, false, false, true, true}));// 0
         ex_VecBools.push_back(VecBool({false, false, false,  true, true, true}));// 1
         ex_VecBools.push_back(VecBool({false, false,  true, false, true, true}));// 2
@@ -217,8 +264,8 @@ VecReal CrrltFun::find_hd_exstate(Int position, Int ex_idx) {
         bool check(true);
         // if (position == 0) check = !(imp[1]) && imp[0] && imp[3] && !(imp[2]);
         // if      (position == 0) check = !(imp[2]) && !(imp[3]) && imp[0] && imp[1];
-        if (position == 0) check = (imp[0]) && (!imp[1]) && (!imp[4]) && (imp[5]); //kondo peak
-        else if (position == 2) check = !(imp[0]) && !(imp[1]) && imp[2] && imp[3];//hd peak
+        if (position == 0)      check = (imp[0]) && (!imp[1]) && (!imp[4]) && (imp[5]); //kondo peak
+        else if (position == 2) check = (!imp[0]) && (!imp[1]) && (imp[2]) && (imp[3]);//hd peak
         else if (ex_idx < 16 && position == 4) check = imp == ex_VecBools[ex_idx] ? true : false;
         else if (ex_idx == 16 && position == 4) check = ((!imp[2]) && (!imp[3]) && (imp[4]) && (imp[5])) || ((!imp[0]) && (!imp[1]) && (imp[4]) && (imp[5])); // #16 h*d+*hd
         else if (ex_idx == 17 && position == 4) check = ((imp == ex_VecBools[1]) || (imp == ex_VecBools[2]) || (imp == ex_VecBools[4]) || (imp == ex_VecBools[8])) ? true : false; // #17
