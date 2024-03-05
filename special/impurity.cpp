@@ -91,6 +91,11 @@ void Impurity::update(Str mode) {
         impH = std::make_pair(h0, set_interaction());
         // modify_Impdata_for_half_fill(impH);
     }
+    else if (mode == "eDMFT") {
+        set_factor();
+        impH = std::make_pair(h0, set_edmft_interaction());
+        // modify_Impdata_for_half_fill(impH);
+    }
     else if (mode == "behte") {
         for_Int(i, 0, ni) imp_lvl[i] = p.eimp[i] - p.mu;
         set_factor();
@@ -270,5 +275,125 @@ void Impurity::modify_Impdata_for_half_fill_hhd(Impdata& impH_i){
 }
 
 
+
+//---------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+//--------------------------------------------------------special for the eDMFT -----------------------------------------------------------------
+
+// four-fermion operator terms for C^+_i C^+_j C_k C_l; 
+// C^+_i C^+_j C_k C_l h_inter from [i][l][j][k] to [alpha][eta][beta][gamma]
+// See SM of Physical Review B 102.16 (2020): 161118, for equation S1-S9.
+VecReal Impurity::set_edmft_interaction() {
+    // #---------------- # Independent components are --------------
+    //                  'z^2' 'x^2-y^2' 'xz' 'yz' 'xy' 
+    Int n = p.norbit;
+    VecReal interaction(std::pow(n, 4), 0.);
+    if (!(p.nband == 5 || p.nband == 3 || p.nband == 2)) ERR("we only support for the eg, t2g and fulld mode");
+    // Mat<MatReal> imp_interact(p.norbs, p.norbs, MatReal(p.norbs, p.norbs, 0.));
+    MatReal imp_dd_interact(p.norbs, p.norbs,  0.);
+    Real Uc(0.0), Jz(0.0);
+
+    if(p.nband == 5){
+        MatReal U_interact(p.nband, p.nband,  0.);
+        MatReal J_interact(p.nband, p.nband,  0.);
+        VecReal S_val(9,0.0);
+
+        // See SM of Physical Review B 102.16 (2020): 161118, for equation S1-S9.
+        S_val[0] = p.U + (8.0/7.0) * p.jz;      // S1
+        S_val[1] = p.U - (328.0/819.0) * p.jz;  // S2~S6
+        S_val[2] = p.U + (48.0/819.0) * p.jz;   // S3~S8
+        S_val[3] = p.U - (516.0/819.0) * p.jz;  // S4~S7
+        S_val[4] = p.U + (236.0/819.0) * p.jz;  // S5~S9
+        S_val[5] = (632.0/819.0) * p.jz;        // S6
+        S_val[6] = (726.0/819.0) * p.jz;        // S7
+        S_val[7] = (444.0/819.0) * p.jz;        // S8
+        S_val[8] = (350.0/819.0) * p.jz;        // S9
+
+        for_Int(b1, 0, p.nband) {
+            // S1
+            U_interact[b1][b1] = p.U + (8/7.0) * p.jz;
+            J_interact[b1][b1] = 0.0;
+            for_Int(b2, 0, p.nband) if (b1 != b2) {
+                U_interact[b1][b2] = S_val[1];//S2
+                J_interact[b1][b2] = S_val[5];//S6
+                if ((b1 == 0 && (b2 == 1 || b2 == 2)) || \
+                    (b2 == 0 && (b1 == 1 || b1 == 2))) {
+                    U_interact[b1][b2] = S_val[3];//S4
+                    J_interact[b1][b2] = S_val[6];//S7
+                }
+
+                if ((b1 == 0 && (b2 == 3 || b2 == 4)) || \
+                    (b2 == 0 && (b1 == 3 || b1 == 4))) {
+                    U_interact[b1][b2] = S_val[2];//S3
+                    J_interact[b1][b2] = S_val[7];//S8
+                }
+
+                if ((b1 == 1 && b2 == 2) || \
+                    (b2 == 1 && b1 == 2)) {
+                    U_interact[b1][b2] = S_val[4];//S5
+                    J_interact[b1][b2] = S_val[8];//S9
+                }
+            }
+        }
+
+        if(mm) WRN(NAV2(U_interact, J_interact));
+
+
+        for_Int(b1, 0, p.nband) {// NO double counting term for impurity
+            imp_dd_interact[2 * b1][2 * b1 + 1] = U_interact[b1][b1];
+            for_Int(b2, b1, p.nband) if (b1 != b2) { // same spin orientation
+                imp_dd_interact[2 * b1][2 * b2] = U_interact[b1][b2] - 3 * J_interact[b1][b2];
+                imp_dd_interact[2 * b1 + 1][2 * b2 + 1] = U_interact[b1][b2] - 3 * J_interact[b1][b2];
+            }
+            for_Int(b2, 0, p.nband) if (b1 != b2) {
+                imp_dd_interact[2 * b1][2 * b2 + 1] = U_interact[b1][b2] - 2 * J_interact[b1][b2];
+            }
+        }
+    }
+    else if (p.nband == 3) {
+        Uc = p.U + (8.0 / 7.0) * p.jz;
+        Jz = (632.0 / 819.0) * p.jz;
+
+        for_Int(b1, 0, p.nband) { // NO double counting term for impurity
+            imp_dd_interact[2 * b1][2 * b1 + 1] = Uc;
+            for_Int(b2, b1, p.nband) if (b1 != b2) { // same spin orientation
+                imp_dd_interact[2 * b1][2 * b2] = Uc - 3 * p.jz;
+                imp_dd_interact[2 * b1 + 1][2 * b2 + 1] = Uc - 3 * p.jz;
+            }
+            for_Int(b2, 0, p.nband) if (b1 != b2) {
+                imp_dd_interact[2 * b1][2 * b2 + 1] = Uc - 2 * p.jz;
+            }
+        }
+    }
+    else if (p.nband == 2) {
+        Uc = p.U + (8.0 / 7.0) * p.jz;
+        Jz = (726.0 / 819.0) * p.jz;
+
+        for_Int(b1, 0, p.nband) { // NO double counting term for impurity
+            imp_dd_interact[2 * b1][2 * b1 + 1] = Uc;
+            for_Int(b2, b1, p.nband) if (b1 != b2) { // same spin orientation
+                imp_dd_interact[2 * b1][2 * b2] = Uc - 3 * p.jz;
+                imp_dd_interact[2 * b1 + 1][2 * b2 + 1] = Uc - 3 * p.jz;
+            }
+            for_Int(b2, 0, p.nband) if (b1 != b2) {
+                imp_dd_interact[2 * b1][2 * b2 + 1] = Uc - 2 * p.jz;
+            }
+        }
+    }
+    else {
+        ERR("Now we only support for the t2g and eg orbital.")
+    }
+
+    if(mm) WRN(NAV(imp_dd_interact));
+    for_Int(N_i, 0, p.norbs)for_Int(N_j, 0, p.norbs) {
+        // if (imp_dd_interact[N_i][N_j] != 0)
+            interaction[SUM_0toX(p.nO2sets, N_i) * std::pow(n, 3) + SUM_0toX(p.nO2sets, N_j) * std::pow(n, 2) + SUM_0toX(p.nO2sets, N_j) * std::pow(n, 1) + SUM_0toX(p.nO2sets, N_i)] = imp_dd_interact[N_i][N_j];
+
+    }
+    
+    return interaction;
+}
 
 //---------------------------------------------------------------------------------------------------------------------------------------

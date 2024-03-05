@@ -109,6 +109,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	}
 }
 
+// Here we only need the energy of the impurity, so we don't need iter too much.
 void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) {
 	std::streambuf* old = std::cout.rdbuf();
 	std::cout.rdbuf(NULL); // redirect std::cout to nowhere
@@ -132,7 +133,8 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 	// 	<<100*MIN(sub_energy)/groune_lst<<"%, so, the Ground state mustn't in this sub-space, and calc. will be stoped." <<"\n"<< std::endl;
 	// 	return ;}
 	
-	while (iter_norg_cnt < p.iter_max_norg && !converged()) {
+	//! while (iter_norg_cnt < p.iter_max_norg && !converged()) {
+	while (iter_norg_cnt < 10 && !converged()) {
 		iter_norg_cnt++;
 		if (mm) PIO("The iteration counting: " + NAV2(iter_norg_cnt, norg_stab_cnt));
 		VEC<MatReal> uormat_new(oneedm.find_unitary_orbital_rotation_matrix());

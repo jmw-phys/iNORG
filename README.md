@@ -425,3 +425,8 @@ Version: v1.3.00.p3 @ 2024.02.28
     realized: merge p3 to newest mode.
     next do : (none)
     thinking: (none)
+
+Version: v1.3.01.p3 @ 2024.02.28
+    realized: Add the eg, t2g, and full-d calculation mode.
+    next do : Testing for the Real meateral in FeSe.
+    thinking: Need to compare norg-edmft with the ctqmc-edmft.

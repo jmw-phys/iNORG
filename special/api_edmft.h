@@ -47,6 +47,7 @@ public:
 	Int dmft_cnt;
 private:
 	void update(const Str& file);
+	void edmft_back_up(const Str& status);
 
 	bool if_lock(const Str file) const;
 
@@ -63,6 +64,7 @@ private:
 	void read_norg_setting( const std::string& filename, std::vector<double>& Ed, std::vector<int>& Deg, double& J, std::string& CoulombF, double& beta, double& U, std::vector<int>& restrain, std::vector<int>& distribute );
 
 	void auto_nooc(Str mode, const Impurity &imp);
+
 public:
 	APIedmft(const MyMpi& mm_i, Prmtr& p, const Str& file = empty_str);
 
