@@ -318,20 +318,20 @@ VecReal Impurity::set_edmft_interaction() {
             for_Int(b2, 0, p.nband) if (b1 != b2) {
                 U_interact[b1][b2] = S_val[1];//S2
                 J_interact[b1][b2] = S_val[5];//S6
-                if ((b1 == 0 && (b2 == 1 || b2 == 2)) || \
-                    (b2 == 0 && (b1 == 1 || b1 == 2))) {
+                if ((b1 == 0 && (b2 == 1 || b2 == 4)) || \
+                    (b2 == 0 && (b1 == 1 || b1 == 4))) {
                     U_interact[b1][b2] = S_val[3];//S4
                     J_interact[b1][b2] = S_val[6];//S7
                 }
 
-                if ((b1 == 0 && (b2 == 3 || b2 == 4)) || \
-                    (b2 == 0 && (b1 == 3 || b1 == 4))) {
+                if ((b1 == 0 && (b2 == 2 || b2 == 3)) || \
+                    (b2 == 0 && (b1 == 2 || b1 == 3))) {
                     U_interact[b1][b2] = S_val[2];//S3
                     J_interact[b1][b2] = S_val[7];//S8
                 }
 
-                if ((b1 == 1 && b2 == 2) || \
-                    (b2 == 1 && b1 == 2)) {
+                if ((b1 == 1 && b2 == 4) || \
+                    (b2 == 1 && b1 == 4)) {
                     U_interact[b1][b2] = S_val[4];//S5
                     J_interact[b1][b2] = S_val[8];//S9
                 }

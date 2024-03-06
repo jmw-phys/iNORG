@@ -276,7 +276,7 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 			norg.PIO_occweight(norg.occnum);
 		}
 		else {
-			NORG norg(mm, p);	norg.read_NTR(); 	norg.up_date_h0_to_solve(imp.impH);
+			NORG norg(mm, p);	norg.read_NTR(); 	norg.up_date_h0_to_solve(imp.impH, 1);
 			uormat = norg.uormat;
 			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb / p.norg_sets);occweight = occnum;
 			nppso = norg.scsp.nppso;

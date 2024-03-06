@@ -426,12 +426,17 @@ Version: v1.3.00.p3 @ 2024.02.28
     next do : (none)
     thinking: (none)
 
-Version: v1.3.01.p3 @ 2024.02.28
+Version: v1.3.01.p3 @ 2024.03.05
     realized: Add the eg, t2g, and full-d calculation mode.
     next do : Testing for the Real meateral in FeSe.
     thinking: Need to compare norg-edmft with the ctqmc-edmft.
 
-Version: v1.3.02.p3 @ 2024.02.28
+Version: v1.3.02.p3 @ 2024.03.06
     realized: Add manual control or_deg_idx and partical space check.
+    next do : (same as prev)
+    thinking: (same as prev)
+
+Version: v1.3.03.p3 @ 2024.03.06
+    realized: Fix a BUG, the U and J construct wrong(dz2,dx2,dxy,dxz,dyz)! Change to Right (dz2,dx2,dxz,dyz,dxy)!
     next do : (same as prev)
     thinking: (same as prev)
