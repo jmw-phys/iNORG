@@ -13,7 +13,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 
 
 APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
-	mm(mm_i), p(prmtr_i), num_omg(prmtr_i.num_omg),
+	mm(mm_i), p(prmtr_i), num_omg(prmtr_i.num_omg), ful_pcl_sch(1), 
 	num_nondegenerate(-1), dmft_cnt(0), weight_nooc(1E-4), weight_freze(1E-13) {
 	update(file);
 	Bath bth(mm, p);
@@ -23,12 +23,11 @@ APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 	ImGreen hb(nband, p);
 	for_Int(j, 0, hb.nomgs)
 		for_Int(i, 0, nband) hb.g[j][i][i] = -imfrq_hybrid_function[j][or_deg_idx[i * 2] - 1];		if (mm) hb.write_edmft("hb_read.txt", or_deg_idx);
-	bth.read_ose_hop();	bth.bath_fit(hb, or_deg_idx);												if (mm) bth.write_ose_hop();
+	bth.read_ose_hop();	//bth.bath_fit(hb, or_deg_idx);												if (mm) bth.write_ose_hop();
 	imp.update("eDMFT");																			if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 	ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_edmft("hb_fit.txt", or_deg_idx);
 	edmft_back_up("read");
-	auto_nooc("ful_pcl_sch", imp);
-	NORG norg(mm, p);
+	auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
 	if (!norg.check_NTR()) norg.uormat = p.rotationU;
 	else MatReal tmp_b = norg.read_NTR();
 	norg.up_date_h0_to_solve(imp.impH, 1);															norg.write_impurtiy_occupation();
@@ -267,7 +266,7 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 		Vec<VecInt> controler(MAX(ordeg) + 1, VecInt(p.ndiv, 0));
 		MatReal occnum, occweight;
 		controler[0] = p.control_divs[0];
-		{
+		if(ful_pcl_sch) {
 			NORG norg(opcler.find_ground_state_partical(imp.impH, or_deg_idx));
 			uormat = norg.uormat;
 			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb / p.norg_sets);occweight = occnum;
@@ -276,6 +275,16 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 			p.rotationU = uormat;
 			norg.PIO_occweight(norg.occnum);
 		}
+		else {
+			NORG norg(mm, p);	norg.read_NTR(); 	norg.up_date_h0_to_solve(imp.impH);
+			uormat = norg.uormat;
+			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb / p.norg_sets);occweight = occnum;
+			nppso = norg.scsp.nppso;
+			p.npartical = norg.scsp.nppso;
+			p.rotationU = uormat;
+			norg.PIO_occweight(norg.occnum);
+		}
+		
 		for_Int(i, 0, p.norg_sets) for_Int(j, 0, p.n_rot_orb / p.norg_sets) occweight[i][j] = occnum[i][j] > 0.5 ? (1 - occnum[i][j]) : occnum[i][j];
 
 		for_Int(i, 0, MAX(ordeg)) {
@@ -433,19 +442,32 @@ int main() {
 
 void APIedmft::edmft_back_up(const Str& status) {
 	using namespace std;
+	if (status == "read") {
+		std::ifstream ifs("edmft_back_up");
+		std::string line;
+		while (std::getline(ifs, line)) {
+			std::istringstream iss(line);
+			std::string key;
+			iss >> key;
+
+			if (key == "npartical")				for_Int(i, 0, p.norbs)		iss >> p.npartical[i];
+			if (key == "ful_pcl_sch")			iss >> ful_pcl_sch;
+			// if (key == "artificial_symm"){
+			// 	artificial_symm.reset(p.norbs, 0);	for_Int(i, 0, p.norbs)	iss >> artificial_symm[i];
+			// }
+		}
+	}
 
 	if (status == "save") {
-		OFS ofs;
+		std::ofstream ofs;
 		ofs.open("edmft_back_up");
 		ofs << iofmt("sci");
 
-		ofs << setw(4) << "npartical";	for_Int(i, 0, p.npartical.size()) ofs << "\t" << setw(w_Real) << p.npartical[i];	ofs << endl;
-	}
-	if (status == "read") {
-		IFS ifs("edmft_back_up");
-		Str strr;
-		ifs >> strr;
-
-		if (strr == "npartical")			for_Int(i, 0, p.npartical.size()) ifs >> p.npartical[i];
+		ofs << setw(4) << "npartical";			for_Int(i, 0, p.norbs)		ofs << setw(4) << p.npartical[i];		ofs << endl;
+		ofs << setw(4) << "ful_pcl_sch";	ofs << setw(4) << ful_pcl_sch;											ofs << endl;
+		// if(artificial_symm.size() != 0 && artificial_symm != or_deg_idx){
+		// 	ofs << setw(4) << "artificial_symm";for_Int(i, 0, p.norbs) 		ofs << setw(4) << artificial_symm[i];	ofs << endl;
+		// }
+		ofs.close();
 	}
 }

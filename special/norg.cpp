@@ -134,7 +134,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const VecReal sub_energy) 
 	// 	return ;}
 	
 	//! while (iter_norg_cnt < p.iter_max_norg && !converged()) {
-	while (iter_norg_cnt < 10 && !converged()) {
+	while (iter_norg_cnt < 10 && !converged(1.E-3)) {
 		iter_norg_cnt++;
 		if (mm) PIO("The iteration counting: " + NAV2(iter_norg_cnt, norg_stab_cnt));
 		VEC<MatReal> uormat_new(oneedm.find_unitary_orbital_rotation_matrix());
@@ -480,11 +480,11 @@ VEC<MatReal> NORG::uormat_initialize()
 	return uormat_i;
 }
 
-bool NORG::converged() 
+bool NORG::converged(Real ge_err) 
 {
 		const Real gseerr = ABS(energy_err);
-		if (gseerr > 1.E-3) { return false; }
-		else if (gseerr < 1.E-10) { return true; }
+		if (gseerr > 1.E-2) { return false; }
+		else if (gseerr < ge_err) { return true; }
 		else if (ABS(energy_err) < 1.E-7) { 
 			norg_stab_cnt++;
 			if (norg_stab_cnt > 10) return true;

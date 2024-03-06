@@ -80,7 +80,7 @@ private:
 		return nppso_i;
 	}
 
-	bool converged();
+	bool converged(Real ge_err = 1.E-10);
 
 	bool green_modify_converged() const;
 	bool green_modify_converged(Real correctionerr_i) const;

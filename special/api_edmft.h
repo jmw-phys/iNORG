@@ -29,6 +29,8 @@ class APIedmft{
 	Real Uc, Jz, mu;
 	Int nband;							
 	Int norbs;
+	Int ful_pcl_sch;
+	// VecInt artificial_symm;
 
 	
 	// NORG coding console

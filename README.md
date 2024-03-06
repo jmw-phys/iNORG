@@ -430,3 +430,8 @@ Version: v1.3.01.p3 @ 2024.02.28
     realized: Add the eg, t2g, and full-d calculation mode.
     next do : Testing for the Real meateral in FeSe.
     thinking: Need to compare norg-edmft with the ctqmc-edmft.
+
+Version: v1.3.02.p3 @ 2024.02.28
+    realized: Add manual control or_deg_idx and partical space check.
+    next do : (same as prev)
+    thinking: (same as prev)
