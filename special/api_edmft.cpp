@@ -128,11 +128,11 @@ void APIedmft::read_eDMFT(const Str& file) {
 
 	}
 
-	if (mm) WRN(NAV2(p.eimp, or_deg_idx))
-		if (mm) WRN(NAV7(restrain, distribute, Uc, Jz, p.beta, weight_nooc, weight_freze))
+	if (mm) WRN(NAV2(p.eimp, or_deg_idx));
+	if (mm) WRN(NAV7(restrain, distribute, Uc, Jz, p.beta, weight_nooc, weight_freze));
 
 
-			imfrq_hybrid_function.reset(num_omg, num_nondegenerate, 0.);
+	imfrq_hybrid_function.reset(num_omg, num_nondegenerate, 0.);
 
 	{// Delta.inp: to get the hyb function.
 		Str hybdata("Delta.inp");
@@ -149,7 +149,7 @@ void APIedmft::read_eDMFT(const Str& file) {
 					ifs >> re;
 					ifs >> im;
 					imfrq_hybrid_function[i][m] = cmplx(re, im);
-					// if (mm) WRN(NAV3(omg, real(imfrq_hybrid_function[i][m]), imag(imfrq_hybrid_function[i][m])))	
+					// if (mm) WRN(NAV3(omg, real(imfrq_hybrid_function[i][m]), imag(imfrq_hybrid_function[i][m])));
 				}
 			}
 			if (!ifs) {
@@ -276,6 +276,7 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 			norg.PIO_occweight(norg.occnum);
 		}
 		else {
+			p.according_nppso(p.npartical);
 			NORG norg(mm, p);	norg.read_NTR(); 	norg.up_date_h0_to_solve(imp.impH, 1);
 			uormat = norg.uormat;
 			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb / p.norg_sets);occweight = occnum;
