@@ -373,6 +373,9 @@ void APIedmft::read_norg_setting(
 		else if (key == "Minsulator") {
 			iss >> p.if_norg_degenerate;
 		}
+		else if (key == "ful_pcl_sch") {
+			iss >> ful_pcl_sch;
+		}
 		else if (key == "weight_nooc") {
 			iss >> weight_nooc;
 		}
