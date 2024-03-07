@@ -440,3 +440,8 @@ Version: v1.3.03.p3 @ 2024.03.06
     realized: Fix a BUG, the U and J construct wrong(dz2,dx2,dxy,dxz,dyz)! Change to Right (dz2,dx2,dxz,dyz,dxy)!
     next do : (same as prev)
     thinking: (same as prev)
+
+Version: v1.3.04.p3 @ 2024.03.07
+    realized: Add the periodic ful_pcl_sch (period = 7).
+    next do : (same as prev)
+    thinking: (same as prev)

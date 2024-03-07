@@ -114,7 +114,10 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_
 
             // IFS ifs_a("ru" + nppso_str(a.scsp.nppso) + ".bi");
             // if (ifs_a) for_Int(i, 0, a.uormat.size()) biread(ifs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());
-            a.up_date_h0_to_solve(impH_i);
+
+            a.read_NTR();
+            if (IFS("ru" + nppso_str(a.scsp.nppso) + ".bi")) if (mm) WRN("find it in the private space");
+            a.up_date_h0_to_solve(impH_i, 1);
             return a;
         } else {
             // nppsos.clear();

@@ -30,6 +30,7 @@ class APIedmft{
 	Int nband;							
 	Int norbs;
 	Int ful_pcl_sch;
+	Int iter_count;
 	// VecInt artificial_symm;
 
 	
