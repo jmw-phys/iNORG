@@ -274,14 +274,16 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 			p.npartical = norg.scsp.nppso;
 			p.rotationU = uormat;
 			norg.PIO_occweight(norg.occnum);
-		}
-		else {
-			p.according_nppso(p.npartical);
-			NORG norg(mm, p);	norg.read_NTR(); 	norg.up_date_h0_to_solve(imp.impH, 1);
+		} else {
+			Prmtr p_temp(p);
+			p_temp.nooc_mode = STR("nooc");
+			p_temp.templet_restrain[1] = -1; p_temp.templet_restrain[p_temp.ndiv - 1] = 1;
+			p_temp.according_nppso(p_temp.npartical);
+
+			NORG norg(mm, p_temp);	norg.read_NTR(); 	norg.up_date_h0_to_solve(imp.impH, 1);
 			uormat = norg.uormat;
-			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb / p.norg_sets);occweight = occnum;
+			occnum = norg.occnum.mat(p_temp.norg_sets, p_temp.n_rot_orb / p_temp.norg_sets);occweight = occnum;
 			nppso = norg.scsp.nppso;
-			p.npartical = norg.scsp.nppso;
 			p.rotationU = uormat;
 			norg.PIO_occweight(norg.occnum);
 		}
@@ -304,10 +306,11 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 			keep_o = o - nooc_o - freze_o; keep_e = e - nooc_e - freze_e;
 			controler[i + 1] = p.if_norg_imp ? VecInt{ freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{ 1, freze_o, nooc_o, keep_o, 1, keep_e, nooc_e, freze_e };
 		}
-		if (mm) WRN(NAV4(p.if_norg_degenerate, p.nooc_mode, weight_nooc, weight_freze));
+		VecInt DIV_constrain = VecInt{controler[0][p.ndiv/2+1], controler[0][p.ndiv/2+2], controler[0][p.ndiv/2+3]};
+		if (mm) WRN(NAV5(p.if_norg_degenerate, p.nooc_mode, DIV_constrain, weight_nooc, weight_freze));
 		// if(mm) WRN(NAV(controler));
 		// p.nooc_mode = STR("cpnooc");
-		controler[0][1] = -0; controler[0][p.ndiv - 1] = 0;
+		// controler[0][1] = -0; controler[0][p.ndiv - 1] = 0;
 		p.according_controler(controler, ordeg);
 	}
 }
@@ -457,7 +460,7 @@ void APIedmft::edmft_back_up(const Str& status) {
 
 				if (key == "iter_count")			iss >> iter_count;
 				if (key == "npartical")				for_Int(i, 0, p.norbs)		iss >> p.npartical[i];
-				if (key == "ful_pcl_sch")			iss >> ful_pcl_sch;
+				// if (key == "ful_pcl_sch")			iss >> ful_pcl_sch;
 				// if (key == "artificial_symm"){
 				// 	artificial_symm.reset(p.norbs, 0);	for_Int(i, 0, p.norbs)	iss >> artificial_symm[i];
 				// }
@@ -472,7 +475,7 @@ void APIedmft::edmft_back_up(const Str& status) {
 
 		ofs << setw(4) << "iter_count";			ofs << setw(4) << (iter_count + 1);											ofs << endl;
 		ofs << setw(4) << "npartical";			for_Int(i, 0, p.norbs)		ofs << setw(4) << p.npartical[i];		ofs << endl;
-		ofs << setw(4) << "ful_pcl_sch";		ofs << setw(4) << ful_pcl_sch;											ofs << endl;
+		// ofs << setw(4) << "ful_pcl_sch";		ofs << setw(4) << ful_pcl_sch;											ofs << endl;
 		// if(artificial_symm.size() != 0 && artificial_symm != or_deg_idx){
 		// 	ofs << setw(4) << "artificial_symm";for_Int(i, 0, p.norbs) 		ofs << setw(4) << artificial_symm[i];	ofs << endl;
 		// }

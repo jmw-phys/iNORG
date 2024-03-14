@@ -445,3 +445,8 @@ Version: v1.3.04.p3 @ 2024.03.07
     realized: Add the periodic ful_pcl_sch (period = 7).
     next do : (same as prev)
     thinking: (same as prev)
+
+Version: v1.3.05.p3 @ 2024.03.14
+    realized: change the ful_pcl_sch nooc_mode to "nooc".
+    next do : (same as prev)
+    thinking: (same as prev)

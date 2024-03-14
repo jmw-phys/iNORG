@@ -293,7 +293,7 @@ VecReal Impurity::set_edmft_interaction() {
     if (!(p.nband == 5 || p.nband == 3 || p.nband == 2)) ERR("we only support for the eg, t2g and fulld mode");
     // Mat<MatReal> imp_interact(p.norbs, p.norbs, MatReal(p.norbs, p.norbs, 0.));
     MatReal imp_dd_interact(p.norbs, p.norbs,  0.);
-    Real Uc(0.0), Jz(0.0);
+    Real Uc(0.0), Jz(0.0), Up(0.0);
 
     if(p.nband == 5){
         MatReal U_interact(p.nband, p.nband,  0.);
@@ -344,41 +344,43 @@ VecReal Impurity::set_edmft_interaction() {
         for_Int(b1, 0, p.nband) {// NO double counting term for impurity
             imp_dd_interact[2 * b1][2 * b1 + 1] = U_interact[b1][b1];
             for_Int(b2, b1, p.nband) if (b1 != b2) { // same spin orientation
-                imp_dd_interact[2 * b1][2 * b2] = U_interact[b1][b2] - 3 * J_interact[b1][b2];
-                imp_dd_interact[2 * b1 + 1][2 * b2 + 1] = U_interact[b1][b2] - 3 * J_interact[b1][b2];
+                imp_dd_interact[2 * b1][2 * b2] = U_interact[b1][b2] - J_interact[b1][b2];
+                imp_dd_interact[2 * b1 + 1][2 * b2 + 1] = U_interact[b1][b2] - J_interact[b1][b2];
             }
             for_Int(b2, 0, p.nband) if (b1 != b2) {
-                imp_dd_interact[2 * b1][2 * b2 + 1] = U_interact[b1][b2] - 2 * J_interact[b1][b2];
+                imp_dd_interact[2 * b1][2 * b2 + 1] = U_interact[b1][b2];
             }
         }
     }
     else if (p.nband == 3) {
         Uc = p.U + (8.0 / 7.0) * p.jz;
+        Up = p.U + (328.0 / 819.0) * p.jz;
         Jz = (632.0 / 819.0) * p.jz;
 
         for_Int(b1, 0, p.nband) { // NO double counting term for impurity
             imp_dd_interact[2 * b1][2 * b1 + 1] = Uc;
             for_Int(b2, b1, p.nband) if (b1 != b2) { // same spin orientation
-                imp_dd_interact[2 * b1][2 * b2] = Uc - 3 * p.jz;
-                imp_dd_interact[2 * b1 + 1][2 * b2 + 1] = Uc - 3 * p.jz;
+                imp_dd_interact[2 * b1][2 * b2] = Up - p.jz;
+                imp_dd_interact[2 * b1 + 1][2 * b2 + 1] = Up - p.jz;
             }
             for_Int(b2, 0, p.nband) if (b1 != b2) {
-                imp_dd_interact[2 * b1][2 * b2 + 1] = Uc - 2 * p.jz;
+                imp_dd_interact[2 * b1][2 * b2 + 1] = Up;
             }
         }
     }
     else if (p.nband == 2) {
         Uc = p.U + (8.0 / 7.0) * p.jz;
+        Up = p.U + (516.0 / 819.0) * p.jz;
         Jz = (726.0 / 819.0) * p.jz;
 
         for_Int(b1, 0, p.nband) { // NO double counting term for impurity
             imp_dd_interact[2 * b1][2 * b1 + 1] = Uc;
             for_Int(b2, b1, p.nband) if (b1 != b2) { // same spin orientation
-                imp_dd_interact[2 * b1][2 * b2] = Uc - 3 * p.jz;
-                imp_dd_interact[2 * b1 + 1][2 * b2 + 1] = Uc - 3 * p.jz;
+                imp_dd_interact[2 * b1][2 * b2] = Up - p.jz;
+                imp_dd_interact[2 * b1 + 1][2 * b2 + 1] = Up - p.jz;
             }
             for_Int(b2, 0, p.nband) if (b1 != b2) {
-                imp_dd_interact[2 * b1][2 * b2 + 1] = Uc - 2 * p.jz;
+                imp_dd_interact[2 * b1][2 * b2 + 1] = Up;
             }
         }
     }
