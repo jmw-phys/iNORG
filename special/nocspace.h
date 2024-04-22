@@ -94,7 +94,8 @@ private:
 	void find_all_possible_state_by_col(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const;
 	void find_all_possible_state_by_row(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const;
 	void find_all_possible_state_by_nooc(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const;
-
+	void find_all_possible_state_suit_for_PHSs(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const;
+/*
 	template<typename T>
 	VEC<VEC<T>> cart_product(const VEC<VEC<T>> &v) const
 	{
@@ -114,9 +115,31 @@ private:
 		}
 		return s;
 	};
-
+*/
+// /*
+	template<typename T>
+	VEC<VEC<T>> cart_product(const VEC<VEC<T>>& v) const {
+		VEC<VEC<T>> result = {{}};
+		for (const auto& u : v) {
+			
+			VEC<VEC<T>> temp;
+			for (const auto& x : result) {
+				for (const auto y : u) {
+					auto new_combination = x; // Create a new combination
+					new_combination.push_back(y); // Add current element
+					temp.push_back(std::move(new_combination)); // Move to temp
+				}
+			}
+			
+			// Move temp to result
+			result = std::move(temp);
+		}
+		return result;
+	};
+// */
 	VEC<VEC<Int> > cart_product_monitor_col(const VEC<VEC<int> >& v, const VEC<VEC<Int> >& a)const;
 	VEC<VEC<Int> > cart_product_monitor_row(const VEC<VEC<int> >& v, const VEC<VEC<int> >& a) const;
+	VEC<VEC<Int> > cart_product_monitor_PHS(const VEC<VEC<int> >& v, const VEC<VEC<int> >& a) const;
 
 	Idx read_the_Tab(Str name) const{
 		Idx temp_dim(-1);	

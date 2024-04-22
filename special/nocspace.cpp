@@ -43,6 +43,11 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_
 	// find_all_noc_subspaces();// ! tested for the YBCO-CDMFT version.
 	find_thought_noc_subspaces();
 	
+	// if(mm) {//!!testing cart_product() function.
+	// VEC<VEC<Int>> temp_test1 = {{1,2},{3,4}};
+	// VEC<VEC<Int>> temp_test2 = cart_product(temp_test1);
+	// WRN(NAV5(temp_test2.size(), Vec(temp_test2[0]), Vec(temp_test2[1]), Vec(temp_test2[2]), Vec(temp_test2[3])));
+	// }
 
 	if(mm) PIO("Begin find_combined_number_subspaces()"+ NAV(dim)+"   "+present());
 }
@@ -67,7 +72,7 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_
 	if(mm) WRN("Begin find_combined_number_subspaces()"+ NAV(dim));
 }
 
-//----------------------------- judge function -----------------------------
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>> judge function begin >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 // here when return true, mean satisfy the PHSs rule.
 bool NocSpace::check_correlated_column(const Int& col_pos, const VecInt& div_colsum) const {
@@ -406,8 +411,39 @@ bool NocSpace::if_row_divs_in_restraint(const Int& restraint, const VEC<Int>& di
 }
 
 
-//----------------------------- space function before judge -----------------------------
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<< judge function end <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>> space function (before judge) begin >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+
+
+void NocSpace::find_all_possible_state(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const {
+	VEC<VEC<Int> > a_lable;
+	Int counter(0);
+	for_Int(col, 0, control_divs.ncols()) {
+		VEC<VEC<Int>> temp_a;
+		VEC<VEC<Int> > a_rol_temp;
+		for_Int(row, 1, control_divs.nrows()) {
+			VEC<Int> one_div;
+			for_Int(spl, 0, control_divs[row][col] + 1) {
+				if (if_div_in_restraint(control_divs[0], col, control_divs[row][col], spl))
+					one_div.push_back(spl);
+			}
+			a_rol_temp.push_back(one_div);
+		}
+		temp_a = cart_product(a_rol_temp);
+		for (const auto& one_divs : temp_a) {
+			if (if_col_divs_in_restraint(control_divs[0][col], one_divs, col))
+				a.push_back(one_divs);
+		}
+		VEC<Int> a_lable_i;
+		for_Int(i, counter, a.size()) {
+			a_lable_i.push_back(i);
+			counter++;
+		}
+		a_lable.push_back(a_lable_i);
+	}
+	s = cart_product(a_lable);
+}
 
 void NocSpace::find_all_possible_state_by_col(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const
 {
@@ -515,38 +551,46 @@ void NocSpace::find_all_possible_state_by_nooc(VEC<VEC<Int> >& a, VEC<VEC<Int> >
 	s = cart_product(a_lable);
 }
 
-void NocSpace::find_all_possible_state(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const {
+//! not test yet.
+void NocSpace::find_all_possible_state_suit_for_PHSs(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const {
+
 	VEC<VEC<Int> > a_lable;
 	Int counter(0);
-	for_Int(col, 0, control_divs.ncols()) {
-		VEC<VEC<Int>> temp_a;
-		VEC<VEC<Int> > a_rol_temp;
-		for_Int(row, 1, control_divs.nrows()) {
+	if(p.if_norg_imp) {ERR("Since this part was not in used, FOR here I have not test yet!");}
+	else for_Int(col, 0, control_divs.ncols()) if (col != 0 && col != ndivs / 2)
+	{
+		VEC<VEC<Int>> temp_a, a_rol_temp;
+		for_Int(row, 1, control_divs.nrows())
+		{
 			VEC<Int> one_div;
-			for_Int(spl, 0, control_divs[row][col] + 1) {
+			for_Int(spl, 0, control_divs[row][col] + 1)
+			{
 				if (if_div_in_restraint(control_divs[0], col, control_divs[row][col], spl))
 					one_div.push_back(spl);
 			}
 			a_rol_temp.push_back(one_div);
 		}
 		temp_a = cart_product(a_rol_temp);
-		for (const auto& one_divs : temp_a) {
+		for (const auto &one_divs : temp_a)	{
 			if (if_col_divs_in_restraint(control_divs[0][col], one_divs, col))
-				a.push_back(one_divs);
+				{a.push_back(one_divs);
+				// if(mm)WRN(NAV(Vec(one_divs)));
+				}
 		}
 		VEC<Int> a_lable_i;
-		for_Int(i, counter, a.size()) {
+		for_Int(i, counter, a.size()){
 			a_lable_i.push_back(i);
 			counter++;
 		}
 		a_lable.push_back(a_lable_i);
+		// if(mm) WRN(NAV2( col,a.size()));
 	}
-	s = cart_product(a_lable);
+	// s = cart_product(a_lable);
+	s = cart_product_monitor_PHS(a_lable, a);
 }
 
-
-
-//----------------------------- space function after judge -----------------------------
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<< space function (before judge) end <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>> space function (after judge) begin >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 void NocSpace::find_thought_noc_subspaces()
 {
@@ -555,6 +599,7 @@ void NocSpace::find_thought_noc_subspaces()
 	VEC<VEC<Int> > a, s;
 
 	if(p.if_norg_imp) find_all_possible_state_by_col(a, s);
+	// else if(p.nooc_mode == STR("phss_v2")) find_all_possible_state_suit_for_PHSs(a, s); //!! TSSTING
 	else find_all_possible_state_by_nooc(a, s);
 	// if(mm) WRN(NAV(s.size()));
 	Vec<MatInt> spilss_divs = multi_judger_with_return(s, a);
@@ -652,8 +697,8 @@ void NocSpace::find_all_noc_subspaces_by_row()
 	// 	ofs.close();
 	// }
 }
-
-//----------------------------- (old/stable)space function -----------------------------
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<< space function (after judge) end <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>> (old/stable)space function begin >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 // find all the combined number subspaces OR find all the combined number subspaces with special partical control.
 void NocSpace::find_combined_number_subspaces(const Int mode)
@@ -698,7 +743,8 @@ void NocSpace::find_combined_number_subspaces(const Int mode)
 	}
 }
 
-//----------------------------- basic function -----------------------------
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<< (old/stable)space function end <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>> basic function begin >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 void NocSpace::set_control()
 {
@@ -751,6 +797,40 @@ VEC<VEC<Int> > NocSpace::cart_product_monitor_row (const VEC<VEC<Int> >& v, cons
         s = move(r);
     }
     return s;
+}
+
+VEC<VEC<Int> > NocSpace::cart_product_monitor_PHS (const VEC<VEC<Int> >& v, const VEC<VEC<Int> >& a)const
+{
+    VEC<VEC<Int>> result = {{}};
+    for (const auto& u : v) {
+		// bool judge(true);
+		VEC<VEC<Int>> temp;
+		for (const auto& x : result) {
+			// if(x.size() == (ndivs - 2)){
+			// 	VecInt change_sum(control_divs.nrows(), 0); judge = true;
+			// 	for_Int(i, 0, (ndivs - 2) / 2) change_sum += sit_mat.tr()[i + 1] - VecInt(a[i]);
+			// 	for_Int(i, (ndivs - 2) / 2, (ndivs - 2)) change_sum += VecInt(a[i]);
+			// 	if (SUM(change_sum) > control_divs[0][ndivs/2]) judge = false;
+			// }
+			for (const auto y : u) {
+				auto new_combination = x; 					// Create a new combination
+				new_combination.push_back(y); 				// Add current element
+				if (x.size() == (ndivs - 2)) {
+					VecInt change_sum(control_divs.nrows(), 0);
+					for_Int(i, 0, (ndivs - 2) / 2) change_sum += sit_mat.tr()[i + 1] - VecInt(a[i]);
+					for_Int(i, (ndivs - 2) / 2, (ndivs - 2)) change_sum += VecInt(a[i]);
+					if (SUM(change_sum) > control_divs[0][ndivs / 2])		temp.push_back(std::move(new_combination)); // Move to temp
+				}
+				else {
+					temp.push_back(std::move(new_combination)); // Move to temp
+				}
+			}
+			
+		}
+		// Move temp to result
+		result = std::move(temp);
+	}
+    return result;
 }
 
 VecInt NocSpace::free_div_base_decode(Int idx, VEC<VEC<Int> > v) const {
@@ -821,3 +901,4 @@ void NocSpace::print(std::ostream& os) const {
 
 #undef nocspace_print
 }
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<< basic function end<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
