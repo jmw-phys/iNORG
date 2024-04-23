@@ -450,3 +450,8 @@ Version: v1.3.05.p3 @ 2024.03.14
     realized: change the ful_pcl_sch nooc_mode to "nooc".
     next do : (same as prev)
     thinking: (same as prev)
+
+Version: v1.3.06.p3 @ 2024.04.23
+    realized: Finish the first version (v1) of find_combined_number_subspaces_no_active_orbital() function.
+    next do : Upgrade this version of the code by 2 stage of free base code.
+    thinking: How to relization this function?

@@ -41,7 +41,8 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_
 	// find_all_noc_subspaces_by_row();
 
 	// find_all_noc_subspaces();// ! tested for the YBCO-CDMFT version.
-	find_thought_noc_subspaces();
+	// find_thought_noc_subspaces();
+	find_combined_number_subspaces_no_active_orbital();
 	
 	// if(mm) {//!!testing cart_product() function.
 	// VEC<VEC<Int>> temp_test1 = {{1,2},{3,4}};
@@ -705,6 +706,7 @@ void NocSpace::find_combined_number_subspaces(const Int mode)
 {
 	Idx length_ECNS;			// length for each combined number subspaces(ECNS).
 	idx_div.push_back(dim);
+	if(mm) WRN(NAV(dim));
 	VEC<VEC<Int> > a;
 	for_Int(row, 1, control_divs.nrows()) {
 		for_Int(col, 0, control_divs.ncols()) {
@@ -717,15 +719,19 @@ void NocSpace::find_combined_number_subspaces(const Int mode)
 	}
 	Idx total_posibile(1);
 	for (const auto& u : a) total_posibile *= u.size();
+	if(mm) WRN(NAV(total_posibile));
 
 	if(mode == 1) {
 		for_Idx(x, 0, total_posibile) {
 			VecInt spilss_div_v(free_div_base_decode(x, a));
 			MatInt spilss_div(spilss_div_v.mat(control_divs.nrows() - 1, control_divs.ncols()));
 			if (ifin_NocSpace(spilss_div, nppso)) {
-				div.push_back(spilss_div);	length_ECNS = 1;
+				div.push_back(spilss_div);
+				divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
+				length_ECNS = 1;
 				for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
-				dim += length_ECNS;			idx_div.push_back(dim);
+				dim += length_ECNS;
+				idx_div.push_back(dim);
 			}
 		}
 	}
@@ -735,15 +741,120 @@ void NocSpace::find_combined_number_subspaces(const Int mode)
 			VecInt spilss_div_v(free_div_base_decode(x, a));
 			MatInt spilss_div(spilss_div_v.mat(control_divs.nrows() - 1, control_divs.ncols()));
 			if (ifin_NocSpace(spilss_div)) {
-				div.push_back(spilss_div);	length_ECNS = 1;
+				div.push_back(spilss_div);
+				divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
+				length_ECNS = 1;
 				for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
-				dim += length_ECNS;			idx_div.push_back(dim);
+				dim += length_ECNS;
+				idx_div.push_back(dim);
 			}
 		}
 	}
 }
 
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<< (old/stable)space function end <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>> space function upgrade for 5 band begin >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+// The code is desigened specital for the no rotate impurity orbital case.
+void NocSpace::find_combined_number_subspaces_no_active_orbital()
+{
+	Idx length_ECNS;			// length for each combined number subspaces(ECNS).
+	idx_div.push_back(dim);
+	if(mm) WRN(NAV(dim));
+	VEC<VEC<Int> > a;
+	for_Int(row, 1, control_divs.nrows()) {
+		for_Int(col, 0, control_divs.ncols()) if (p.if_norg_imp || (col != 0 && col != ndivs / 2)) {
+			VEC<Int> one_div;
+			for_Int(spl, 0, control_divs[row][col] + 1) {
+				if(if_div_in_restraint(control_divs[0],col, control_divs[row][col],spl)) one_div.push_back(spl);
+			}
+			a.push_back(one_div);
+		}
+	}
+	unsigned long int total_noc_posibile(1);
+	for (const auto& u : a) total_noc_posibile *= u.size();
+	if(mm) WRN(NAV(total_noc_posibile)+"   "+present());
+
+	for_Idx(sigle_posibile, 0, total_noc_posibile) {
+		// VecInt spilss_div_v(free_div_base_decode(sigle_posibile, a));
+		MatInt spilss_noc_div(free_div_base_decode(sigle_posibile, a).mat(control_divs.nrows() - 1, control_divs.ncols() - 2));
+		// if (mm) WRN(NAV(spilss_noc_div));
+		if (suit_NOOC(spilss_noc_div, nppso)) { 
+			// if (mm) WRN(NAV(spilss_noc_div));
+			VecInt left_div_size(p.norg_sets), left_n(p.norg_sets);
+			VEC<VEC<VecInt>> left_ii(p.norg_sets);
+
+			// for the two "*" terms.
+			for_Int(j, 0, p.norg_sets) {
+				Int n(nppso[j] - SUM(spilss_noc_div[j])), sit_i(sit_mat[j][0]), sit_b(sit_mat[j][ndivs / 2]); left_n[j] = n;
+				Int possible = n < MIN(sit_i, sit_b) ? n + 1 : n + 1 - MAX(n - sit_b, 0) - MAX(n - sit_i, 0);	left_div_size[j] = possible;
+				VecInt a_beg(2, 0);
+				a_beg = possible == n + 1 ? Vec{ 0, n } : Vec{ n - sit_b, sit_b };
+				for_Int(k, 0, possible) { left_ii[j].push_back(a_beg); a_beg[0]++; a_beg[1]--; }
+				// if(mm) WRN(NAV(left_ii[j].size()));
+			}
+
+			if (!p.if_norg_imp) for (const auto& x : cart_product(left_ii)) {
+				MatInt unnooc(p.norg_sets, 2);
+				for_Int(j, 0, x.size()) unnooc[j] = x[j];
+				MatInt spilss_div(concat(concat(unnooc.tr()[0], spilss_noc_div.tr().truncate_row(0, spilss_noc_div.ncols() / 2).vec()), \
+					concat(unnooc.tr()[1], spilss_noc_div.tr().truncate_row(spilss_noc_div.ncols() / 2, spilss_noc_div.ncols()).vec())).\
+					mat(sit_mat.ncols(), sit_mat.nrows()).tr());
+				// split_spilss_divs.push_back(spilss_noc_div);
+
+				div.push_back(spilss_div);
+				divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
+				length_ECNS = 1;
+				for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
+				dim += length_ECNS;
+				idx_div.push_back(dim);
+			}
+		}
+	}
+}
+
+
+
+/*
+void NocSpace::nestedLoops(int depth, int n, MatInt control_divs, std::vector<int>& current) {
+    if (depth == n) {
+        for (int num : current) {
+            std::cout << num << " ";
+        }
+        std::cout << std::endl;
+        return;
+    }
+
+    for (int i = 0; i < control_divs; i++) {
+        current[depth] = i;
+        nestedLoops(depth + 1, n, control_divs, current);
+    }
+}
+
+void NocSpace::find_thought_noc_subspaces_nestedloops()
+{
+	Idx length_ECNS;						// length for each combined number subspaces(ECNS).
+	idx_div.push_back(dim);
+	VEC<VEC<Int> > a, s;
+
+	if(p.if_norg_imp) find_all_possible_state_by_col(a, s);
+	else find_all_possible_state_by_nooc(a, s);
+	// if(mm) WRN(NAV(s.size()));
+	Vec<MatInt> spilss_divs = multi_judger_with_return(s, a);
+	// if(mm) WRN(NAV(spilss_divs.size()));
+	for_Int(k, 0, spilss_divs.size()) {
+		const MatInt & spilss_div(spilss_divs[k]);
+		div.push_back(spilss_div);
+		divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
+		length_ECNS = 1;
+		for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
+		dim += length_ECNS;
+		idx_div.push_back(dim);
+	}
+}
+*/
+
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<< space function upgrade for 5 band end <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>> basic function begin >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 void NocSpace::set_control()
@@ -833,8 +944,8 @@ VEC<VEC<Int> > NocSpace::cart_product_monitor_PHS (const VEC<VEC<Int> >& v, cons
     return result;
 }
 
-VecInt NocSpace::free_div_base_decode(Int idx, VEC<VEC<Int> > v) const {
-	VecInt base(v.size() + 1, 1);
+VecInt NocSpace::free_div_base_decode(unsigned long int idx, VEC<VEC<Int> > v) const {
+	Vec<unsigned long int> base(v.size() + 1, 1);
 	for_Int(i, 1, base.size()) base[i] = base[i - 1] * v[i - 1].size();
 
 	VecInt rep(base.size() - 1, 0);

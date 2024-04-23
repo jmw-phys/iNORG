@@ -20,7 +20,7 @@ public:
 	const Prmtr& p;					// parameters
 	Idx ndivs;						// The amount of divisons's number. 
 	MatInt control_divs;			// to set the number of division and the shortcut restratin.
-	VecInt orbital_divcnt;		// the SUM in row for each colum.
+	VecInt orbital_divcnt;			// the SUM in row for each colum.
 	MatInt sit_mat;					// spinless - orbits number in each division.
 	Idx nspa;						// The amount of partical's number.
 	VecInt nppso;					// nppso mean: number of partical per spin orbital.
@@ -43,6 +43,7 @@ private:
 	void set_control();
 	// Find all the combined number subspaces.
 	void find_combined_number_subspaces(const Int mode = 0);
+	void find_combined_number_subspaces_no_active_orbital();
 	// // Find all the combined number subspaces by nppso.
 	// void find_combined_number_subspaces(const VecInt& nppso);
 
@@ -51,6 +52,8 @@ private:
 	void find_all_noc_subspaces_multi();
 	void find_all_noc_subspaces_by_row();
 	void find_thought_noc_subspaces();
+	void find_thought_noc_subspaces_nestedloops();
+
 
 	void print(std::ostream& os, const Str& var, const Str& val, const Str& comment) const {
 		using namespace std;
@@ -95,28 +98,9 @@ private:
 	void find_all_possible_state_by_row(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const;
 	void find_all_possible_state_by_nooc(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const;
 	void find_all_possible_state_suit_for_PHSs(VEC<VEC<Int> >& a, VEC<VEC<Int> >& s) const;
-/*
-	template<typename T>
-	VEC<VEC<T>> cart_product(const VEC<VEC<T>> &v) const
-	{
-		VEC<VEC<T>> s = {{}};
-		for (const auto &u : v)
-		{
-			VEC<VEC<T>> r;
-			for (const auto &x : s)
-			{
-				for (const auto y : u)
-				{
-					r.push_back(x);
-					r.back().push_back(y);
-				}
-			}
-			s = move(r);
-		}
-		return s;
-	};
-*/
-// /*
+
+	
+	void nestedLoops(int depth, int n, MatInt control_divs, std::vector<int>& current);
 	template<typename T>
 	VEC<VEC<T>> cart_product(const VEC<VEC<T>>& v) const {
 		VEC<VEC<T>> result = {{}};
@@ -136,7 +120,6 @@ private:
 		}
 		return result;
 	};
-// */
 	VEC<VEC<Int> > cart_product_monitor_col(const VEC<VEC<int> >& v, const VEC<VEC<Int> >& a)const;
 	VEC<VEC<Int> > cart_product_monitor_row(const VEC<VEC<int> >& v, const VEC<VEC<int> >& a) const;
 	VEC<VEC<Int> > cart_product_monitor_PHS(const VEC<VEC<int> >& v, const VEC<VEC<int> >& a) const;
@@ -181,5 +164,35 @@ public:
 		Str temp; for_Int(i, 0, p.npartical.size()) { if (i == 0) temp += STR(p.npartical[i]); else /*if (i % 2 == 0)*/ temp += "-" + STR(p.npartical[i]); }	return temp;
 	}
 
-	VecInt free_div_base_decode(Int idx, VEC<VEC<Int> > v) const;
+	VecInt free_div_base_decode(unsigned long int idx, VEC<VEC<Int> > v) const;
 };
+
+
+
+/* // NOT in used code
+
+/// #1 cart_product
+	template<typename T>
+	VEC<VEC<T>> cart_product(const VEC<VEC<T>> &v) const
+	{
+		VEC<VEC<T>> s = {{}};
+		for (const auto &u : v)
+		{
+			VEC<VEC<T>> r;
+			for (const auto &x : s)
+			{
+				for (const auto y : u)
+				{
+					r.push_back(x);
+					r.back().push_back(y);
+				}
+			}
+			s = move(r);
+		}
+		return s;
+	};
+///
+
+
+
+*/
