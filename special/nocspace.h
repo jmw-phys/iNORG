@@ -164,7 +164,7 @@ public:
 		Str temp; for_Int(i, 0, p.npartical.size()) { if (i == 0) temp += STR(p.npartical[i]); else /*if (i % 2 == 0)*/ temp += "-" + STR(p.npartical[i]); }	return temp;
 	}
 
-	VecInt free_div_base_decode(unsigned long int idx, VEC<VEC<Int> > v) const;
+	VecInt free_div_base_decode(Idx idx, VEC<VEC<Int> > v) const;
 };
 
 

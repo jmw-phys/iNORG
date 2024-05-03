@@ -9,3 +9,4 @@ tools/test_list/
 tools/testjl/*
 z-release_version/*
 makefile
+.vscode/*

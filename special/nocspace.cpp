@@ -50,7 +50,7 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_
 	// WRN(NAV5(temp_test2.size(), Vec(temp_test2[0]), Vec(temp_test2[1]), Vec(temp_test2[2]), Vec(temp_test2[3])));
 	// }
 
-	if(mm) PIO("Begin find_combined_number_subspaces()"+ NAV(dim)+"   "+present());
+	if(mm) PIO("Begin find_combined_number_subspaces_no_active_orbital()"+ NAV(dim)+"   "+present());
 }
 
 // nppso mean: number of partical per spin orbital.
@@ -760,27 +760,47 @@ void NocSpace::find_combined_number_subspaces_no_active_orbital()
 {
 	Idx length_ECNS;			// length for each combined number subspaces(ECNS).
 	idx_div.push_back(dim);
-	if(mm) WRN(NAV(dim));
-	VEC<VEC<Int> > a;
-	for_Int(row, 1, control_divs.nrows()) {
-		for_Int(col, 0, control_divs.ncols()) if (p.if_norg_imp || (col != 0 && col != ndivs / 2)) {
+	// if(mm) WRN(NAV(dim));
+	VEC<VEC<VEC<Int>>> right_col_div;
+	VEC<VEC<Int> > right_cols;
+	for_Int(col, 0, control_divs.ncols()) if (p.if_norg_imp || (col != 0 && col != ndivs / 2)) {
+		VEC<VEC<Int> > col_data;
+		VEC<Int> right_col;
+		for_Int(row, 1, control_divs.nrows()) {
 			VEC<Int> one_div;
 			for_Int(spl, 0, control_divs[row][col] + 1) {
 				if(if_div_in_restraint(control_divs[0],col, control_divs[row][col],spl)) one_div.push_back(spl);
 			}
-			a.push_back(one_div);
+			col_data.push_back(one_div);
 		}
+		Idx total_one_noc_col_posibile(1);
+		for (const auto& u : col_data) total_one_noc_col_posibile *= u.size();
+		// if(mm) WRN(NAV2(col,total_one_noc_col_posibile)+"   "+present());
+		// now beging to check the col is right or not.
+		for_Idx(sigle_posibile, 0, total_one_noc_col_posibile) {
+			if(if_col_divs_in_restraint(control_divs[0][col], free_div_base_decode(sigle_posibile, col_data).stdvec(), col))
+				right_col.push_back(sigle_posibile);
+		}
+		// if(mm) WRN(NAV2(col,VecInt(right_col))+"   "+present());
+		right_cols.push_back(right_col);
+		right_col_div.push_back(col_data);
 	}
-	unsigned long int total_noc_posibile(1);
-	for (const auto& u : a) total_noc_posibile *= u.size();
-	if(mm) WRN(NAV(total_noc_posibile)+"   "+present());
+	Idx total_noc_posibile(1);
+	for (const auto& u : right_cols) total_noc_posibile *= u.size();
+	// VEC<VEC<Int> > combine_right_cols = cart_product(right_cols);
+	// if(mm) WRN(NAV2(total_noc_posibile, combine_right_cols.size())+"   "+present());
 
-	for_Idx(sigle_posibile, 0, total_noc_posibile) {
-		// VecInt spilss_div_v(free_div_base_decode(sigle_posibile, a));
-		MatInt spilss_noc_div(free_div_base_decode(sigle_posibile, a).mat(control_divs.nrows() - 1, control_divs.ncols() - 2));
-		// if (mm) WRN(NAV(spilss_noc_div));
+	for_Idx(sigle_posibile_idx, 0, total_noc_posibile) {
+		// VecInt col_idx(free_div_base_decode(sigle_posibile_idx, right_cols));
+		// if(mm) WRN(NAV2(sigle_posibile_idx,col_idx)+"   "+present());
+		VecInt one_combine_right_cols(free_div_base_decode(sigle_posibile_idx, right_cols));
+		MatInt spilss_noc_div_tr(control_divs.ncols() - 2, control_divs.nrows() - 1);
+		for_Idx(i, 0, 6) spilss_noc_div_tr[i] = free_div_base_decode(one_combine_right_cols[i], right_col_div[i]);
+		// MatInt spilss_noc_div(free_div_base_decode(sigle_posibile_idx, ？？？).mat(control_divs.nrows() - 1, control_divs.ncols() - 2));
+		MatInt spilss_noc_div(spilss_noc_div_tr.tr());
+		// if (mm && sigle_posibile_idx < 1) WRN(NAV2(sigle_posibile_idx, spilss_noc_div));
 		if (suit_NOOC(spilss_noc_div, nppso)) { 
-			// if (mm) WRN(NAV(spilss_noc_div));
+			// if (mm) WRN("This is Right!!: "+ NAV(spilss_noc_div));
 			VecInt left_div_size(p.norg_sets), left_n(p.norg_sets);
 			VEC<VEC<VecInt>> left_ii(p.norg_sets);
 
@@ -944,8 +964,8 @@ VEC<VEC<Int> > NocSpace::cart_product_monitor_PHS (const VEC<VEC<Int> >& v, cons
     return result;
 }
 
-VecInt NocSpace::free_div_base_decode(unsigned long int idx, VEC<VEC<Int> > v) const {
-	Vec<unsigned long int> base(v.size() + 1, 1);
+VecInt NocSpace::free_div_base_decode(Idx idx, VEC<VEC<Int> > v) const {
+	Vec<Idx> base(v.size() + 1, 1);
 	for_Int(i, 1, base.size()) base[i] = base[i - 1] * v[i - 1].size();
 
 	VecInt rep(base.size() - 1, 0);

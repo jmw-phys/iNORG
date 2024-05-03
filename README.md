@@ -455,3 +455,8 @@ Version: v1.3.06.p3 @ 2024.04.23
     realized: Finish the first version (v1) of find_combined_number_subspaces_no_active_orbital() function.
     next do : Upgrade this version of the code by 2 stage of free base code.
     thinking: How to relization this function?
+
+Version: v1.4.00.p3 @ 2024.05.03
+    realized: Finish the Second version (v1) of find_combined_number_subspaces_no_active_orbital() function.
+    next do : Can I use the parallel process in this function to speed up?
+    thinking: How to relization this parallel function?
