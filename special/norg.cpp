@@ -47,7 +47,11 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	// oneedm.write_the_multiTab("0.25-");
 	if(mm) std::cout << std::endl;						// blank line
 	impH = impH_i;
-	
+	// //! testing-20240503 begin
+	// scsp.div = std::vector<MatInt>();
+	scsp.divs_to_idx = std::map<std::string, Idx>();
+	// scsp.idx_div = std::vector<Int>();
+	// //! testing-20240503 end
 	if (mm) WRN(NAV2(impH.first,scsp.dim));
 	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 

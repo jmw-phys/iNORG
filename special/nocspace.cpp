@@ -763,42 +763,100 @@ void NocSpace::find_combined_number_subspaces_no_active_orbital()
 	// if(mm) WRN(NAV(dim));
 	VEC<VEC<VEC<Int>>> right_col_div;
 	VEC<VEC<Int> > right_cols;
-	for_Int(col, 0, control_divs.ncols()) if (p.if_norg_imp || (col != 0 && col != ndivs / 2)) {
-		VEC<VEC<Int> > col_data;
-		VEC<Int> right_col;
-		for_Int(row, 1, control_divs.nrows()) {
-			VEC<Int> one_div;
-			for_Int(spl, 0, control_divs[row][col] + 1) {
-				if(if_div_in_restraint(control_divs[0],col, control_divs[row][col],spl)) one_div.push_back(spl);
+	MatInt new_restratin_divs(p.norg_sets * 2 + 1, (control_divs.ncols() - 2) / 2, 0);
+
+	// if(1) {
+	if(p.nooc_mode != STR("phss_v2")) {
+		for_Int(col, 0, control_divs.ncols()) if (p.if_norg_imp || (col != 0 && col != ndivs / 2)) {
+			VEC<VEC<Int> > col_data;
+			VEC<Int> right_col;
+			for_Int(row, 1, control_divs.nrows()) {
+				VEC<Int> one_div;
+				for_Int(spl, 0, control_divs[row][col] + 1) {
+					if(if_div_in_restraint(control_divs[0],col, control_divs[row][col],spl)) one_div.push_back(spl);
+				}
+				col_data.push_back(one_div);
 			}
-			col_data.push_back(one_div);
+			Idx total_one_noc_col_posibile(1);
+			for (const auto& u : col_data) total_one_noc_col_posibile *= u.size();
+			// if(mm) WRN(NAV2(col,total_one_noc_col_posibile)+"   "+present());
+			// now beging to check the col is right or not.
+			for_Idx(sigle_posibile, 0, total_one_noc_col_posibile) {
+				if(if_col_divs_in_restraint(control_divs[0][col], free_div_base_decode(sigle_posibile, col_data).stdvec(), col))
+					right_col.push_back(sigle_posibile);
+			}
+			// if(mm) WRN(NAV2(col,VecInt(right_col))+"   "+present());
+			right_cols.push_back(right_col);
+			right_col_div.push_back(col_data);
 		}
-		Idx total_one_noc_col_posibile(1);
-		for (const auto& u : col_data) total_one_noc_col_posibile *= u.size();
-		// if(mm) WRN(NAV2(col,total_one_noc_col_posibile)+"   "+present());
-		// now beging to check the col is right or not.
-		for_Idx(sigle_posibile, 0, total_one_noc_col_posibile) {
-			if(if_col_divs_in_restraint(control_divs[0][col], free_div_base_decode(sigle_posibile, col_data).stdvec(), col))
-				right_col.push_back(sigle_posibile);
+	} else if(p.nooc_mode == STR("phss_v2")){
+		for_Int(i, 0, new_restratin_divs.nrows()) for_Int(j, 0, new_restratin_divs.ncols()) {
+			if (i < p.norg_sets+1)
+				new_restratin_divs[i][j] = control_divs[i][j + control_divs.ncols() - new_restratin_divs.ncols()];
+			else
+				new_restratin_divs[i][j] = control_divs[i - p.norg_sets][ndivs / 2 - 1 - j];
 		}
-		// if(mm) WRN(NAV2(col,VecInt(right_col))+"   "+present());
-		right_cols.push_back(right_col);
-		right_col_div.push_back(col_data);
+		// if(mm) WRN(NAV2(new_restratin_divs, control_divs));
+		for_Int(col, 0, new_restratin_divs.ncols()) {
+			VEC<VEC<Int> > col_data;
+			VEC<Int> right_col;
+			for_Int(row, 1, new_restratin_divs.nrows()) {
+				VEC<Int> one_div;
+				for_Int(spl, 0, new_restratin_divs[row][col] + 1) {
+					if(spl <= new_restratin_divs[0][col]) one_div.push_back(spl);
+				}
+				col_data.push_back(one_div);
+			}
+			Idx total_one_noc_col_posibile(1);
+			for (const auto& u : col_data) total_one_noc_col_posibile *= u.size();
+			for_Idx(sigle_posibile, 0, total_one_noc_col_posibile) {
+				if(SUM(free_div_base_decode(sigle_posibile, col_data)) <= new_restratin_divs[0][col])
+					right_col.push_back(sigle_posibile);
+			}
+			right_cols.push_back(right_col);
+			right_col_div.push_back(col_data);
+			// if(mm) WRN(NAV(right_col.size())+"   "+present());
+		}
 	}
+
 	Idx total_noc_posibile(1);
 	for (const auto& u : right_cols) total_noc_posibile *= u.size();
 	// VEC<VEC<Int> > combine_right_cols = cart_product(right_cols);
-	// if(mm) WRN(NAV2(total_noc_posibile, combine_right_cols.size())+"   "+present());
+	if(mm) WRN(NAV(total_noc_posibile)+"   "+present());
 
-	for_Idx(sigle_posibile_idx, 0, total_noc_posibile) {
-		// VecInt col_idx(free_div_base_decode(sigle_posibile_idx, right_cols));
-		// if(mm) WRN(NAV2(sigle_posibile_idx,col_idx)+"   "+present());
-		VecInt one_combine_right_cols(free_div_base_decode(sigle_posibile_idx, right_cols));
-		MatInt spilss_noc_div_tr(control_divs.ncols() - 2, control_divs.nrows() - 1);
-		for_Idx(i, 0, 6) spilss_noc_div_tr[i] = free_div_base_decode(one_combine_right_cols[i], right_col_div[i]);
-		// MatInt spilss_noc_div(free_div_base_decode(sigle_posibile_idx, ？？？).mat(control_divs.nrows() - 1, control_divs.ncols() - 2));
-		MatInt spilss_noc_div(spilss_noc_div_tr.tr());
+	for_Idx(sigle_posibile_idx, 0, total_noc_posibile) { // ! begin to finding
+		MatInt spilss_noc_div(control_divs.nrows() - 1, control_divs.ncols() - 2, 0);
+		// if (1) {
+		if (p.nooc_mode != STR("phss_v2")) {
+			// VecInt col_idx(free_div_base_decode(sigle_posibile_idx, right_cols));
+			// if(mm) WRN(NAV2(sigle_posibile_idx,col_idx)+"   "+present());
+			VecInt one_combine_right_cols(free_div_base_decode(sigle_posibile_idx, right_cols));
+			MatInt spilss_noc_div_tr(control_divs.ncols() - 2, control_divs.nrows() - 1);
+			for_Idx(i, 0, control_divs.ncols() - 2) spilss_noc_div_tr[i] = free_div_base_decode(one_combine_right_cols[i], right_col_div[i]);
+			// MatInt spilss_noc_div(free_div_base_decode(sigle_posibile_idx, ？？？).mat(control_divs.nrows() - 1, control_divs.ncols() - 2));
+			// MatInt spilss_noc_div(spilss_noc_div_tr.tr());
+			spilss_noc_div = spilss_noc_div_tr.tr();
+
 		// if (mm && sigle_posibile_idx < 1) WRN(NAV2(sigle_posibile_idx, spilss_noc_div));
+		}
+		else if(p.nooc_mode == STR("phss_v2")) {
+			VecInt one_combine_right_cols(free_div_base_decode(sigle_posibile_idx, right_cols));
+			MatInt spilss_noc_div_tr(new_restratin_divs.ncols(), new_restratin_divs.nrows() - 1);
+			for_Idx(i, 0, new_restratin_divs.ncols()) spilss_noc_div_tr[i] = free_div_base_decode(one_combine_right_cols[i], right_col_div[i]);
+			// MatInt spilss_noc_div(spilss_noc_div_tr.tr());
+			// spilss_noc_div = spilss_noc_div_tr.tr();
+			MatInt temp_spilss_noc_div(spilss_noc_div_tr.tr());
+			MatInt temp_control_divs(control_divs.truncate_row(1, control_divs.nrows()));
+			// if (mm) WRN(NAV2(temp_spilss_noc_div, temp_control_divs));
+			for_Int(i, 0, spilss_noc_div.nrows()) for_Int(j, 0, spilss_noc_div.ncols()) {
+				if (j < spilss_noc_div.ncols()/2)
+					spilss_noc_div[i][j] = temp_control_divs[i][j + 1] - temp_spilss_noc_div[i + p.norg_sets][temp_spilss_noc_div.ncols() - 1 - j];
+				else
+					spilss_noc_div[i][j] = temp_spilss_noc_div[i][j - temp_spilss_noc_div.ncols()];
+			}
+			// if (mm) WRN(NAV2(temp_spilss_noc_div, spilss_noc_div))
+			// if (mm) WRN(NAV3(spilss_noc_div, temp_control_divs[5][0 + 1], temp_spilss_noc_div[5 + p.norg_sets][spilss_noc_div.ncols() - 0]))
+		}
 		if (suit_NOOC(spilss_noc_div, nppso)) { 
 			// if (mm) WRN("This is Right!!: "+ NAV(spilss_noc_div));
 			VecInt left_div_size(p.norg_sets), left_n(p.norg_sets);
@@ -831,6 +889,9 @@ void NocSpace::find_combined_number_subspaces_no_active_orbital()
 			}
 		}
 	}
+	// div.shrink_to_fit();
+	idx_div.shrink_to_fit();
+	// if(mm) WRN(NAV3(div.size(), idx_div.size(), divs_to_idx.size()))
 }
 
 

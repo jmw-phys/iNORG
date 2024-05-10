@@ -307,7 +307,7 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 			controler[i + 1] = p.if_norg_imp ? VecInt{ freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{ 1, freze_o, nooc_o, keep_o, 1, keep_e, nooc_e, freze_e };
 		}
 		VecInt DIV_constrain = VecInt{controler[0][p.ndiv/2+1], controler[0][p.ndiv/2+2], controler[0][p.ndiv/2+3]};
-		if (mm) WRN(NAV5(p.if_norg_degenerate, p.nooc_mode, DIV_constrain, weight_nooc, weight_freze));
+		if (mm) WRN(NAV5(p.if_norg_degenerate, p.nooc_mode, DIV_constrain, weight_nooc, weight_freze)+"   "+present());
 		// if(mm) WRN(NAV(controler));
 		// p.nooc_mode = STR("cpnooc");
 		// controler[0][1] = -0; controler[0][p.ndiv - 1] = 0;
