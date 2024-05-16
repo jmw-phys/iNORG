@@ -7,7 +7,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 using namespace std;
 StateStatistics::StateStatistics(const Int& h_i, const Int& comdiv_idx, const NocSpace& scsp) :
 	space(scsp), div_idx(comdiv_idx), idx(h_i - scsp.idx_div[comdiv_idx]),
-	occ_n(scsp.div[comdiv_idx]), cfg(cfgdetail()), filled_spinless(scsp.sit_mat.nrows())
+	occ_n(scsp.div_matint_2_Int(comdiv_idx)), cfg(cfgdetail()), filled_spinless(scsp.sit_mat.nrows())
 	// cfgup(cfg.cf.truncate(0, scsp.ndivs)), cfgdw(cfg.cf.truncate(scsp.ndivs, scsp.ndivs + scsp.ndivs))
 {
 	//DBG("statistics BEGIN: " + NAV(idx));
@@ -225,7 +225,7 @@ StateStatistics::hopdata StateStatistics::divocchop_ingroup(const Int& ComDiv, I
 	// For the spinless orbits.
 	for_Int(c, 0, space.ndivs){				//Here "1" refer to div_idx, according to the "set_control()" function.
 		for_Int(cp, 0, space.ndivs){		//Here "1" refer to div_idx, according to the "set_control()" function.
-			MatInt occupy(space.div[ComDiv]);
+			MatInt occupy(space.div_matint_2_Int(ComDiv));
 			--occupy[sets_n][c];
 			++occupy[sets_n][cp];
 			// if (space.ifin_NocSpace(occupy)) {
@@ -247,7 +247,7 @@ StateStatistics::furfrm StateStatistics::divs_change_fourFermi(const Int& ComDiv
 	for_Int(cp_j, 0, space.ndivs) {
 		for_Int(c_k, 0, space.ndivs) {
 		for_Int(c_l, 0, space.ndivs) {
-			MatInt occupy(space.div[ComDiv]);
+			MatInt occupy(space.div_matint_2_Int(ComDiv));
 			++occupy[sets_i][cp_i]; ++occupy[sets_j][cp_j]; 
 			--occupy[sets_j][c_k]; --occupy[sets_i][c_l]; 
 			if (space.ifin_NocSpace(occupy, space.nppso)) {
@@ -266,7 +266,7 @@ VEC<MatInt> StateStatistics::interation_soc_hop(const Int& ComDiv)
 	VEC<MatInt> hop_soc;
 	// For the spinless orbits.
 	
-	MatInt occupy = space.div[ComDiv];
+	MatInt occupy = space.div_matint_2_Int(ComDiv);
 	WRN(NAV(occupy));
 	for_Int(i, 0, space.p.nband) {
 		Int cnt(occupy[i*2][0] + occupy[i*2+1][0]);

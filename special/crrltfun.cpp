@@ -92,7 +92,8 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
     Cmplx zero(0.,0.);
     VecCmplx green_pre(g0.nomgs, zero);
     VecCmplx green_error(g0.nomgs, zero);
-    while (true) {
+    // while (true) {
+    for_Int(iter_time, 0, 10) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
         ltd.push_back(a_i); lt_sd.push_back(b_i);
         VecReal a(ltd), b(lt_sd);
@@ -107,15 +108,17 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
             green_error[w] = gaz - green_pre[w];
             green_pre[w] = gaz;
         }
-        VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
+        // VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
         // if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) {
         //     MatReal ev(ltd.size(), ltd.size(), 0.);
         //     trd_heevr_qr(a, b, ev);
         //     if (mm) WRN(NAV(a.truncate(0,200)));
         // }
-        if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) break;
+        // if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) break;
         // if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
     }
+    VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
+    if(mm) WRN(NAV(ABS(SUM(check_err))/check_err.size()));
     for_Int(w, 0, g0.nomgs) g0[w][0][0] += green_pre[w];
     if (mm) PIO("The size of a and b in greaer:" + NAV2(ltd.size(), lt_sd.size()));
     // return last_green;
@@ -152,7 +155,8 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
     Cmplx zero(0.,0.);
     VecCmplx green_pre(g0.nomgs, zero);
     VecCmplx green_error(g0.nomgs, zero);
-    while (true) {
+    // while (true) {
+    for_Int(iter_time, 0, 10) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
         ltd.push_back(a_i); lt_sd.push_back(b_i);
         VecReal a(ltd), b(lt_sd);
@@ -167,15 +171,17 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
             green_error[w] = gaz - green_pre[w];
             green_pre[w] = gaz;
         }
-        VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
+        // VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
         // if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) {
         //     MatReal ev(ltd.size(), ltd.size(), 0.);
         //     trd_heevr_qr(a, b, ev);
         //     if (mm) WRN(NAV(a.truncate(0,200)));
         // }
-        if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) break;
+        // if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) break;
         // if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
     }
+    VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
+    if(mm) WRN(NAV(ABS(SUM(check_err))/check_err.size()));
     for_Int(w, 0, g0.nomgs) g0[w][0][0] += green_pre[w];
     if (mm) PIO("The size of a and b in lesser:" + NAV2(ltd.size(), lt_sd.size()));
 	// return last_green;
@@ -519,10 +525,9 @@ void CrrltFun::add_ex_state_part_in_rotation(const VecReal &initial_vector, VecR
     const Int subnosp(old_nosp.wherein_NocSpace(h_i));
 
     StateStatistics a(h_i, subnosp, old_nosp);
-
     VecReal rotation_coefficients = p.rotationU[set_n].tr()[orb_before_rot];
     for_Int(pos, 0, rotation_coefficients.size()) {
-        MatInt new_nospdiv = old_nosp.div[subnosp];
+        MatInt new_nospdiv = old_nosp.div_matint_2_Int(subnosp);
         Int div_idx_in_one_set(0);
         for_Int(i, 1, p.ndiv + 1) if (SUM_0toX(old_nosp.sit_mat[set_n], i) > pos) {div_idx_in_one_set = i - 1; break; }
         if (crtorann == -1) --new_nospdiv[set_n][div_idx_in_one_set];
@@ -556,12 +561,12 @@ VecReal CrrltFun::project_uplwer_parical_space(const VecReal& initial_vector, co
     }
     else for_Int(h_i, row_H.bgn(), row_H.end()) {
         const Int subnosp(old_nosp.wherein_NocSpace(h_i));
-        MatInt new_nospdiv = old_nosp.div[subnosp];
+        MatInt new_nospdiv = old_nosp.div_matint_2_Int(subnosp);
         if (crtann == -1) --new_nospdiv[norg_set][0];
         if (crtann == +1) ++new_nospdiv[norg_set][0];
         // if (new_nosp.ifin_NocSpace(new_nospdiv)) {
         if (new_nosp.ifin_NocSpace(new_nospdiv, new_nosp.nppso)) {
-            const ComDivs group(h_i - old_nosp.idx_div[subnosp], (old_nosp.div[subnosp]), (old_nosp.sit_mat), true);
+            const ComDivs group(h_i - old_nosp.idx_div[subnosp], (old_nosp.div_matint_2_Int(subnosp)), (old_nosp.sit_mat), true);
             VecOnb exd_cf = group.cf;
             if (if_in_this_orbital(exd_cf, crtann, norg_set * new_nosp.ndivs, orbit_pos_in_div)) {
                 if (crtann == -1) exd_cf[norg_set * new_nosp.ndivs] = exd_cf[norg_set * new_nosp.ndivs].ann(orbit_pos_in_div);

@@ -465,3 +465,8 @@ Version: v1.4.01.p3 @ 2024.05.10
     realized: Finish the third version (v3) of find_combined_number_subspaces_no_active_orbital() function, now is specialize for the phss_v2, NOW finding the dim is fast!
     next do : Try to optimize the data structure to save memory.
     thinking: can I use one number to save the hole MatInt in div?
+
+Version: v1.4.02.p3 @ 2024.05.15
+    realized: Changed the type to take up less memory when storing.
+    next do : Test program stability
+    thinking: (same as prev)

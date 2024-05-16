@@ -404,7 +404,7 @@ VecReal Operator::sn_prtcl_ex_state(const Int imp_div, const VecReal ground_stat
 	for_Int(h_i, row_H.bgn(), row_H.end())
 	{
 		Int subscsp(scsp.wherein_NocSpace(h_i));
-		ComDivs cfg(h_i - scsp.idx_div[subscsp], (scsp.div[subscsp]), (scsp.sit_mat), true);
+		ComDivs cfg(h_i - scsp.idx_div[subscsp], (scsp.div_matint_2_Int(subscsp)), (scsp.sit_mat), true);
 		if (crtann == +1)if (cfg.cf[imp_div * scsp.ndivs].isuno(0))ex_state_part[h_i - row_H.bgn()] = 1.;
 		if (crtann == -1)if (cfg.cf[imp_div * scsp.ndivs].isocc(0))ex_state_part[h_i - row_H.bgn()] = 1.;
 	}
