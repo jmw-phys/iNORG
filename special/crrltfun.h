@@ -19,7 +19,7 @@ class CrrltFun : public Operator
 	typedef std::tuple<VecReal, VecReal> Vectrdgnl;
 	typedef std::tuple<StdVecReal, StdVecReal> VECtrdgnl;
 	const NocSpace& old_nosp;				// nature orbital space
-	const NocSpace& new_nosp;				// nature orbital space
+	NocSpace& new_nosp;						// nature orbital space
 	//VecReal vgs;							// vector ground state(gs)
 	const Int crtorann;
 	//const Real& gse;					// ground state energy(gse)	
@@ -51,9 +51,9 @@ private:
 	bool if_in_this_orbital(const VecOnb &exd_cf, const Int crtann, const Int div_in_one_row_pos, const Int orbit_pos_in_div) const;
 
 public:
-	CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_nosp_i, const NocSpace& main_nosp, const VecReal& vgs_i, const Int position = 0);
-	CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_nosp_i, const NocSpace& main_nosp, const Operator& oper, const VecReal& vgs_i, const Int position = 0);
-	CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_nosp_i, const NocSpace& main_nosp, const Operator& oper, const VecReal& vgs_i, const Int pos_in_set, const Int pos_in_div);
+	CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_nosp_i, NocSpace& main_nosp, const VecReal& vgs_i, const Int position = 0);
+	CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_nosp_i, NocSpace& main_nosp, const Operator& oper, const VecReal& vgs_i, const Int position = 0);
+	CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_nosp_i, NocSpace& main_nosp, const Operator& oper, const VecReal& vgs_i, const Int pos_in_set, const Int pos_in_div);
 	CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const Operator& oper, const VecReal ex_state_i, const Int crtorann_i);
 
 	// CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_nosp_i, const NocSpace& main_scsp, const Tab& table, const MatReal& vdegs_i, const Int position = 0);

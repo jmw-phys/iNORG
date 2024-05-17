@@ -54,7 +54,7 @@ public:
 	// [i][0]row Idx; [i][1]colum Idx;[i][2] for the position for the hopint.
 	Tab find_fullH_idx();
 
-	void clear(){ for_Int(i, 0, 3) VEC<int> ().swap(table[i]);}
+	void clear_TAB(){ for_Int(i, 0, 3) VEC<int> ().swap(table[i]);}
 
 	// By using the find_h_idx() to find the idx first then speed up the procedure.
 	SparseMatReal find_hmlt(const Tab h_idx) const;

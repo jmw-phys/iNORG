@@ -172,6 +172,12 @@ public:
 	}
 
 	VecInt free_div_base_decode(Idx idx, VEC<VEC<Int> > v) const;
+
+	void clear() {
+		div = Vec<Mat<int8_t>>();
+		divs_to_idx = std::map<std::string, Idx>();
+		idx_div = std::vector<Int>();
+	}
 };
 
 

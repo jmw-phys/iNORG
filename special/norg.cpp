@@ -49,7 +49,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	impH = impH_i;
 	// //! testing-20240503 begin
 	// scsp.div = std::vector<MatInt>();
-	scsp.divs_to_idx = std::map<std::string, Idx>();
+	// scsp.divs_to_idx = std::map<std::string, Idx>();
 	// scsp.idx_div = std::vector<Int>();
 	// //! testing-20240503 end
 	if (mm) WRN(NAV2(impH.first,scsp.dim));
