@@ -63,7 +63,7 @@ Crrvec::Crrvec(const NocSpace &old_nosp_i, Operator& main_opr, const VecReal &vg
     old_nosp(old_nosp_i), new_nosp(main_opr.scsp), crtorann(main_opr.scsp.nspa - old_nosp.nspa), omega(0), eta(0.01),
     ground_state_energy(gs)
 {
-    main_opr.clear();
+    main_opr.clear_TAB();
     if(crtorann == +1) mat_green.g += krylov_space_for_green_matrix(mat_green);
     else if(crtorann == -1) {
         Vec<MatCmplx> temp_mat = krylov_space_for_green_matrix(mat_green);
@@ -446,7 +446,7 @@ void Crrvec::add_ex_state_part_in_rotation(const VecReal &initial_vector, VecRea
 
     VecReal rotation_coefficients = p.rotationU[set_n].tr()[orb_before_rot];
     for_Int(pos, 0, rotation_coefficients.size()) {
-        MatInt new_nospdiv = old_nosp.div_matint_2_Int(subnosp);
+        MatInt new_nospdiv = old_nosp.div[subnosp];
         Int div_idx_in_one_set(0);
         for_Int(i, 1, p.ndiv + 1) if (SUM_0toX(old_nosp.sit_mat[set_n], i) > pos) {div_idx_in_one_set = i - 1; break; }
         if (crtorann == -1) --new_nospdiv[set_n][div_idx_in_one_set];
@@ -480,12 +480,12 @@ VecReal Crrvec::project_uplwer_parical_space(const VecReal& initial_vector, cons
     }
     else for_Int(h_i, row_H.bgn(), row_H.end()) {
         const Int subnosp(old_nosp.wherein_NocSpace(h_i));
-        MatInt new_nospdiv = old_nosp.div_matint_2_Int(subnosp);
+        MatInt new_nospdiv = old_nosp.div[subnosp];
         if (crtann == -1) --new_nospdiv[norg_set][0];
         if (crtann == +1) ++new_nospdiv[norg_set][0];
         // if (new_nosp.ifin_NocSpace(new_nospdiv)) {
         if (new_nosp.ifin_NocSpace(new_nospdiv, new_nosp.nppso)) {
-            const ComDivs group(h_i - old_nosp.idx_div[subnosp], old_nosp.div_matint_2_Int(subnosp), (old_nosp.sit_mat), true);
+            const ComDivs group(h_i - old_nosp.idx_div[subnosp], (old_nosp.div[subnosp]), (old_nosp.sit_mat), true);
             VecOnb exd_cf = group.cf;
             if (if_in_this_orbital(exd_cf, crtann, norg_set  * new_nosp.ndivs, orbit_pos_in_div)) {
                 if (crtann == -1) exd_cf[norg_set * new_nosp.ndivs] = exd_cf[norg_set * new_nosp.ndivs].ann(orbit_pos_in_div);

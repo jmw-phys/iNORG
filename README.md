@@ -470,3 +470,13 @@ Version: v1.4.02.p3 @ 2024.05.15
     realized: Changed the type to take up less memory when storing.
     next do : Test program stability
     thinking: (same as prev)
+
+Version: v1.4.03.p3 @ 2024.05.16
+    realized: Delete exhausted data structures (eg. used TAB and H) to save memory.
+    next do : (same as prev)
+    thinking: (same as prev)
+
+Version: v1.4.04.p3 @ 2024.05.17
+    realized: Kill the updata on v1.4.01 --> v1.4.02
+    next do : try the IO table technique.
+    thinking: (same as prev)

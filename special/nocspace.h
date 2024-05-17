@@ -26,10 +26,9 @@ public:
 	VecInt nppso;					// nppso mean: number of partical per spin orbital.
 	
 	Idx dim;						// the dimension of the Shortcut space.
-	// VEC<MatInt> div;				// a set of combined number.
-	Vec<Mat<int8_t>> div;				// a set of combined number.
+	VEC<MatInt> div;				// a set of combined number.
 	std::map<std::string, Idx> divs_to_idx;	// a set of combined number.
-	VEC<int> idx_div;				// a set of idx(The idx of the begining with 0) for each subspace.
+	VEC<Int> idx_div;				// a set of idx(The idx of the begining with 0) for each subspace.
 	VecReal mu;						// -\mu_{k}^{\prime}b_{k,\sigma}^{+}b_{k,\sigma}
 	VEC<VecReal> t_ose;				// H_0 onset energy
 	VEC<VecReal> t_hyb;				// hopping parameter from bath to imp.
@@ -161,11 +160,12 @@ public:
 
 	void print(std::ostream& os = std::cout) const;
 
-	MatInt div_matint_2_Int(Int div_idx) const {
-		MatInt return_mat(div[div_idx].nrows(), div[div_idx].ncols());
-		for_Int(i, 0, return_mat.nrows()) for_Int(j, 0, return_mat.ncols()) return_mat[i][j] = div[div_idx][i][j];
-		return return_mat;
-	}
+	// add from v1.4.01-->v1.4.02, //!now is droped.
+	// MatInt div_matint_2_Int(Int div_idx) const {
+	// 	MatInt return_mat(div[div_idx].nrows(), div[div_idx].ncols());
+	// 	for_Int(i, 0, return_mat.nrows()) for_Int(j, 0, return_mat.ncols()) return_mat[i][j] = div[div_idx][i][j];
+	// 	return return_mat;
+	// }
 
 	Str nppso_str() const	{
 		Str temp; for_Int(i, 0, p.npartical.size()) { if (i == 0) temp += STR(p.npartical[i]); else /*if (i % 2 == 0)*/ temp += "-" + STR(p.npartical[i]); }	return temp;
@@ -174,7 +174,7 @@ public:
 	VecInt free_div_base_decode(Idx idx, VEC<VEC<Int> > v) const;
 
 	void clear() {
-		div = Vec<Mat<int8_t>>();
+		div= std::vector<MatInt>();
 		divs_to_idx = std::map<std::string, Idx>();
 		idx_div = std::vector<Int>();
 	}

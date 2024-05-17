@@ -598,7 +598,6 @@ void NocSpace::find_thought_noc_subspaces()
 	Idx length_ECNS;						// length for each combined number subspaces(ECNS).
 	idx_div.push_back(dim);
 	VEC<VEC<Int> > a, s;
-	VEC<MatInt> div_temp;
 
 	if(p.if_norg_imp) find_all_possible_state_by_col(a, s);
 	// else if(p.nooc_mode == STR("phss_v2")) find_all_possible_state_suit_for_PHSs(a, s); //!! TSSTING
@@ -608,21 +607,13 @@ void NocSpace::find_thought_noc_subspaces()
 	// if(mm) WRN(NAV(spilss_divs.size()));
 	for_Int(k, 0, spilss_divs.size()) {
 		const MatInt & spilss_div(spilss_divs[k]);
-		div_temp.push_back(spilss_div);
+		div.push_back(spilss_div);
 		divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
 		length_ECNS = 1;
 		for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
 		dim += length_ECNS;
 		idx_div.push_back(dim);
 	}
-	Mat<int8_t> temp_mat(div_temp[0].nrows(), div_temp[0].ncols(), 0);
-	div.reset(div_temp.size(), temp_mat);
-	for_Int (div_i, 0, div_temp.size()) {
-		for_Int(i, 0, temp_mat.nrows()) for_Int(j, 0, temp_mat.ncols()) div[div_i][i][j] = div_temp[div_i][i][j];
-	}
-
-	// div = div_temp;
-	VEC<MatInt> ().swap(div_temp);
 }
 
 void NocSpace::find_all_noc_subspaces()
@@ -630,7 +621,6 @@ void NocSpace::find_all_noc_subspaces()
 	Idx length_ECNS;						// length for each combined number subspaces(ECNS).
 	idx_div.push_back(dim);
 	VEC<VEC<Int> > a, s;
-	VEC<MatInt> div_temp;
 
 
 	find_all_possible_state_by_col(a, s);
@@ -641,7 +631,7 @@ void NocSpace::find_all_noc_subspaces()
 		MatInt spilss_div(spilss_div_tr.tr());
 		if (ifin_NocSpace(spilss_div, nppso)) {
 			// if (mm) WRN(NAV(spilss_div));
-			div_temp.push_back(spilss_div);
+			div.push_back(spilss_div);
 			divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
 			length_ECNS = 1;
 			for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
@@ -649,15 +639,7 @@ void NocSpace::find_all_noc_subspaces()
 			idx_div.push_back(dim);
 		}
 	}
-	Mat<int8_t> temp_mat(div_temp[0].nrows(), div_temp[0].ncols(), 0);
-	div.reset(div_temp.size(), temp_mat);
-	for_Int (div_i, 0, div_temp.size()) {
-		for_Int(i, 0, temp_mat.nrows()) for_Int(j, 0, temp_mat.ncols()) div[div_i][i][j] = div_temp[div_i][i][j];
-	}
-
-	// div = div_temp;
-	VEC<MatInt> ().swap(div_temp);
-	// WRN(NAV(dim));
+			// WRN(NAV(dim));
 }
 
 // find all the possible state speed up with MPI.
@@ -665,8 +647,6 @@ void NocSpace::find_all_noc_subspaces_multi() {
 	Idx length_ECNS;						// length for each combined number subspaces(ECNS).
 	idx_div.push_back(dim);
 	VEC<VEC<Int> > a, s;
-	VEC<MatInt> div_temp;
-
 
 	find_all_possible_state_by_col(a, s);
 	if(mm) PIO(NAV(s.size())+"   "+present());
@@ -681,21 +661,13 @@ void NocSpace::find_all_noc_subspaces_multi() {
 		MatInt spilss_div_tr(spilss_div_v.mat(control_divs.ncols(), control_divs.nrows() - 1));
 		MatInt spilss_div(spilss_div_tr.tr());
 		// if (ifin_NocSpace(spilss_div, nppso)) 
-		div_temp.push_back(spilss_div);
+		div.push_back(spilss_div);
 		divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
 		length_ECNS = 1;
 		for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
 		dim += length_ECNS;
 		idx_div.push_back(dim);
 	}
-	Mat<int8_t> temp_mat(div_temp[0].nrows(), div_temp[0].ncols(), 0);
-	div.reset(div_temp.size(), temp_mat);
-	for_Int (div_i, 0, div_temp.size()) {
-		for_Int(i, 0, temp_mat.nrows()) for_Int(j, 0, temp_mat.ncols()) div[div_i][i][j] = div_temp[div_i][i][j];
-	}
-
-	// div = div_temp;
-	VEC<MatInt> ().swap(div_temp);
 }
 
 void NocSpace::find_all_noc_subspaces_by_row()
@@ -703,7 +675,6 @@ void NocSpace::find_all_noc_subspaces_by_row()
 	Idx length_ECNS;						// length for each combined number subspaces(ECNS).
 	idx_div.push_back(dim);
 	VEC<VEC<Int> > a, s;
-	VEC<MatInt> div_temp;
 
 	find_all_possible_state_by_row(a, s);
 	if(mm) PIO(NAV(s.size())+"   "+present());
@@ -714,21 +685,13 @@ void NocSpace::find_all_noc_subspaces_by_row()
 	// for (const auto &x : out)
 	for_Int(ii, 0, s.size()) if(judger_out[ii]) {
 		MatInt spilss_div(read_from_col_lable(s[ii],a).mat( control_divs.nrows() - 1, control_divs.ncols()));
-		div_temp.push_back(spilss_div);
+		div.push_back(spilss_div);
 		divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
 		length_ECNS = 1;
 		for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
 		dim += length_ECNS;
 		idx_div.push_back(dim);
 	}
-	Mat<int8_t> temp_mat(div_temp[0].nrows(), div_temp[0].ncols(), 0);
-	div.reset(div_temp.size(), temp_mat);
-	for_Int (div_i, 0, div_temp.size()) {
-		for_Int(i, 0, temp_mat.nrows()) for_Int(j, 0, temp_mat.ncols()) div[div_i][i][j] = div_temp[div_i][i][j];
-	}
-
-	// div = div_temp;
-	VEC<MatInt> ().swap(div_temp);
 	// if(mm) {
 	// 	OFS ofs;	ofs.open("judger"+nppso_str()+ ".bdat");
 	// 	biwrite(ofs, CharP(judger_out.p()), judger_out.szof());
@@ -745,8 +708,6 @@ void NocSpace::find_combined_number_subspaces(const Int mode)
 	idx_div.push_back(dim);
 	if(mm) WRN(NAV(dim));
 	VEC<VEC<Int> > a;
-	VEC<MatInt> div_temp;
-
 	for_Int(row, 1, control_divs.nrows()) {
 		for_Int(col, 0, control_divs.ncols()) {
 			VEC<Int> one_div;
@@ -765,7 +726,7 @@ void NocSpace::find_combined_number_subspaces(const Int mode)
 			VecInt spilss_div_v(free_div_base_decode(x, a));
 			MatInt spilss_div(spilss_div_v.mat(control_divs.nrows() - 1, control_divs.ncols()));
 			if (ifin_NocSpace(spilss_div, nppso)) {
-				div_temp.push_back(spilss_div);
+				div.push_back(spilss_div);
 				divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
 				length_ECNS = 1;
 				for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
@@ -780,7 +741,7 @@ void NocSpace::find_combined_number_subspaces(const Int mode)
 			VecInt spilss_div_v(free_div_base_decode(x, a));
 			MatInt spilss_div(spilss_div_v.mat(control_divs.nrows() - 1, control_divs.ncols()));
 			if (ifin_NocSpace(spilss_div)) {
-				div_temp.push_back(spilss_div);
+				div.push_back(spilss_div);
 				divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
 				length_ECNS = 1;
 				for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
@@ -789,18 +750,7 @@ void NocSpace::find_combined_number_subspaces(const Int mode)
 			}
 		}
 	}
-
-	Mat<int8_t> temp_mat(div_temp[0].nrows(), div_temp[0].ncols(), 0);
-	div.reset(div_temp.size(), temp_mat);
-	for_Int (div_i, 0, div_temp.size()) {
-		for_Int(i, 0, temp_mat.nrows()) for_Int(j, 0, temp_mat.ncols()) div[div_i][i][j] = div_temp[div_i][i][j];
-	}
-
-	// div = div_temp;
-	VEC<MatInt> ().swap(div_temp);
 }
-
-
 
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<< (old/stable)space function end <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>> space function upgrade for 5 band begin >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -813,8 +763,6 @@ void NocSpace::find_combined_number_subspaces_no_active_orbital()
 	// if(mm) WRN(NAV(dim));
 	VEC<VEC<VEC<Int>>> right_col_div;
 	VEC<VEC<Int> > right_cols;
-	VEC<MatInt> div_temp;
-
 	MatInt new_restratin_divs(p.norg_sets * 2 + 1, (control_divs.ncols() - 2) / 2, 0);
 
 	// if(1) {
@@ -932,7 +880,7 @@ void NocSpace::find_combined_number_subspaces_no_active_orbital()
 					mat(sit_mat.ncols(), sit_mat.nrows()).tr());
 				// split_spilss_divs.push_back(spilss_noc_div);
 
-				div_temp.push_back(spilss_div);
+				div.push_back(spilss_div);
 				divs_to_idx.insert(std::pair<std::string, Int>(spilss_div.vec().string(), dim));
 				length_ECNS = 1;
 				for_Int(i, 1, control_divs.nrows()) for_Int(j, 0, ndivs) length_ECNS = length_ECNS * bf(control_divs[i][j], spilss_div[i - 1][j]);
@@ -941,15 +889,7 @@ void NocSpace::find_combined_number_subspaces_no_active_orbital()
 			}
 		}
 	}
-	Mat<int8_t> temp_mat(div_temp[0].nrows(), div_temp[0].ncols(), 0);
-	div.reset(div_temp.size(), temp_mat);
-	for_Int (div_i, 0, div_temp.size()) {
-		for_Int(i, 0, temp_mat.nrows()) for_Int(j, 0, temp_mat.ncols()) div[div_i][i][j] = div_temp[div_i][i][j];
-		div_temp[div_i].reset();
-	}
-
-	// div = div_temp;
-	VEC<MatInt> ().swap(div_temp);
+	div.shrink_to_fit();
 	idx_div.shrink_to_fit();
 	// if(mm) WRN(NAV3(div.size(), idx_div.size(), divs_to_idx.size()))
 }
