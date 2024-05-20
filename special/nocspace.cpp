@@ -22,8 +22,7 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const Int& NumberSpa
 
 NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const Int& NumberSpa) :
  	mm(mm_i), p(prmtr_i), ndivs(prmtr_i.ndiv), nspa(NumberSpa), sit_mat(p.norg_sets, prmtr_i.ndiv, 0),
-	hopint(nob, nob, 0.), coefficient(int(std::pow(nob,4) + hopint.size() + 1), 0.),
- 	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), orbital_divcnt(prmtr_i.ndiv, 0), dim(0)
+	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), orbital_divcnt(prmtr_i.ndiv, 0), dim(0)
 {
  	set_control();
  	find_combined_number_subspaces();
@@ -32,8 +31,7 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const Int& NumberSpa
 // nppso mean: number of partical per spin orbital.
 NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_i) :
 	mm(mm_i), p(prmtr_i), ndivs(prmtr_i.ndiv), nspa(SUM(nppso_i)), sit_mat(p.norg_sets, prmtr_i.ndiv, 0),
-	hopint(nob, nob, 0.), coefficient(int(std::pow(nob,4) + hopint.size() + 1), 0.), nppso(nppso_i),
-	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), orbital_divcnt(prmtr_i.ndiv, 0), dim(0)
+	nppso(nppso_i), control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), orbital_divcnt(prmtr_i.ndiv, 0), dim(0)
 {
 	set_control();
 	// find_combined_number_subspaces(1);
@@ -53,25 +51,28 @@ NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_
 	if(mm) PIO("Begin find_combined_number_subspaces_no_active_orbital()"+ NAV(dim)+"   "+present());
 }
 
+
 // nppso mean: number of partical per spin orbital.
 NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_i, Str tab_name) :
 	mm(mm_i), p(prmtr_i), ndivs(prmtr_i.ndiv), nspa(SUM(nppso_i)), sit_mat(p.norg_sets, prmtr_i.ndiv, 0),
-	hopint(nob, nob, 0.), coefficient(int(std::pow(nob,4) + hopint.size() + 1), 0.), nppso(nppso_i),
-	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), orbital_divcnt(prmtr_i.ndiv, 0), dim(read_the_Tab(tab_name))
+	nppso(nppso_i),	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), orbital_divcnt(prmtr_i.ndiv, 0), dim(0)
 {
 	set_control();
-	if(mm) WRN("Begin find_combined_number_subspaces()"+ NAV(dim));
+	find_combined_number_subspaces_no_active_orbital();
+	if(mm) PIO("Begin find_combined_number_subspaces_no_active_orbital()"+ NAV(dim)+"   "+present());
 }
 
+/*
 // using the table to construce the NOC space.
 NocSpace::NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_i, const Tab& tab) :
 	mm(mm_i), p(prmtr_i), ndivs(prmtr_i.ndiv), nspa(SUM(nppso_i)), sit_mat(p.norg_sets, prmtr_i.ndiv, 0),
-	hopint(nob, nob, 0.), coefficient(int(std::pow(nob,4) + hopint.size() + 1), 0.), nppso(nppso_i),
-	control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), orbital_divcnt(prmtr_i.ndiv, 0), dim(tab[0].size())
+	nppso(nppso_i), control_divs(p.norg_sets + 1, prmtr_i.ndiv, 0), orbital_divcnt(prmtr_i.ndiv, 0), dim(0)
 {
 	set_control();
-	if(mm) WRN("Begin find_combined_number_subspaces()"+ NAV(dim));
+	find_combined_number_subspaces_no_active_orbital();
+	if(mm) PIO("Begin find_combined_number_subspaces_no_active_orbital()"+ NAV(dim)+"   "+present());
 }
+*/
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>> judge function begin >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 

@@ -11,7 +11,7 @@ using namespace std;
 
 Asnci::Asnci(const NORG& norg, Idx trncat_size):
     dim(trncat_size), mm(norg.mm), p(norg.p), impH(norg.impH), mayhop(find_mayhop()),
-    nosp(norg.scsp), groundE(norg.groune_lst), coefficient(norg.scsp.coefficient),
+    nosp(norg.scsp), groundE(norg.groune_lst), 
     // core_dim(Int(trncat_size / Int(mayhop.size() )))
     core_dim(trncat_size)
 {
@@ -21,7 +21,7 @@ Asnci::Asnci(const NORG& norg, Idx trncat_size):
 
 Asnci::Asnci(const NORG& norg, Idx trncat_size, Int ex_pos):
     dim(trncat_size), mm(norg.mm), p(norg.p), impH(norg.impH), mayhop(find_mayhop()),
-    nosp(norg.scsp), groundE(norg.groune_lst), coefficient(norg.scsp.coefficient),
+    nosp(norg.scsp), groundE(norg.groune_lst), 
     // core_dim(Int(trncat_size / Int(mayhop.size() / 4.0)))
     core_dim(trncat_size),
     trncat(git_nci_no_rank(norg.final_ground_state[0], ex_pos))

@@ -1,16 +1,13 @@
 /*
 code	by	Rong-Qiang He (rqhe@ruc.edu.cn, RUC, China) date 2013 - 2017
-modify	by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
+modify	by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
 */
 #include "hyberr.h"
-
-HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i, VecReal oseA_i, VecReal hopB_i) :
-	p(p_i), hb(hb_i), nw(p.fit_num_omg), nb(nb_i), regV_b(1E-10),
-	x(2 * nw + 1), y(2 * nw + 1), sig(2 * nw + 1), oseA(oseA_i), hopB(hopB_i)
+/*
+HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i) :
+	p(p_i), hb(hb_i), nw(p.fit_num_omg), nb(p.nbath),
+	x(2 * nw + 1), y(2 * nw + 1), sig(2 * nw + 1)
 {
-	// set the curve expected:
-	expect_err = std::pow(10, -(nb - 1) / 2);
-
 	// curve
 	{
 		Real mag_real = 0.;
@@ -23,50 +20,43 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i, VecReal os
 			x[nw + n] = nw + n;
 			y[nw + n] = imag(hb[n][0][0]);
 			mag_imag += SQR(y[nw + n]);
-			wght[n] = wght[nw + n] = std::pow(p.Imomg(n) + p.fit_rsd, -p.fit_pow);
-			// wght[n] = wght[nw + n] = 1;
+			// wght[n] = wght[nw + n] = std::pow(p.mbomg(n) + p.fit_rsd, -p.fit_pow);
+			wght[n] = wght[nw + n] = 1;
 		}
-		mag_real = SQRT(mag_real / nw);
-		mag_imag = SQRT(mag_imag / nw);
-		mag_real = MAX(mag_real, 1.e-3 * mag_imag);
+		mag_real = SQRT(1 + mag_real / nw);
+		mag_imag = SQRT(1 + mag_imag / nw);
 		wght *= INV(SUM(wght));
 		for_Int(n, 0, nw) {
-			sig[nw + n] = mag_imag / SQRT(wght[nw + n]);
 			sig[n] = mag_real / SQRT(wght[n]);
+			sig[nw + n] = mag_imag / SQRT(wght[nw + n]);
 		}
 	}
-
 	// the part of ose regularization
 	if(x.size()>= 2 * nw + 1){
-		x[2 * nw + 0]	= 2 * nw;
+		x[2 * nw + 0]	= 2 * nw + 0;
 		y[2 * nw + 0]	= 0.;
-		// // old
-		// sig[2 * nw + 0] = nb * std::pow(8 * p.fit_max_omg, 4);
-		// x*e^(0.5*(x/bw)^2)		// old
-		// x*e^(0.5*(x/(bw/8.))^2) 	// new
-		sig[2 * nw + 0] = 1;
+		sig[2 * nw + 0] = nb * std::pow(8 * p.fit_max_omg, 4);
 	}
-	// // the part of bath sum rule
-	// if (x.size() >= 2 * nw + 2) {
-	// 	x[2 * nw + 1]	= 2 * nw + 1;
-	// 	y[2 * nw + 1]	= 0.;
-	// 	sig[2 * nw] = 0.1 * (1 + ABS(p.bsr));  
-	// }
+	// the part of bath sum rule
+	if (x.size() >= 2 * nw + 2) {
+		x[2 * nw + 1]	= 2 * nw + 1;
+		y[2 * nw + 1]	= 0.;
+		sig[2 * nw] = 0.1 * (1 + ABS(p.bsr));  //Change to the part of ose regularization
+	}
 }
+*/
 
-
-HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i, VecReal oseA_i, VecReal hopB_i, Int orb_i) :
-	p(p_i), hb(hb_i), nw(p.fit_num_omg), nb(nb_i), regV_b(1E-10),
-	x(2 * nw + 3), y(2 * nw + 3), sig(2 * nw + 3), oseA(oseA_i), hopB(hopB_i)
+HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int& nb_i, Int orb_i, Int mode_i) :
+	p(p_i), hb(hb_i), nw(p.fit_num_omg), nb(nb_i), mode(mode_i),
+	x(2 * nw + 2), y(2 * nw + 2), sig(2 * nw + 2)
 {
-	// set the curve expected:
-	expect_err = std::pow(10, -(nb - 1) / 2);
-
 	// curve
-	{	
+	{
+		
 		Real mag_real = 0.;
 		Real mag_imag = 0.;
 		VecReal wght(2 * nw);
+
 		for_Int(n, 0, nw) {
 			x[n] = n;
 			y[n] = real(hb[n][0][0]);
@@ -74,42 +64,50 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb_i, const Int nb_i, VecReal os
 			x[nw + n] = nw + n;
 			y[nw + n] = imag(hb[n][0][0]);
 			mag_imag += SQR(y[nw + n]);
-			wght[n] = wght[nw + n] = std::pow(p.Imomg(n) + p.fit_rsd, -p.fit_pow);
-			// wght[n] = wght[nw + n] = 1;
+			// wght[n] = wght[nw + n] = std::pow(p.mbomg(n) + p.fit_rsd, -p.fit_pow);
+			wght[n] = wght[nw + n] = 1;
 		}
-		mag_real = SQRT(mag_real / nw);
-		mag_imag = SQRT(mag_imag / nw);
-		mag_real = MAX(mag_real, 1.e-3 * mag_imag);
+
+		mag_real = SQRT(1 + mag_real / nw);
+		mag_imag = SQRT(1 + mag_imag / nw);
 		wght *= INV(SUM(wght));
 		for_Int(n, 0, nw) {
-			sig[nw + n] = mag_imag / SQRT(wght[nw + n]);
 			sig[n] = mag_real / SQRT(wght[n]);
+			sig[nw + n] = mag_imag / SQRT(wght[nw + n]);
 		}
 	}
 	
+
+	
 	// the part of ose regularization
-	if(x.size()>= 2 * nw + 1){
-		x[2 * nw + 0]	= 2 * nw;
-		y[2 * nw + 0]	= 0.;
-		// // old
-		// sig[2 * nw + 0] = nb * std::pow(8 * p.fit_max_omg, 4);
-		sig[2 * nw + 0] = 1;
+	x[2 * nw + 0] = 2 * nw + 0;
+	y[2 * nw + 0] = 0.;
+	if (mode == 0)
+	{
+		sig[2 * nw + 0] = nb * std::pow(8 * p.fit_max_omg, 4);
 	}
-	// the part of hop regularization
-	if (x.size() >= 2 * nw + 2) {
-		x[2 * nw + 1]	= 2 * nw + 1;
-		y[2 * nw + 1]	= 0.;
-		// sig[2 * nw + 1] = 1E9 /(std::pow(10, -(nb+1)/2) * 64.);
-		sig[2 * nw + 1] = 1;
-		// WRN(NAV(sig[2 * nw + 1]))
+	else if (mode == 1)
+	{
+		if (nb == 1)
+		{
+			//sig[2 * nw + 0] = nb * std::pow(8 * p.fit_max_omg, 4);
+			x[2 * nw + 0] = 2 * nw + 0;
+			y[2 * nw + 0] = p.bsr[orb_i];
+    			sig[2 * nw + 0] = 0.1 * (1 + p.bsr[orb_i]);
+		}
+		else if (nb > 1)
+		{
+			sig[2 * nw + 0] = (nb / 2) * std::pow(8 * p.fit_max_omg, 4);
+		}
+		
 	}
+	
+	
+	
 	// the part of bath sum rule
-	if (x.size() >= 2 * nw + 3) {
-		x[2 * nw + 2]	= 2 * nw + 2;
-		y[2 * nw + 2]	= p.bsr[orb_i];
-		sig[2 * nw + 2] = 0.1 * (1 + p.bsr[orb_i]);
-		// WRN(NAV5(2 * nw + 2,x.size(),y.size(),x[2 * nw + 2],y[2 * nw + 2]));
-	}
+	x[2 * nw + 1] = 2 * nw + 1;
+	y[2 * nw + 1] = p.bsr[orb_i];
+    sig[2 * nw + 1] = 0.1 * (1 + p.bsr[orb_i]);
     
 }
 
@@ -132,68 +130,186 @@ void HybErr::operator()(const Int x, const VecReal& a, Real& y, VecReal& dyda) c
 	if (x < 2 * nw) {
 		const Int n = x < nw ? x : x - nw;
 		const Cmplx iomgn = p.Imz(n);
-		//const VecCmplx E = cmplx(temp.sm(nb, a.p()));
-		VecCmplx E(oseA.size());
-		for_Int(i,0,oseA.size()){
-			E[i] = oseA[i] * std::exp(a[i]);
+
+		if (mode == 1)
+		{
+			Int nb_tmp = nb / 2;
+			if (nb % 2 == 0)
+			{
+				const VecReal E_tmp = temp.sm(nb_tmp, a.p());
+				const VecReal V_tmp = temp.sm(nb_tmp, a.p() + nb_tmp);
+
+				const VecCmplx E = cmplx(concat(E_tmp, -E_tmp));
+				const VecCmplx S = INV(E - VecCmplx(2 * nb_tmp, iomgn));
+				const VecCmplx V = cmplx(concat(V_tmp, V_tmp));
+				const VecCmplx Vco = V.co();
+				Cmplx hyb = DOT(Vco, S * Vco);
+				y = x < nw ? real(hyb) : imag(hyb);
+				//VecCmplx D_E = V * Cmplx(-1.) * S * S * Vco;
+
+				VecCmplx D_E = cmplx(V_tmp) * INV(cmplx(E_tmp) + VecCmplx(nb_tmp, iomgn)) * INV(cmplx(E_tmp) + VecCmplx(nb_tmp, iomgn)) * (cmplx(V_tmp.co())) - cmplx(V_tmp) * INV(cmplx(E_tmp) - VecCmplx(nb_tmp, iomgn)) * INV(cmplx(E_tmp) - VecCmplx(nb_tmp, iomgn)) * (cmplx(V_tmp.co()));
+				//VecCmplx D_V = V * S + S * Vco;
+				VecCmplx D_V = cmplx(V_tmp) * (INV(cmplx(E_tmp) - VecCmplx(nb_tmp, iomgn)) - INV(cmplx(E_tmp) + VecCmplx(nb_tmp, iomgn))) + (INV(cmplx(E_tmp) - VecCmplx(nb_tmp, iomgn)) - INV(cmplx(E_tmp) + VecCmplx(nb_tmp, iomgn))) * (cmplx(V_tmp.co()));
+				VecCmplx D = concat(D_E, D_V);
+				dyda = x < nw ? real(D) : imag(D);
+			}
+			else
+			{
+				if (nb == 1)
+				{
+					const VecCmplx V = cmplx(a);
+					const VecCmplx S = -INV(VecCmplx(nb, iomgn));
+					const VecCmplx Vco = V.co();
+					Cmplx hyb = DOT(Vco, S * Vco);
+					y = x < nw ? real(hyb) : imag(hyb);
+					VecCmplx D_V = V * (INV(- VecCmplx(nb, iomgn))) + (INV(- VecCmplx(nb, iomgn))) * (V.co());
+					dyda = x < nw ? real(D_V) : imag(D_V);
+				}
+				else if (nb > 1)
+				{
+					const VecReal E_tmp = temp.sm(nb_tmp, a.p());
+					const VecReal V_tmp_left = temp.sm(nb_tmp + 1, a.p() + nb_tmp);
+					const VecReal V_tmp_right = temp.sm(nb_tmp, a.p() + nb_tmp);
+
+					VecReal tmp0(1, 0.);
+					const VecCmplx E = cmplx(concat(concat(E_tmp, tmp0), -E_tmp));
+					const VecCmplx S = INV(E - VecCmplx(2 * nb_tmp + 1, iomgn));
+					const VecCmplx V = cmplx(concat(V_tmp_left, V_tmp_right));
+					const VecCmplx Vco = V.co();
+					Cmplx hyb = DOT(Vco, S * Vco);
+					y = x < nw ? real(hyb) : imag(hyb);
+					//VecCmplx D_E = V * Cmplx(-1.) * S * S * Vco;
+
+					VecCmplx D_E = cmplx(V_tmp_right) * INV(cmplx(E_tmp) + VecCmplx(nb_tmp, iomgn)) * INV(cmplx(E_tmp) + VecCmplx(nb_tmp, iomgn)) * (cmplx(V_tmp_right.co())) - cmplx(V_tmp_right) * INV(cmplx(E_tmp) - VecCmplx(nb_tmp, iomgn)) * INV(cmplx(E_tmp) - VecCmplx(nb_tmp, iomgn)) * (cmplx(V_tmp_right.co()));
+					//VecCmplx D_V = V * S + S * Vco;
+					VecCmplx D_V_tmp(1, -V_tmp_left[nb_tmp] * cmplx(1.) / iomgn - (cmplx(1.) / iomgn) * cnjg(V_tmp_left[nb_tmp]));
+					VecCmplx D_V = concat(cmplx(V_tmp_right) * (INV(cmplx(E_tmp) - VecCmplx(nb_tmp, iomgn)) - INV(cmplx(E_tmp) + VecCmplx(nb_tmp, iomgn))) + (INV(cmplx(E_tmp) - VecCmplx(nb_tmp, iomgn)) - INV(cmplx(E_tmp) + VecCmplx(nb_tmp, iomgn))) * (cmplx(V_tmp_right.co())), D_V_tmp);
+					VecCmplx D = concat(D_E, D_V);
+					dyda = x < nw ? real(D) : imag(D);
+				}
+				
+			}
 		}
-		const VecCmplx S = INV(E - VecCmplx(nb, iomgn));
-		//const VecCmplx V = cmplx(temp.sm(nb, a.p() + nb));
-		VecCmplx V(hopB.size());
-		for_Int(i,0,hopB.size()){
-			V[i] = hopB[i] * std::exp(a[oseA.size() + i]);
+		else if (mode == 0)
+		{
+			const VecCmplx E = cmplx(temp.sm(nb, a.p()));
+			const VecCmplx S = INV(E - VecCmplx(nb, iomgn));
+			const VecCmplx V = cmplx(temp.sm(nb, a.p() + nb));
+			const VecCmplx Vco = V.co();
+			Cmplx hyb = DOT(Vco, S * Vco);
+			y = x < nw ? real(hyb) : imag(hyb);
+			VecCmplx D_E = V * Cmplx(-1.) * S * S * Vco;
+			VecCmplx D_V = V * S + S * Vco;
+			VecCmplx D = concat(D_E, D_V);
+			dyda = x < nw ? real(D) : imag(D);
 		}
-		const VecCmplx Vco = V.co();
-		Cmplx hyb = DOT(Vco, S * Vco);
-		y = x < nw ? real(hyb) : imag(hyb);
-		VecCmplx D_E = (V * Cmplx(-1.) * S * S * Vco) * E;
-		VecCmplx D_V = (V * S + S * Vco) * V;
-		VecCmplx D = concat(D_E, D_V);
-		dyda = x < nw ? real(D) : imag(D);
 	}
-	// x*e^(0.5*(x/bw)^2)
-	// (e^((0.5 x^2)/bw^2) * (bw^2 + x^2))/bw^2
 	else if (x == 2 * nw + 0) { // the part of ose regularization
-		//const VecReal E = temp.sm(nb, a.p());
-		VecReal E(oseA.size());
-		for_Int(i, 0, oseA.size()) {
-			E[i] = oseA[i] * std::exp(a[i]);
+		if (mode == 1)
+		{
+			Int nb_tmp = nb / 2;
+			if (nb % 2 == 0)
+			{
+				const VecReal E_tmp = temp.sm(nb_tmp, a.p());
+				const VecReal E = concat(E_tmp, -E_tmp);
+				const VecReal E2 = E * E;
+				y = DOT(E2, E2);
+				VecReal D_E = 8. * (E_tmp * E_tmp * E_tmp);
+				VecReal D_V = VecReal(nb_tmp, 0.);
+				VecReal D = concat(D_E, D_V);
+				dyda = D;
+			}
+			else
+			{
+				if (nb == 1)
+				{
+					const VecReal V = a;
+					const VecReal Vco = V.co();
+					Real hyb = DOT(Vco, Vco);
+					y = hyb;
+					VecReal D_V = 2. * V;
+					dyda = D_V;
+				}
+				else if (nb > 1)
+				{
+					const VecReal E_tmp = temp.sm(nb_tmp, a.p());
+					VecReal tmp0(1, 0.);
+					const VecReal E = concat(concat(E_tmp, tmp0), -E_tmp);
+					const VecReal E2 = E * E;
+					y = DOT(E2, E2);
+					VecReal D_E = 8. * (E_tmp * E_tmp * E_tmp);
+					VecReal D_V = VecReal(nb_tmp + 1, 0.);
+					VecReal D = concat(D_E, D_V);
+					dyda = D;
+				}
+			}
 		}
-		const VecReal E3 = E * E * E;
-		const Real coefficient = expect_err * std::pow(p.bandw, -6);
-		y = coefficient * DOT(E3, E3);
-		VecReal D_E = 6. * E3 * E3;
-		VecReal D_V = VecReal(nb, 0.);
-		VecReal D = concat(D_E, D_V);
-		dyda = coefficient * D;
+		else if (mode == 0)
+		{
+			const VecReal E = temp.sm(nb, a.p());
+			const VecReal E2 = E * E;
+			y = DOT(E2, E2);
+			VecReal D_E = 4. * E2 * E;
+			VecReal D_V = VecReal(nb, 0.);
+			VecReal D = concat(D_E, D_V);
+			dyda = D;
+		}
 	}
-	else if (x == 2 * nw + 1) { // the part of hop regularization
-		//const VecReal V = temp.sm(nb, a.p() + nb);
-		VecReal V(hopB.size());
-		for_Int(i,0,hopB.size()){
-			V[i]=hopB[i]*std::exp(a[oseA.size()+i]);
+	else if (x == 2 * nw + 1) { // the part of bath sum rule
+		if (mode == 1)
+		{
+			Int nb_tmp = nb / 2;
+			if (nb % 2 == 0)
+			{
+				const VecReal V_tmp = temp.sm(nb_tmp, a.p() + nb_tmp);
+				const VecReal V = concat(V_tmp, V_tmp);
+				const VecReal Vco = V.co();
+				Real hyb = DOT(Vco, Vco);
+				y = hyb;
+				VecReal D_E = VecReal(nb_tmp, 0.);
+				VecReal D_V = 2. * V_tmp + 2. * (V_tmp.co());
+				VecReal D = concat(D_E, D_V);
+				dyda = D;
+			}
+			else
+			{
+				if (nb == 1)
+				{
+					const VecReal V = a;
+					const VecReal Vco = V.co();
+					Real hyb = DOT(Vco, Vco);
+					y = hyb;
+					VecReal D_V = 2. * V;
+					dyda = D_V;
+				}
+				else if (nb > 1)
+				{
+					const VecReal V_tmp_left = temp.sm(nb_tmp + 1, a.p() + nb_tmp);
+					const VecReal V_tmp_right = temp.sm(nb_tmp, a.p() + nb_tmp);
+					const VecReal V = concat(V_tmp_left, V_tmp_right);
+					const VecReal Vco = V.co();
+					Real hyb = DOT(Vco, Vco);
+					y = hyb;
+					VecReal D_E = VecReal(nb_tmp, 0.);
+					VecReal D_V_tmp(1, V_tmp_left[nb_tmp] + cnjg(V_tmp_left[nb_tmp]));
+					VecReal D_V = concat(2. * V_tmp_right + 2. * (V_tmp_right.co()), D_V_tmp);
+					VecReal D = concat(D_E, D_V);
+					dyda = D;
+				}
+			}
 		}
-		const VecReal V2 = V * V;
-		const Real coefficient = expect_err * std::pow(regV_b, 3);
-		y = coefficient * DOT(INV(V2), INV(V));
-		VecReal D_E = VecReal(nb, 0.);
-		VecReal D_V = -3. * INV(V2 * V);
-		VecReal D = concat(D_E, D_V);
-		dyda = coefficient * D;
-	}
-	else if (x == 2 * nw + 2) { // the part of bath sum rule
-		//const VecReal V = temp.sm(nb, a.p() + nb);
-		VecReal V(hopB.size());
-		for_Int(i,0,hopB.size()){
-			V[i]=hopB[i]*std::exp(a[oseA.size()+i]);
+		else if (mode == 0)
+		{
+			const VecReal V = temp.sm(nb, a.p() + nb);
+			const VecReal Vco = V.co();
+			Real hyb = DOT(Vco, Vco);
+			y = hyb;
+			VecReal D_E = VecReal(nb, 0.);
+			VecReal D_V = V + Vco;
+			VecReal D = concat(D_E, D_V);
+			dyda = D;
 		}
-		const VecReal Vco = V.co();
-		Real hyb = DOT(Vco, Vco);
-		y = hyb;
-		VecReal D_E = VecReal(nb, 0.);
-		VecReal D_V = 2.*(V * Vco);
-		VecReal D = concat(D_E, D_V);
-		dyda = D;
+
 	}
 	else {
 		ERR(NAV(x));

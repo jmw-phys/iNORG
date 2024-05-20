@@ -23,21 +23,38 @@ APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
 	ImGreen hb(nband, p);
 	for_Int(j, 0, hb.nomgs)
 		for_Int(i, 0, nband) hb.g[j][i][i] = -imfrq_hybrid_function[j][or_deg_idx[i * 2] - 1];		if (mm) hb.write_edmft("hb_read.txt", or_deg_idx);
-	bth.read_ose_hop();	bth.bath_fit(hb, or_deg_idx);												if (mm) bth.write_ose_hop();
+	bth.read_ose_hop();	number_bath_fit(hb, iter_cnt, 0)											if (mm) bth.write_ose_hop();
 	imp.update("eDMFT");																			if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 	ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_edmft("hb_fit.txt", or_deg_idx);
-	edmft_back_up("read");
-	auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
-	if (!norg.check_NTR()) norg.uormat = p.rotationU;
-	else MatReal tmp_b = norg.read_NTR();
-	norg.up_date_h0_to_solve(imp.impH, 1);															norg.write_impurtiy_occupation();
-	MatReal tmp_e = norg.save_NTR();
-	norg.oneedm.clear_TAB();
-	// MatReal local_multiplets_state = norg.oneedm.local_multiplets_state(norg.oneedm.ground_state);	if (mm)WRN(NAV(local_multiplets_state));
-	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_edmft("g0imp.txt", or_deg_idx);
-	ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp, or_deg_idx);							if (mm) gfimp.write_edmft("Gf.out", or_deg_idx);
-	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();							if (mm) seimp.write_edmft("Sig.out", or_deg_idx);
-	edmft_back_up("save");
+	edmft_back_up_read();
+	// if(iter_count == 0) {
+	if(1) {
+		auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
+		if (!norg.check_NTR()) norg.uormat = p.rotationU;
+		else norg.read_NTR();
+		norg.up_date_h0_to_solve(imp.impH, 1);														norg.write_impurtiy_occupation();
+		norg.save_NTR();
+
+		// norg.oneedm.write_the_Tab("main_space" + std::to_string(mm.id()) + ".bin");
+		norg.oneedm.clear_TAB();
+		// MatReal local_multiplets_state = norg.oneedm.local_multiplets_state(norg.oneedm.ground_state);	if (mm)WRN(NAV(local_multiplets_state));
+		ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);												if (mm)	g0imp.write_edmft("g0imp.txt", or_deg_idx);
+		ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp, or_deg_idx);						if (mm) gfimp.write_edmft("Gf.out", or_deg_idx);
+		ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();						if (mm) seimp.write_edmft("Sig.out", or_deg_idx);
+		edmft_back_up_write(norg);
+	} else {
+		NORG norg(mm, p, "main_space" + std::to_string(mm.id()) + ".bin");
+		if (!norg.check_NTR()) norg.uormat = p.rotationU;
+		else norg.read_NTR();
+		norg.up_date_h0_to_solve(imp.impH, 1);														norg.write_impurtiy_occupation();
+		norg.save_NTR();
+		norg.oneedm.clear_TAB();
+		// MatReal local_multiplets_state = norg.oneedm.local_multiplets_state(norg.oneedm.ground_state);	if (mm)WRN(NAV(local_multiplets_state));
+		ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);												if (mm)	g0imp.write_edmft("g0imp.txt", or_deg_idx);
+		ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp, or_deg_idx);						if (mm) gfimp.write_edmft("Gf.out", or_deg_idx);
+		ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();						if (mm) seimp.write_edmft("Sig.out", or_deg_idx);
+		edmft_back_up_write(norg);
+	}
 
 	//hold for checking-----------------------------------------------------------------------------------------------------------------------------------
 	/*
@@ -448,38 +465,37 @@ int main() {
 }
 */
 
-void APIedmft::edmft_back_up(const Str& status) {
+void APIedmft::edmft_back_up_read() {
 	using namespace std;
-	if (status == "read") {
-		std::ifstream ifs("edmft_back_up");
-		if (ifs){
-			std::string line;
-			while (std::getline(ifs, line)) {
-				std::istringstream iss(line);
-				std::string key;
-				iss >> key;
+	std::ifstream ifs("edmft_back_up");
+	if (ifs) {
+		std::string line;
+		while (std::getline(ifs, line)) {
+			std::istringstream iss(line);
+			std::string key;
+			iss >> key;
 
-				if (key == "iter_count")			iss >> iter_count;
-				if (key == "npartical")				for_Int(i, 0, p.norbs)		iss >> p.npartical[i];
-				// if (key == "ful_pcl_sch")			iss >> ful_pcl_sch;
-				// if (key == "artificial_symm"){
-				// 	artificial_symm.reset(p.norbs, 0);	for_Int(i, 0, p.norbs)	iss >> artificial_symm[i];
-				// }
-			}
+			if (key == "iter_count")				iss >> iter_count;
+			if (key == "npartical")					for_Int(i, 0, p.norbs)		iss >> p.npartical[i];
+			// if (key == "main_table_size")			iss >> main_table_size;
+			// if (key == "orbit_subspace_dim")		for_Int(i, 0, p.norbs)		iss >> orbit_subspace_dim[i];
+
 		}
+	} else {
+		WRN("Error opening file : edmft_back_up")
 	}
+}
 
-	if (status == "save") {
-		std::ofstream ofs;
-		ofs.open("edmft_back_up");
-		ofs << iofmt("sci");
+void APIedmft::edmft_back_up_write(const NORG& norg) {
+	using namespace std;
+	std::ofstream ofs;
+	ofs.open("edmft_back_up");
+	ofs << iofmt("sci");
 
-		ofs << setw(4) << "iter_count";			ofs << setw(4) << (iter_count + 1);											ofs << endl;
-		ofs << setw(4) << "npartical";			for_Int(i, 0, p.norbs)		ofs << setw(4) << p.npartical[i];		ofs << endl;
-		// ofs << setw(4) << "ful_pcl_sch";		ofs << setw(4) << ful_pcl_sch;											ofs << endl;
-		// if(artificial_symm.size() != 0 && artificial_symm != or_deg_idx){
-		// 	ofs << setw(4) << "artificial_symm";for_Int(i, 0, p.norbs) 		ofs << setw(4) << artificial_symm[i];	ofs << endl;
-		// }
-		ofs.close();
-	}
+	ofs << setw(4) << "iter_count";			ofs << setw(4) << (iter_count + 1);										ofs << endl;
+	ofs << setw(4) << "npartical";			for_Int(i, 0, p.norbs)	ofs << setw(4) << p.npartical[i];				ofs << endl;
+	// ofs << setw(4) << "main_table_size";		ofs << setw(4) << norg.scsp.dim;										ofs << endl;
+	// ofs << setw(4) << "orbit_subspace_dim";	for_Int(i, 0, p.norbs)	ofs << setw(w_Real) << orbit_subspace_dim[i];	ofs << endl;
+
+	ofs.close();
 }

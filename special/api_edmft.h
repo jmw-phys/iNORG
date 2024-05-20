@@ -43,6 +43,10 @@ class APIedmft{
 	//Int nimp;
 	VecReal bathose, bathhop;
 
+	// BACK_UP_DATA:
+	Int main_table_size;
+	VecInt orbit_subtable_size;
+
 public:
 	VEC<VecReal> t_ose;						// hopping integral for all sites
 	VEC<VecReal> t_hyb;						// H_0 onset energy
@@ -50,7 +54,8 @@ public:
 	Int dmft_cnt;
 private:
 	void update(const Str& file);
-	void edmft_back_up(const Str& status);
+	void edmft_back_up_read();
+	void edmft_back_up_write(const NORG& norg);
 
 	bool if_lock(const Str file) const;
 

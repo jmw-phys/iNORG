@@ -1,150 +1,239 @@
 #include "bath.h"
-
+/*
 Bath::Bath(const MyMpi& mm_i, const Prmtr& prmtr_i) :
-	mm(mm_i), p(prmtr_i), nb(p.nI2B[0]), hb(1, p), uur(mm.id()), ose(p.nI2B[0]), hop(p.nI2B[0]), info(p.nband, 7, 0.),
-	vec_ose(p.nband), vec_hop(p.nband), osea(p.nI2B[0]), oseA(p.nI2B[0]), hopb(p.nI2B[0]), hopB(p.nI2B[0])
+	mm(mm_i), p(prmtr_i), nb(p.nbath), hb(1, p), uur(mm.id()), ose(p.nbath), hop(p.nbath)
 {
 	// make random seed output together
 	{ SLEEP(1); mm.barrier(); }
-	// init_ose_hop();
-	
+	init_ose_hop();
 }
+*/
 
-void Bath::bath_fit(const ImGreen& hb_i, Int iter)
+
+
+Bath::Bath(const MyMpi& mm_i, const Prmtr& prmtr_i) :mm(mm_i), p(prmtr_i), uur(mm.id()),
+	vec_ose(p.nband), vec_hop(p.nband), info(p.nband, 7, 0.)
 {
-	if(iter == 1) read_ose_hop(); IFS ifs("ose_hop");
+	// make random seed output together
+	{ SLEEP(1); mm.barrier(); }
 
-	// Int band_i = 0;
-
-	for_Int(band_i, 0, p.nband)
+	for_Int(i, 0, p.nband)
 	{
-		if(p.nband != hb_i[0].nrows()) ERR("some thing wrong with the hybrid function.")
-		for_Int(i, 0, hb_i.nomgs) hb[i] = hb_i[i][band_i][band_i];
-		ose.reset(p.nI2B[band_i]);   hop.reset(p.nI2B[band_i]); 
-		osea.reset(p.nI2B[band_i]); hopb.reset(p.nI2B[band_i]);
-		oseA.reset(p.nI2B[band_i]); hopB.reset(p.nI2B[band_i]);
-		nb = p.nI2B[band_i];
-
-		//adopt even or odd bath
-		for_Int(i, 0, nb) {
-			hopB[i] = 1.;
-			if (i < nb / 2) oseA[i] = -1.;
-			else oseA[i] = (nb % 2 == 1 && i == nb / 2) ? 0. : 1.;
-		}
-
-		/*
-		if(ifs || iter > 1) {ose = vec_ose[band_i]; hop = vec_hop[band_i];} 
-		else init_ose_hop();
-		regularize_ose_hop();
-		*/
-		if(ifs || iter > 1) {
-			ose = vec_ose[band_i]; 
-			hop = vec_hop[band_i];
-			for_Int(i, 0, nb) {
-				hopb[i] = std::log(hop[i] / hopB[i]);
-				osea[i] = (nb % 2 == 1 && i == nb / 2) ? 0. : std::log(ose[i] / oseA[i]);
-			}
-		} else init_osea_hopb();
-		regularize_osea_hopb();
-		//init_osea_hopb();
-		//regularize_osea_hopb();
-
-		const VecReal a0 = concat(osea, hopb);
-		// if(mm) WRN(NAV(a0));
-		Real err;
-		VecReal a;
-		Int nmin;
-		// std::tie(err, a, nmin) = bath_fit_contest(a0);
-		//if(mm) WRN(NAV2(a0,band_i));
-		std::tie(err, a, nmin) = bath_fit_bsr(a0, band_i);
-		osea = a.truncate(0, nb);
-		hopb = a.truncate(nb, nb + nb);
-		regularize_osea_hopb();
-		vec_ose[band_i] = ose; vec_hop[band_i] = hop;
-		if (mm) {
-			const HybErr hyberr(p, hb, nb, oseA, hopB, band_i);
-			const VecReal a = concat(osea, hopb);
-			Real err = hyberr(a);
-			Real err_crv = hyberr.err_curve(a);
-			Real err_regE = hyberr.err_regE(a);
-			//Real err_regE = 0.;
-			Real err_regV = hyberr.err_regV(a);
-			//Real err_regV = 0.;
-			Real err_bsr = hyberr.err_bsr(a);
-			//Real err_bsr = 0.; 
-			//Real a_norm = a.norm();
-			Real a_norm=std::sqrt(DOT(ose,ose)+DOT(hop,hop));
-			using namespace std;
-			cout << setw(4) << band_i+1 << "  " << NAV7(nmin, err, err_crv, err_regE, err_regV, err_bsr, a_norm) << "  " << present() << endl;
-			NAV7(Int(info[band_i][0]=Real(nmin)), info[band_i][1]=err, info[band_i][2]=err_crv, info[band_i][3]=err_regE, info[band_i][4]=err_regV, info[band_i][5]=err_bsr, info[band_i][6]=a_norm);
-		}
+		vec_ose[i].reset(p.nI2B[2*i]);
+		vec_hop[i].reset(p.nI2B[2*i]);
 	}
-	// for_Int(band_j, 1, p.nband) {vec_ose[band_j] = ose; vec_hop[band_j] = hop;} // add for same as band 1.
+	init_vec_ose_hop();
 }
 
-void Bath::bath_fit(const ImGreen& hb_i, VecInt or_deg)// for Zen mode
+
+void Bath::init_vec_ose_hop()
 {
-	read_ose_hop();IFS ifs("ose_hop");
-	for_Int(degi, 0, MAX(or_deg)) {
-		Int count(0), orb_rep(-1);
-		VecCmplx hb_fit(hb.nomgs); 
-		for_Int(i, 0, hb_i.norbs) {
-			if (or_deg[i * 2] - 1 == degi) {
-				for_Int(n, 0, hb.nomgs) hb_fit[n] += hb_i.g[n][i][i];
-				count++;
+	for_Int(i, 0, vec_ose.size())
+	{
+		uur(vec_ose[i]);
+		vec_ose[i] -= 0.5;
+		vec_ose[i] *= 4.;
+		uur(vec_hop[i]);
+		vec_hop[i] -= 0.5;
+		vec_hop[i] *= 4.;
+		slctsort(vec_ose[i], vec_hop[i]);
+		vec_hop[i] = ABS(vec_hop[i]);
+	}
+}
+
+void Bath::number_bath_fit(const ImGreen& hb_i, Int iter,Int mode)
+{
+	// for_Int(band_i, 0, p.nband)
+	for_Int(band_i, 1, 3) //! set band 0 same as band 1.
+	{
+		ImGreen hb(hb_i,band_i,band_i);
+
+		VecReal a0;
+		if (mode == 1)
+		{
+			if (vec_ose[band_i].size() % 2 == 0)
+			{
+				a0 = concat(vec_ose[band_i].truncate(0, vec_ose[band_i].size() / 2), vec_hop[band_i].truncate(0, vec_hop[band_i].size() / 2));
+			}
+			else
+			{
+				if (vec_ose[band_i].size() == 1)
+				{
+					a0 = vec_hop[band_i];
+				}
+				else if (vec_ose[band_i].size() > 1)
+				{
+					a0 = concat(vec_ose[band_i].truncate(0, vec_ose[band_i].size() / 2), vec_hop[band_i].truncate(0, vec_hop[band_i].size() / 2 + 1));
+				}
+				
 			}
 		}
-		if(p.nband != hb_i[0].nrows()) ERR("some thing wrong with the hybrid function.")
-		for_Int(i, 0, hb.nomgs) hb[i] = hb_fit[i] / Real(count);
-		for_Int(j, 0, p.nband) { orb_rep = j; if (or_deg[j * 2] == degi + 1) break; }
-
-		ose.reset(p.nI2B[orb_rep]);   hop.reset(p.nI2B[orb_rep]); 
-		osea.reset(p.nI2B[orb_rep]); hopb.reset(p.nI2B[orb_rep]);
-		oseA.reset(p.nI2B[orb_rep]); hopB.reset(p.nI2B[orb_rep]);
-		nb = p.nI2B[orb_rep];
-
-		//adopt even or odd bath
-		for_Int(i, 0, nb) {
-			hopB[i] = 1.;
-			if (i < nb / 2) oseA[i] = -1.;
-			else oseA[i] = (nb % 2 == 1 && i == nb / 2) ? 0. : 1.;
+		else if (mode == 0)
+		{
+			a0 = concat(vec_ose[band_i], vec_hop[band_i]);
 		}
-
-		if(ifs) {
-			ose = vec_ose[orb_rep]; 
-			hop = vec_hop[orb_rep];
-			for_Int(i, 0, nb) {
-				hopb[i] = std::log(hop[i] / hopB[i]);
-				osea[i] = (nb % 2 == 1 && i == nb / 2) ? 0. : std::log(ose[i] / oseA[i]);
-			}
-		} else init_osea_hopb();
-		regularize_osea_hopb();
-
-		const VecReal a0 = concat(osea, hopb);
+		
 		Real err;
 		VecReal a;
 		Int nmin;
-		std::tie(err, a, nmin) = bath_fit_contest(a0);
-		osea = a.truncate(0, nb);
-		hopb = a.truncate(nb, nb + nb);
-		regularize_osea_hopb();
-		for_Int(i, 0, p.nband) if (or_deg[i * 2] - 1 == degi) vec_ose[i] = ose;
-		for_Int(i, 0, p.nband) if (or_deg[i * 2] - 1 == degi) vec_hop[i] = hop;
-		// if(mm) WRN(NAV2(vec_ose.size(),vec_hop.size()));
-		if (mm) {
-			const HybErr hyberr(p, hb, nb, oseA, hopB);
-			const VecReal a = concat(osea, hopb);
+
+
+		std::tie(err, a, nmin) = bath_fit_number_contest(a0, vec_ose[band_i].size(), hb, band_i, mode);
+		
+
+
+		nb = vec_ose[band_i].size();
+
+		if (mode == 1)
+		{
+			if (vec_ose[band_i].size() % 2 == 0)
+			{
+				vec_ose[band_i] = concat(a.truncate(0, nb / 2), -a.truncate(0, nb / 2));
+				vec_hop[band_i] = concat(a.truncate(nb / 2, (nb + nb) / 2), a.truncate(nb / 2, (nb + nb) / 2));
+			}
+			else
+			{
+				VecReal tmp0(1, 0.);
+				if (vec_ose[band_i].size() == 1)
+				{
+					vec_ose[band_i] = tmp0;
+					vec_hop[band_i] = a;
+				}
+				else if (vec_ose[band_i].size() > 1)
+				{
+					vec_ose[band_i] = concat(concat(a.truncate(0, nb / 2), tmp0), -a.truncate(0, nb / 2));
+					vec_hop[band_i] = concat(a.truncate(nb / 2, (nb + nb) / 2), a.truncate((nb / 2), (nb + nb) / 2 - 1));
+				}
+			}
+		}
+		else if (mode == 0)
+		{
+			vec_ose[band_i] = a.truncate(0, nb);
+			vec_hop[band_i] = a.truncate(nb, nb + nb);
+		}
+
+		
+		slctsort(vec_ose[band_i], vec_hop[band_i]);
+		vec_hop[band_i] = ABS(vec_hop[band_i]);
+		
+		if (mm)
+		{
+			HybErr hyberr(p, hb, vec_ose[band_i].size(), band_i, mode);
+			VecReal a;
+			if (mode == 1)
+			{
+				if (vec_ose[band_i].size() % 2 == 0)
+				{
+					a = concat(vec_ose[band_i].truncate(0, vec_ose[band_i].size() / 2), vec_hop[band_i].truncate(0, vec_hop[band_i].size() / 2));
+				}
+				else
+				{
+					if (vec_ose[band_i].size() == 1)
+					{
+						a = vec_hop[band_i];
+					}
+					else if (vec_ose[band_i].size() > 1)
+					{
+						a = concat(vec_ose[band_i].truncate(0, vec_ose[band_i].size() / 2), vec_hop[band_i].truncate(0, vec_hop[band_i].size() / 2 + 1));
+					}
+				}
+			}
+			else if (mode == 0)
+			{
+				a = concat(vec_ose[band_i], vec_hop[band_i]);
+			}
+			
 			Real err = hyberr(a);
 			Real err_crv = hyberr.err_curve(a);
-			Real err_reg = hyberr.err_regE(a);
-			//Real err_bsr = hyberr.err_bsr(a);
+			Real err_reg = hyberr.err_reg(a);
+			Real err_bsr = hyberr.err_bsr(a);
 			Real a_norm = a.norm();
 			using namespace std;
-			cout << setw(4) << degi << "  " << NAV5(nmin, err, err_crv, err_reg,/* err_bsr,*/ a_norm) << "  " << present() << endl;
-			NAV5(Int(info[degi][0]=Real(nmin)), info[degi][1]=err, info[degi][2]=err_crv, info[degi][3]=err_reg, /*err_bsr,*/ info[degi][6]=a_norm);
+			cout << setw(4) << iter << "  " << NAV7(band_i, nmin, err, err_crv, err_reg, err_bsr, a_norm) << "  " << present() << endl;
+			NAV7(Int(info[band_i][0]=Real(nmin)), info[band_i][1]=err, info[band_i][2]=err_crv, info[band_i][3]=err_reg, info[band_i][4]=0, info[band_i][5]=err_bsr, info[band_i][6]=a_norm);
 		}
+	{vec_ose[0] = vec_ose[1]; vec_hop[0] = vec_hop[1];} //! set band 0 same as band 1.
 	}
 }
+
+std::tuple<Real, VecReal, Int> Bath::bath_fit_number_contest(const VecReal& a0, Int nb, const ImGreen&hb_i, Int orb_i,Int mode)
+{
+
+	const HybErr hyberr(p, hb_i, nb, orb_i,mode);
+
+	const Int np = a0.size();
+	const Int ntry_fine = MAX(16, mm.np() - 1);
+	const Int ntry = MAX(64 * ntry_fine, 1024);
+	const Real tol = 1.e-8;
+	Int nmin = 0;		// number of fittings reaching the minimum
+	MPI_Status status;
+	VecReal a(np);
+	VecReal a_optm = a0;
+	Real err_optm = hyberr(a_optm);
+	
+	if (mm) {
+		Int ntot = ntry;
+		//		Int ntot = 2;
+		Int nsnd = 0;
+		Int nrcv = 0;
+		Int nfst = 1;
+		Int itry = 0;
+		while (nrcv < ntot) {
+			if (nfst < mm.np()) {
+				if (nsnd < ntot) {
+					a = next_initial_fitting_parameters(a0, ntry_fine, itry);
+					mm.Send(a, nfst, 1);
+					++nsnd;
+				}
+				else {
+					mm.Send(a, nfst, 0);
+				}
+				++nfst;
+			}
+			else {
+				mm.Recv(a, status);
+				++nrcv;
+				Int sndr = status.MPI_SOURCE;
+				Real err = hyberr(a);
+				if (false) {
+					Real err_crv = hyberr.err_curve(a);
+					Real err_reg = hyberr.err_reg(a);
+					Real err_bsr = hyberr.err_bsr(a);
+					Real a_norm = a.norm();
+					WRN(NAV5(sndr, ntot, nsnd, nrcv, itry) + ", " + NAV5(err_optm, err, err_crv, err_reg,/* err_bsr,*/ a_norm));
+				}
+				if (err_optm - tol > err) { nmin = 0; }
+				if (err_optm > err) { a_optm = a; err_optm = err; }
+				nmin += err - err_optm < tol;
+
+				if (nsnd < ntot) {
+					a = next_initial_fitting_parameters(a0, ntry_fine, itry);
+					mm.Send(a, sndr, 1);
+					++nsnd;
+				}
+				else {
+					mm.Send(a, sndr, 0);
+				}
+			}
+		}
+	}
+	else {
+		while (true) {
+			mm.Recv(a, status, mm.ms());
+			if (status.MPI_TAG == 0) break;
+			FitMrq<HybErr> mrq(hyberr.x, hyberr.y, hyberr.sig, a, hyberr, tol);
+			if((a.size() % 2 == 1) && a[a.size() - 1] < 5E-5) mrq.hold(a.size() - 1, 0.0); //! TESTING!!
+			Int mrq_fit_info = mrq.fit();
+			mm.Send(mrq.a, mm.ms(), 1);
+		}
+	}
+
+	mm.Bcast(err_optm);
+	mm.Bcast(a_optm);
+	mm.Bcast(nmin);
+	return std::make_tuple(err_optm, a_optm, nmin);
+}
+
 
 
 VecReal Bath::next_initial_fitting_parameters(const VecReal& a0, const Int& ntry_fine, Int& itry)
@@ -172,177 +261,6 @@ VecReal Bath::next_initial_fitting_parameters(const VecReal& a0, const Int& ntry
 	return a;
 }
 
-std::tuple<Real, VecReal, Int> Bath::bath_fit_contest(const VecReal& a0)
-{
-	const HybErr hyberr(p, hb, nb, oseA, hopB);
-	const Int np = a0.size();
-	const Int ntry_fine = MAX(16, mm.np() - 1);
-	// const Int ntry = MAX(64 * ntry_fine, 200);
-	const Int ntry = MAX(1024 * ntry_fine, 2000);
-	const Real tol = 1.e-12;
-	Int nmin = 0;		// number of fittings reaching the minimum
-	MPI_Status status;
-	VecReal a(np);
-	VecReal a_optm = a0;
-	Real err_optm = hyberr(a_optm);
-
-	if (mm) {
-		Int ntot = ntry;
-//		Int ntot = 2;
-		Int nsnd = 0;
-		Int nrcv = 0;
-		Int nfst = 1;
-		Int itry = 0;
-		while (nrcv < ntot) {
-			if (nfst < mm.np()) {
-				if (nsnd < ntot) {
-					a = next_initial_fitting_parameters(a0, ntry_fine, itry);
-					mm.Send(a, nfst, 1);
-					++nsnd;
-				}
-				else {
-					mm.Send(a, nfst, 0);
-				}
-				++nfst;
-			}
-			else {
-				mm.Recv(a, status);
-				++nrcv;
-				Int sndr = status.MPI_SOURCE;
-				Real err = hyberr(a);
-				if (false) {
-					Real err_crv = hyberr.err_curve(a);
-					Real err_reg = hyberr.err_regE(a);
-					Real a_norm = a.norm();
-					WRN(NAV5(sndr, ntot, nsnd, nrcv, itry) + ", " + NAV5(err_optm, err, err_crv, err_reg, a_norm));
-				}
-				if (err_optm - tol > err) { nmin = 0; }
-				if (err_optm > err) { a_optm = a; err_optm = err; }
-				nmin += err - err_optm < tol;
-
-				if (nsnd < ntot) {
-					a = next_initial_fitting_parameters(a0, ntry_fine, itry);
-					mm.Send(a, sndr, 1);
-					++nsnd;
-				}
-				else {
-					mm.Send(a, sndr, 0);
-				}
-			}
-		}
-	}
-	else {
-		while (true) {
-			mm.Recv(a, status, mm.ms());
-			if (status.MPI_TAG == 0) break;
-			FitMrq<HybErr> mrq(hyberr.x, hyberr.y, hyberr.sig, a, hyberr, tol);
-			//for_Int(i, 0, a.size()/2) mrq.hold(i, a[i]);
-			if (nb % 2 == 1) mrq.hold(nb / 2, 0.);
-			Int mrq_fit_info = mrq.fit();
-			mm.Send(mrq.a, mm.ms(), 1);
-		}
-	}
-
-	mm.Bcast(err_optm);
-	mm.Bcast(a_optm);
-	mm.Bcast(nmin);
-	return std::make_tuple(err_optm, a_optm, nmin);
-}
-
-std::tuple<Real, VecReal, Int> Bath::bath_fit_bsr(const VecReal& a0, const Int& orb_i)
-{
-	const HybErr hyberr(p, hb, nb, oseA, hopB, orb_i);
-	const Int np = a0.size();
-	const Int ntry_fine = MAX(16, mm.np() - 1);
-	// const Int ntry = MAX(128 * ntry_fine, 10);
-	const Int ntry = MAX(1024 * ntry_fine, 2000);
-	const Real tol = 1.e-12;
-	Int nmin = 0;		// number of fittings reaching the minimum
-	MPI_Status status;
-	VecReal a(np);
-	VecReal a_optm = a0;
-	Real err_optm = hyberr(a_optm);
-
-	if (mm) {
-		Int ntot = ntry;
-//		Int ntot = 2;
-		Int nsnd = 0;
-		Int nrcv = 0;
-		Int nfst = 1;
-		Int itry = 0;
-		while (nrcv < ntot) {
-			if (nfst < mm.np()) {
-				if (nsnd < ntot) {
-					a = next_initial_fitting_parameters(a0, ntry_fine, itry);
-					mm.Send(a, nfst, 1);
-					++nsnd;
-				}
-				else {
-					mm.Send(a, nfst, 0);
-				}
-				++nfst;
-			}
-			else {
-				mm.Recv(a, status);
-				++nrcv;
-				Int sndr = status.MPI_SOURCE;
-				Real err = hyberr(a);
-				if (false) {
-					Real err_crv = hyberr.err_curve(a);
-					Real err_regE = hyberr.err_regE(a);
-					//Real err_regE = 0.;
-					Real err_regV = hyberr.err_regV(a);
-					//Real err_regV = 0.; 
-					Real err_bsr = hyberr.err_bsr(a);
-					//Real err_bsr = 0.;
-					Real a_norm = a.norm();
-					WRN(NAV5(sndr, ntot, nsnd, nrcv, itry) + ", " + NAV7(err_optm, err, err_crv, err_regE, err_regV, err_bsr, a_norm));
-				}
-				if (err_optm - tol > err) { nmin = 0; }
-				if (err_optm > err) { a_optm = a; err_optm = err; }
-				nmin += err - err_optm < tol;
-
-				if (nsnd < ntot) {
-					a = next_initial_fitting_parameters(a0, ntry_fine, itry);
-					mm.Send(a, sndr, 1);
-					++nsnd;
-				}
-				else {
-					mm.Send(a, sndr, 0);
-				}
-			}
-		}
-	}
-	else {
-		while (true) {
-			mm.Recv(a, status, mm.ms());
-			if (status.MPI_TAG == 0) break;
-			FitMrq<HybErr> mrq(hyberr.x, hyberr.y, hyberr.sig, a, hyberr, tol);
-			//if ((a.size() / 2) % 2 != 0) mrq.hold(Int(a.size() / 4), 0.);
-			//for_Int(i, 0, a.size()/2) mrq.hold(i, a[i]);
-			/*
-			mrq.hold(0, -1.);
-			mrq.hold(1, -0.66666666666666);
-			mrq.hold(2, -0.44444444444444);
-			mrq.hold(3, 0.44444444444444);
-			mrq.hold(4, 0.66666666666666);
-			mrq.hold(5, 1.);
-			*/
-			if(nb%2==1){
-				mrq.hold(nb/2, 0.);
-			}
-			Int mrq_fit_info = mrq.fit();
-			//WRN(NAV(mrq_fit_info));
-			mm.Send(mrq.a, mm.ms(), 1);
-		}
-	}
-
-	mm.Bcast(err_optm);
-	mm.Bcast(a_optm);
-	mm.Bcast(nmin);
-	return std::make_tuple(err_optm, a_optm, nmin);
-}
-
 
 //rely on imp model's frame
 MatReal Bath::find_hop() const
@@ -361,6 +279,7 @@ MatReal Bath::find_hop() const
     }
     return h0;
 }
+
 
 void Bath::write_ose_hop(Int iter_cnt, const Str& bath_name) const {
 	using namespace std;
@@ -406,33 +325,4 @@ void Bath::read_ose_hop() {
 		vec_hop[band_i] = hop_t;
 		// if(mm) WRN(NAV(hop_t));
 	}
-}
-
-//------------------------------------------------------------------ print out ------------------------------------------------------------------
-void Bath::regularize_ose_hop() {
-	slctsort(ose, hop);
-	// after a unitary transformation, hop can always be
-	// non-negative when there is only one impurity site
-	hop = ABS(hop);
-}
-
-void Bath::regularize_osea_hopb() {
-	for_Int(i,0,nb){
-		ose[i]=oseA[i]*std::exp(osea[i]);
-		hop[i]=hopB[i]*std::exp(hopb[i]);
-	}
-	//if(mm) WRN(NAV6(oseA,osea,ose,hopB,hopb,hop));
-	VecReal E_tmp1=ose;
-	VecReal E_tmp2=ose;
-	VecReal E_tmp3=ose;
-	VecReal E_tmp4=ose;
-	slctsort(E_tmp1, osea);
-	slctsort(E_tmp2, hopb);
-	slctsort(E_tmp3, oseA);
-	slctsort(E_tmp4, hopB);
-	for_Int(i,0,nb){
-		ose[i]=oseA[i]*std::exp(osea[i]);
-		hop[i]=hopB[i]*std::exp(hopb[i]);
-	}
-	//if(mm) WRN(NAV6(oseA,osea,ose,hopB,hopb,hop));
 }

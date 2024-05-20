@@ -480,3 +480,8 @@ Version: v1.4.04.p3 @ 2024.05.17
     realized: Kill the updata on v1.4.01 --> v1.4.02
     next do : try the IO table technique.
     thinking: (same as prev)
+
+Version: v1.5.00.p3 @ 2024.05.17
+    realized: Try to begin a new data structure, Tabular!
+    next do : "Hold_for_a_moment", I will try to fix the fitting function.
+    thinking: What kind of data structure do I need to add?
