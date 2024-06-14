@@ -69,7 +69,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_number_contest(const VecReal& a0, 
 	// const Int ntry_fine = ntry / 4;
 	// Int ntry = 1 * (mm.np() - 1);
 	Int ntry_fine = MAX(16, mm.np() - 1);
-	Int ntry = MAX(512 * ntry_fine, 2000);
+	Int ntry = MAX(12 * ntry_fine, 516);
 	//Int ntry = 2 * (mm.np() - 1);
 	//const Int ntry_fine = 24;
 	//const Int ntry = MAX(12 * ntry_fine, 512);
@@ -99,7 +99,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_number_contest(const VecReal& a0, 
 			// itmax = 50;
 			// ndone = 4;
 			itmax = 500;
-			ndone = 8;
+			ndone = 16;
 		}
 		else if (ntime == 1)
 		{
@@ -107,7 +107,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_number_contest(const VecReal& a0, 
 			// itmax = 150;
 			// ndone = 4;
 			itmax = 1500;
-			ndone = 8;
+			ndone = 16;
 		}
 
 		if (mm) {
@@ -180,6 +180,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_number_contest(const VecReal& a0, 
 			}
 
 			++ntime;
+		if(mm) WRN(NAV(itry));
 		}
 		else {
 			while (true) {
