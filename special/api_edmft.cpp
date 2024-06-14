@@ -36,9 +36,11 @@ APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i
 	edmft_back_up("save");
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_edmft("g0imp.txt", or_deg_idx);
 	ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp, or_deg_idx);							if (mm) gfimp.write_edmft("Gf.out", or_deg_idx);
-	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();							
-	ImGreen last_sig(p.nband, p); 
-	last_sig.read_edmft("Sig.out", or_deg_idx);	sig_err = seimp.error(last_sig);					log("sigerr_update");
+	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();
+	if (mm) {
+		ImGreen last_sig(p.nband, p);
+		last_sig.read_edmft("Sig.out", or_deg_idx);	sig_err = seimp.error(last_sig);					log("sigerr_update");
+	}
 	{ mm.barrier(); SLEEP(1); }
 	if (mm) seimp.write_edmft("Sig.out", or_deg_idx);
 	//hold for checking-----------------------------------------------------------------------------------------------------------------------------------
