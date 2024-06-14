@@ -51,7 +51,6 @@ public:
 	VEC<VecReal> t_ose;						// hopping integral for all sites
 	VEC<VecReal> t_hyb;						// H_0 onset energy
 	VecReal muvec;
-	Int dmft_cnt;
 private:
 	void update(const Str& file);
 	void edmft_back_up(const Str& status);
@@ -81,7 +80,7 @@ private:
 		// os << setw(8) << p.U;
 		os << iofmt("sci");
 		os << "  " << setw(w_Real) << sig_err;
-		os << setw(4 + 2 * p.nband) << temp;
+		os << setw(3 + 2 * p.nband) << temp;
 		for_Int(i, 0, p.nband) {
 			os << "  " << setw(w_Real) << n_eles[i * 2];
 		}
@@ -92,7 +91,7 @@ private:
 	void log(const Str& lbl) {
 		if (mm) {
 			print_log(lbl);
-			OFS ofs("norg_log.txt", std::ios::app);
+			OFS ofs("log.norg", std::ios::app);
 			print_log(lbl, ofs);
 			ofs.close();
 		}

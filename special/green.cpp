@@ -205,22 +205,47 @@ void Green::read_edmft(const Str& file, const VecInt& or_deg) {
     if (!ifs) {
         WRN(STR("file opening failed with ") + NAV(file));
     } else {
-        Real omg;
-        MatReal re(norbs, norbs, 0.);
-        MatReal im(norbs, norbs, 0.);
-        for_Int(n, 0, nomgs) {
-            ifs >> omg;
-			VecReal re_temp(MAX(or_deg)), im_temp(MAX(or_deg));
-            for_Int(m, 0, MAX(or_deg)) {
-				ifs >> re_temp[m];
-				ifs >> im_temp[m];
+        Str line;
+        // skip the "#" line
+        while (std::getline(ifs, line)) {
+            if (line.empty() || line[0] != '#') {
+                std::istringstream iss(line);
+                Real omg;
+				Int n = 0;
+                MatReal re(norbs, norbs, 0.);
+                MatReal im(norbs, norbs, 0.);
+                VecReal re_temp(MAX(or_deg)), im_temp(MAX(or_deg));
+                iss >> omg;
+                for_Int(m, 0, MAX(or_deg)) {
+                    iss >> re_temp[m];
+                    iss >> im_temp[m];
+                }
+                for_Int(m, 0, norbs) {
+                    re[m][m] = re_temp[or_deg[m * 2] - 1];
+                    im[m][m] = im_temp[or_deg[m * 2] - 1];
+                }
+                g[n] = cmplx(re, im);
+                break;
             }
-			for_Int(m, 0, norbs) {
-				re[m][m] = re_temp[or_deg[m * 2] - 1];
-				im[m][m] = im_temp[or_deg[m * 2] - 1];
-			}
+        }
+
+        for_Int(n, 1, nomgs) {
+            Real omg;
+            MatReal re(norbs, norbs, 0.);
+            MatReal im(norbs, norbs, 0.);
+            ifs >> omg;
+            VecReal re_temp(MAX(or_deg)), im_temp(MAX(or_deg));
+            for_Int(m, 0, MAX(or_deg)) {
+                ifs >> re_temp[m];
+                ifs >> im_temp[m];
+            }
+            for_Int(m, 0, norbs) {
+                re[m][m] = re_temp[or_deg[m * 2] - 1];
+                im[m][m] = im_temp[or_deg[m * 2] - 1];
+            }
             g[n] = cmplx(re, im);
         }
+
         if (!ifs) {
             ERR(STR("read-in error with ") + NAV(file));
         }

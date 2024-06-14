@@ -14,16 +14,15 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 
 APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i), p(prmtr_i), num_omg(prmtr_i.num_omg), 
 	ful_pcl_sch(1), iter_count(0), sig_err(0.), n_eles(p.norbs, 0.),
-	num_nondegenerate(-1), dmft_cnt(0), weight_nooc(5, 1E-4), weight_freze(5, 1E-13) 
+	num_nondegenerate(-1), weight_nooc(5, 1E-4), weight_freze(5, 1E-13) 
 {
 	update(file);
 	Bath bth(mm, p);
 	Impurity imp(mm, p, bth, or_deg_idx);
-
-	dmft_cnt++; 
-	ImGreen hb(p.nband, p);
-	hb.read_edmft("Delta.inp", or_deg_idx);															if (mm) hb.write_edmft("hb_read.txt", or_deg_idx);
+	ImGreen hb(p.nband, p);	hb.read_edmft("Delta.inp", or_deg_idx);									if (mm) hb.write_edmft("hb_read.txt", or_deg_idx);
 	bth.bth_read_fvb("ose_hop");	 bth.number_bath_fit(hb, or_deg_idx);							if (mm) bth.bth_write_fvb();
+	{ mm.barrier(); SLEEP(1); }
+
 	imp.update("eDMFT");																			if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 	ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_edmft("hb_fit.txt", or_deg_idx);
 	edmft_back_up("read");
@@ -37,12 +36,12 @@ APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_edmft("g0imp.txt", or_deg_idx);
 	ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp, or_deg_idx);							if (mm) gfimp.write_edmft("Gf.out", or_deg_idx);
 	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();
-	if (mm) {
-		ImGreen last_sig(p.nband, p);
-		last_sig.read_edmft("Sig.out", or_deg_idx);	sig_err = seimp.error(last_sig);					log("sigerr_update");
-	}
+
 	{ mm.barrier(); SLEEP(1); }
-	if (mm) seimp.write_edmft("Sig.out", or_deg_idx);
+	if (mm) {
+		ImGreen last_sig(p.nband, p); 		last_sig.read_edmft("Sig.out", or_deg_idx);				sig_err = seimp.error(last_sig);
+		log("sigerr_update");																		seimp.write_edmft("Sig.out", or_deg_idx);
+	}
 	//hold for checking-----------------------------------------------------------------------------------------------------------------------------------
 	/* 
 		// if(mode == "realf_mode"){
@@ -261,7 +260,7 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 		Vec<VecInt> controler(MAX(ordeg) + 1, VecInt(p.ndiv, 0));
 		MatReal occnum, occweight;
 		controler[0] = p.control_divs[0];
-		if(ful_pcl_sch || (iter_count%30 == 0)) {
+		if(ful_pcl_sch) {
 			NORG norg(opcler.find_ground_state_partical(imp.impH, or_deg_idx));
 			uormat = norg.uormat;
 			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb / p.norg_sets);occweight = occnum;
