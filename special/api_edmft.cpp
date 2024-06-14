@@ -23,7 +23,7 @@ APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i
 	dmft_cnt++; 
 	ImGreen hb(p.nband, p);
 	hb.read_edmft("Delta.inp", or_deg_idx);															if (mm) hb.write_edmft("hb_read.txt", or_deg_idx);
-	bth.bth_read_fvb("ose_hop");	 //bth.number_bath_fit(hb, or_deg_idx);							if (mm) bth.bth_write_fvb();
+	bth.bth_read_fvb("ose_hop");	 bth.number_bath_fit(hb, or_deg_idx);							if (mm) bth.bth_write_fvb();
 	imp.update("eDMFT");																			if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 	ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_edmft("hb_fit.txt", or_deg_idx);
 	edmft_back_up("read");
