@@ -490,3 +490,8 @@ Version: v1.6.00.p3 @ 2024.06.16
     realized: Add the NEW fitting function, and readly for the matrix fitting.
     next do : test for the fitting.
     thinking: this fitting is stable?
+
+Version: v1.6.10.p3 @ 2024.06.17
+    realized: Add some modify, add the log for DMFT+NROG iteration, in eDMFTapi
+    next do : (same as prev)
+    thinking: (same as prev)

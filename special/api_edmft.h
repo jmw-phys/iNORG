@@ -43,6 +43,10 @@ class APIedmft{
 	//Int nimp;
 	VecReal bathose, bathhop;
 
+	// Iteration info
+	Real sig_err;
+	VecReal n_eles;
+
 public:
 	VEC<VecReal> t_ose;						// hopping integral for all sites
 	VEC<VecReal> t_hyb;						// H_0 onset energy
@@ -67,6 +71,32 @@ private:
 	void read_norg_setting(const std::string& filename, std::vector<double>& Ed, std::vector<int>& Deg, double& J, std::string& CoulombF, double& beta, double& U, std::vector<double>& noc1, std::vector<double>& noc2, std::vector<int>& restrain, std::vector<int>& distribute);
 
 	void auto_nooc(Str mode, const Impurity &imp);
+
+	void print_log(const Str& lbl, std::ostream& os = std::cout) const {
+		using namespace std;
+		Str temp; for_Int(i, 0, p.nband) { if (i == 0) temp += STR(p.npartical[i * 2]); else temp += "-" + STR(p.npartical[i * 2]); }
+
+		os << iofmt();
+		os << setw(4) << iter_count;
+		// os << setw(8) << p.U;
+		os << iofmt("sci");
+		os << "  " << setw(w_Real) << sig_err;
+		os << setw(4 + 2 * p.nband) << temp;
+		for_Int(i, 0, p.nband) {
+			os << "  " << setw(w_Real) << n_eles[i * 2];
+		}
+		os << "  " << present();
+		os << "  " << lbl << endl;
+	}
+
+	void log(const Str& lbl) {
+		if (mm) {
+			print_log(lbl);
+			OFS ofs("norg_log.txt", std::ios::app);
+			print_log(lbl, ofs);
+			ofs.close();
+		}
+	}
 
 public:
 	APIedmft(const MyMpi& mm_i, Prmtr& p, const Str& file = empty_str);

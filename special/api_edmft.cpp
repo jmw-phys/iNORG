@@ -12,34 +12,37 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 #include "api_edmft.h"
 
 
-APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) :
-	mm(mm_i), p(prmtr_i), num_omg(prmtr_i.num_omg), ful_pcl_sch(1), iter_count(0),
-	num_nondegenerate(-1), dmft_cnt(0), weight_nooc(5, 1E-4), weight_freze(5, 1E-13) {
+APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i), p(prmtr_i), num_omg(prmtr_i.num_omg), 
+	ful_pcl_sch(1), iter_count(0), sig_err(0.), n_eles(p.norbs, 0.),
+	num_nondegenerate(-1), dmft_cnt(0), weight_nooc(5, 1E-4), weight_freze(5, 1E-13) 
+{
 	update(file);
 	Bath bth(mm, p);
 	Impurity imp(mm, p, bth, or_deg_idx);
 
 	dmft_cnt++; 
-	ImGreen hb(nband, p);
-	for_Int(j, 0, hb.nomgs)
-		for_Int(i, 0, nband) hb.g[j][i][i] = imfrq_hybrid_function[j][or_deg_idx[i * 2] - 1];		if (mm) hb.write_edmft("hb_read.txt", or_deg_idx);
-	bth.bth_read_fvb("ose_hop");	 bth.number_bath_fit(hb, or_deg_idx);							if (mm) bth.bth_write_fvb();
+	ImGreen hb(p.nband, p);
+	hb.read_edmft("Delta.inp", or_deg_idx);															if (mm) hb.write_edmft("hb_read.txt", or_deg_idx);
+	bth.bth_read_fvb("ose_hop");	 //bth.number_bath_fit(hb, or_deg_idx);							if (mm) bth.bth_write_fvb();
 	imp.update("eDMFT");																			if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 	ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_edmft("hb_fit.txt", or_deg_idx);
 	edmft_back_up("read");
 	auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
 	if (!norg.check_NTR()) norg.uormat = p.rotationU;
 	else MatReal tmp_b = norg.read_NTR();
-	norg.up_date_h0_to_solve(imp.impH, 1);															norg.write_impurtiy_occupation();
-	MatReal tmp_e = norg.save_NTR();
+	norg.up_date_h0_to_solve(imp.impH, 1);															n_eles = norg.write_impurtiy_occupation();
+	// MatReal tmp_e = norg.save_NTR();
 	// MatReal local_multiplets_state = norg.oneedm.local_multiplets_state(norg.oneedm.ground_state);	if (mm)WRN(NAV(local_multiplets_state));
 	edmft_back_up("save");
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_edmft("g0imp.txt", or_deg_idx);
 	ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp, or_deg_idx);							if (mm) gfimp.write_edmft("Gf.out", or_deg_idx);
-	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();							if (mm) seimp.write_edmft("Sig.out", or_deg_idx);
-
+	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();							
+	ImGreen last_sig(p.nband, p); 
+	last_sig.read_edmft("Sig.out", or_deg_idx);	sig_err = seimp.error(last_sig);					log("sigerr_update");
+	{ mm.barrier(); SLEEP(1); }
+	if (mm) seimp.write_edmft("Sig.out", or_deg_idx);
 	//hold for checking-----------------------------------------------------------------------------------------------------------------------------------
-	/*
+	/* 
 		// if(mode == "realf_mode"){
 			ReGreen g0imp_re(p.nband, p);	imp.find_g0(g0imp_re);													if (mm)	g0imp_re.write_edmft("Re_g0imp");
 			ReGreen gfimp_re(p.nband, p);	norg.get_gimp_eigpairs(gfimp_re, or_deg_idx);							if (mm) gfimp_re.write_edmft("Re_gfimp");
@@ -225,6 +228,7 @@ void APIedmft::update(const Str& file) {
 		p.after_modify_prmtr(); p.recalc_partical_number();
 		p.Uprm = p.U - 2 * p.jz;
 		p.degel = 0;
+		n_eles.reset(norbs, 0);
 		// if (mm) p.print();
 	}
 
@@ -255,7 +259,7 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 		Vec<VecInt> controler(MAX(ordeg) + 1, VecInt(p.ndiv, 0));
 		MatReal occnum, occweight;
 		controler[0] = p.control_divs[0];
-		if(ful_pcl_sch || (iter_count%7 == 0)) {
+		if(ful_pcl_sch || (iter_count%30 == 0)) {
 			NORG norg(opcler.find_ground_state_partical(imp.impH, or_deg_idx));
 			uormat = norg.uormat;
 			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb / p.norg_sets);occweight = occnum;

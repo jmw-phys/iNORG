@@ -200,6 +200,34 @@ void Green::write_edmft(const Str& green_name, const VecInt& or_deg) const {
 	}
 }
 
+void Green::read_edmft(const Str& file, const VecInt& or_deg) {
+    IFS ifs(file);
+    if (!ifs) {
+        WRN(STR("file opening failed with ") + NAV(file));
+    } else {
+        Real omg;
+        MatReal re(norbs, norbs, 0.);
+        MatReal im(norbs, norbs, 0.);
+        for_Int(n, 0, nomgs) {
+            ifs >> omg;
+			VecReal re_temp(MAX(or_deg)), im_temp(MAX(or_deg));
+            for_Int(m, 0, MAX(or_deg)) {
+				ifs >> re_temp[m];
+				ifs >> im_temp[m];
+            }
+			for_Int(m, 0, norbs) {
+				re[m][m] = re_temp[or_deg[m * 2] - 1];
+				im[m][m] = im_temp[or_deg[m * 2] - 1];
+			}
+            g[n] = cmplx(re, im);
+        }
+        if (!ifs) {
+            ERR(STR("read-in error with ") + NAV(file));
+        }
+    }
+    ifs.close();
+}
+
 void Green::write_zen(const Str& green_name, Int nspin, Int iter_cnt) const {
 	OFS ofs;
 	// if (iter_cnt == 999) { ofs.open(iox + green_name + ".txt"); }

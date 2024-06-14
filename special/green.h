@@ -34,6 +34,7 @@ public:
 	inline const MatCmplx& operator[](Idx i) const;
 	void write(const Str& green_name, Int iter_cnt=999) const;
 	void write(const Str& green_name, const Str& rowname, Int iter_cnt=999) const;
+	void read_edmft(const Str& file, const VecInt& or_deg);
 	void write_edmft(const Str& green_name, const VecInt& or_deg) const;
 	void write_zen(const Str& green_name, Int nspin=2, Int iter_cnt=999) const;
 	void write_zen(const Str& green_name, const Str& rowname, Int nspin=2, Int iter_cnt=999) const;
