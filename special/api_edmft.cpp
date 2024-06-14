@@ -13,7 +13,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 
 
 APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i), p(prmtr_i), num_omg(prmtr_i.num_omg), 
-	ful_pcl_sch(1), iter_count(0), sig_err(0.), n_eles(p.norbs, 0.),
+	ful_pcl_sch(1), iter_count(0), sig_err(0.), n_eles(p.norbs, 0.), fit_err(p.nband, 0.),
 	num_nondegenerate(-1), weight_nooc(5, 1E-4), weight_freze(5, 1E-13) 
 {
 	update(file);
@@ -36,7 +36,7 @@ APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i
 	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_edmft("g0imp.txt", or_deg_idx);
 	ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp, or_deg_idx);							if (mm) gfimp.write_edmft("Gf.out", or_deg_idx);
 	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();
-
+	fit_err = bth.info.tr()[1];
 	{ mm.barrier(); SLEEP(1); }
 	if (mm) {
 		ImGreen last_sig(p.nband, p); 		last_sig.read_edmft("Sig.out", or_deg_idx);				sig_err = seimp.error(last_sig);
@@ -229,7 +229,7 @@ void APIedmft::update(const Str& file) {
 		p.after_modify_prmtr(); p.recalc_partical_number();
 		p.Uprm = p.U - 2 * p.jz;
 		p.degel = 0;
-		n_eles.reset(norbs, 0);
+		n_eles.reset(norbs, 0); fit_err.reset(nband, 0);
 		// if (mm) p.print();
 	}
 
@@ -248,6 +248,25 @@ bool APIedmft::if_lock(const Str file) const {
 		{ mm.barrier(); SLEEP(5000); }
 		return false;
 	}
+}
+
+
+void APIedmft::print_log(const Str& lbl, std::ostream& os) const {
+	using namespace std;
+	Str temp; for_Int(i, 0, p.nband) { if (i == 0) temp += STR(p.npartical[i * 2]); else temp += "-" + STR(p.npartical[i * 2]); }
+
+	os << iofmt();
+	os << setw(4) << iter_count;
+	// os << setw(8) << p.U;
+	os << iofmt("sci");
+	os << "  " << setw(w_Real) << sig_err;
+	os << setw(3 + 2 * p.nband) << temp;
+	os << iofmt() << setprecision(8);
+	for_Int(i, 0, p.nband) {
+		os << setw(15) << fit_err[i] << "~" << n_eles[i * 2];
+	}
+	os << "  " << present();
+	os << "  " << lbl << endl;
 }
 
 
