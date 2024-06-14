@@ -18,9 +18,6 @@ public:
 	// occupation number: for each row stand the bath's occupation for one specific imp orbit.
 	VEC<VecReal> occupationnumber;
 
-
-	Int hopint_size;				// The size of the hopint.
-
 private:
 	/*
 	//! (Deactivate) To build the one-electron density matrix at the Multi-states.

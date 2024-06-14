@@ -19,23 +19,23 @@ by Rong-Qiang He (rqhe@ruc.edu.cn, RUC, China), 2021-02-19
 template<typename F>
 class FitMrq {
 public:
-	static const Int NDONE = 32;			// default value: 4
-	static const Int ITMAX = 9990;		// default value: 1000
-	Int ndat;				// number of data points
-	Int ma;					// number of free and fixed fitting parameters to be determined
-	Int mfit;				// number of free fitting perameters to be determined
+	Int NDONE = 4;			// default value: 4
+	Int ITMAX = 1000;		// default value: 1000
+	Int ndat;							// number of data points
+	Int ma;								// number of free and fixed fitting parameters to be determined
+	Int mfit;							// number of free fitting perameters to be determined
 	const VecInt& x;
-	const VecReal& y;
+	const VecReal& y; 
 	const VecReal& sig;
-	Real tol;				// default value: 1.e-3
+	Real tol;							// default value: 1.e-3
 	// user-supplied function funcs that calculates the nonlinear fitting function and 
 	// its derivatives. void (*funcs)(const Int x, const VecReal& a, Real& y, VecReal& dyda);
-	const F& funcs;
+	F& funcs;
 	VecBool ia;
-	VecReal a;				// optimized fitting parameters after fit()
-	MatReal covar;			// covariance matrix
-	MatReal alpha;
-	Real chisq;				// chi_sqr after fit()
+	VecReal a;							// optimized fitting parameters after fit()
+	MatReal covar;						// covariance matrix
+	MatReal alpha;			
+	Real chisq;							// chi_sqr after fit()
 private:
 	// Used by fit to evaluate the linearized fitting matrix alpha, 
 	// and vector beta as in (15.5.8), and to calculate and return chi_sqr.
@@ -51,9 +51,9 @@ public:
 	// not modified) and an optional convergence tolerance tol_i. Initializes all 
 	// parameters as free (not held).
 	FitMrq(const VecInt& x_i, const VecReal& y_i, const VecReal& sig_i, const VecReal& a_i,
-		const F& funks, const Real tol_i = 1.e-20) :
+		F& funks, const Real tol_i = 1.e-20,const Int itmax=2000,const Int ndone=32) :
 		ndat(x_i.size()), ma(a_i.size()), x(x_i), y(y_i), sig(sig_i),
-		tol(tol_i), funcs(funks), ia(ma, true), a(a_i), covar(ma, ma), alpha(ma, ma) {
+		tol(tol_i), funcs(funks), ia(ma, true), a(a_i), covar(ma, ma), alpha(ma, ma),ITMAX(itmax),NDONE(ndone) {
 	}
 
 	void hold(const Int i, const Real val) { ia[i] = false; a[i] = val; }
@@ -162,7 +162,7 @@ Int FitMrq<F>::fit()
 			chisq = chisqtry;
 		}
 		else {
-			alamda *= 10.0;
+			alamda *= 1.5;
 		}
 	}
 	return -1;	// ERR("FitMrq too many iterations");

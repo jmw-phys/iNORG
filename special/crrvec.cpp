@@ -63,7 +63,7 @@ Crrvec::Crrvec(const NocSpace &old_nosp_i, Operator& main_opr, const VecReal &vg
     old_nosp(old_nosp_i), new_nosp(main_opr.scsp), crtorann(main_opr.scsp.nspa - old_nosp.nspa), omega(0), eta(0.01),
     ground_state_energy(gs)
 {
-    main_opr.clear_TAB();
+    main_opr.clear();
     if(crtorann == +1) mat_green.g += krylov_space_for_green_matrix(mat_green);
     else if(crtorann == -1) {
         Vec<MatCmplx> temp_mat = krylov_space_for_green_matrix(mat_green);
@@ -329,6 +329,42 @@ SparseMatReal Crrvec::find_diagonal_sparse_matrix(Real number)
     return splited_number;
 }
 
+SparseMatReal Crrvec::add_diagonal_sparse_matrix(VEC<VecInt> h_idx, Real ge0, Real omega)
+{
+    VecPartition row_H(mm.np(), mm.id(), new_nosp.dim);
+    SparseMatReal hmlt_splited(row_H.len(), new_nosp.dim, mm);
+    bool once(true);
+    Idx lastone(0);
+    if (crtorann == +1) {
+        Real number = -ge0 - omega;
+        for (const auto& idxval : h_idx)
+        {
+            lastone = idxval[0];
+            if (idxval[0] > lastone) once = true;
+            Int coefficient_comm = idxval[2] >= 0 ? 1 : -1;
+            hmlt_splited.addelement(coefficient_comm * new_nosp.coefficient[abs(idxval[2])], idxval[1], idxval[0]);
+            if (once && idxval[1] == (idxval[0] + row_H.bgn())) {
+                hmlt_splited.addelement(number, idxval[1], idxval[0]);
+                once = false;
+            }
+        }
+    }
+    if (crtorann == -1) {
+        Real number = -ge0 + omega;
+        for (const auto& idxval : h_idx)
+        {
+            if (idxval[0] > lastone) once = true;
+            Int coefficient_comm = idxval[2] >= 0 ? 1 : -1;
+            hmlt_splited.addelement(coefficient_comm * new_nosp.coefficient[abs(idxval[2])], idxval[1], idxval[0]);
+            if (once && idxval[1] == (idxval[0] + row_H.bgn())) {
+                hmlt_splited.addelement(number, idxval[1], idxval[0]);
+                once = false;
+            }
+        }
+    }
+    return hmlt_splited;
+}
+
 VecReal Crrvec::operator*(const VecReal& KetVec)
 {
     VecReal x(KetVec.size(),0.);
@@ -475,46 +511,3 @@ bool Crrvec::if_in_this_orbital(const VecOnb &exd_cf, const Int crtann, const In
     if (crtann == +1) return exd_cf[div_in_one_row_pos].isuno(orbit_pos_in_div);
     ERR("Some thing wrong with this function, if_in_this_orbital ()!")
 }
-
-
-// ------------------------------------------------------------------🪦 code grave 🪦------------------------------------------------------------------
-/*
-
-// ! GRAVE@2025-05-17
-SparseMatReal Crrvec::add_diagonal_sparse_matrix(VEC<VecInt> h_idx, Real ge0, Real omega)
-{
-    VecPartition row_H(mm.np(), mm.id(), new_nosp.dim);
-    SparseMatReal hmlt_splited(row_H.len(), new_nosp.dim, mm);
-    bool once(true);
-    Idx lastone(0);
-    if (crtorann == +1) {
-        Real number = -ge0 - omega;
-        for (const auto& idxval : h_idx)
-        {
-            lastone = idxval[0];
-            if (idxval[0] > lastone) once = true;
-            Int coefficient_comm = idxval[2] >= 0 ? 1 : -1;
-            hmlt_splited.addelement(coefficient_comm * new_nosp.coefficient[abs(idxval[2])], idxval[1], idxval[0]);
-            if (once && idxval[1] == (idxval[0] + row_H.bgn())) {
-                hmlt_splited.addelement(number, idxval[1], idxval[0]);
-                once = false;
-            }
-        }
-    }
-    if (crtorann == -1) {
-        Real number = -ge0 + omega;
-        for (const auto& idxval : h_idx)
-        {
-            if (idxval[0] > lastone) once = true;
-            Int coefficient_comm = idxval[2] >= 0 ? 1 : -1;
-            hmlt_splited.addelement(coefficient_comm * new_nosp.coefficient[abs(idxval[2])], idxval[1], idxval[0]);
-            if (once && idxval[1] == (idxval[0] + row_H.bgn())) {
-                hmlt_splited.addelement(number, idxval[1], idxval[0]);
-                once = false;
-            }
-        }
-    }
-    return hmlt_splited;
-}
-
-*/

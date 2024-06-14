@@ -48,7 +48,7 @@ void Prmtr::set_values() {
     // Uprm = U - 2 * jz;
     jz = 0;
     Uprm = U - delta;
-    bandw = 50.;                                        //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
+    bandw = 20.;                                        //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
     eimp = VecReal(norbs, 0.);
     degel = 2;                                          // Degenerate energy levels
     bethe_t.reset(nband, 0.5);

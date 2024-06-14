@@ -32,6 +32,7 @@ private:
 	VecReal imp_lvl;			// impurity energy level
 public:
 	Impdata impH;				// The impurity H construction data
+	VecInt ordeg;				// order of degeneracy
 
 private:
 	//hopping  factors;when bath parameters is unusual,we just need to modify bath.hop() 

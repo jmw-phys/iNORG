@@ -1,8 +1,8 @@
 #pragma once
 
 /*
-coded by Rong-Qiang He (rqhe@ruc.edu.cn, RUC, China) date 2021-02-19
-coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2023
+coded by Rong-Qiang He (rqhe@ruc.edu.cn, RUC, China)
+date 2021-02-19
 */
 
 #include "specs.h"
@@ -13,55 +13,54 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2023
 class Bath {
 public:
 	const MyMpi& mm;
-	const Prmtr& p;			// parameters
-	Int nb;					// number of bath sites
+	const Prmtr& p;				// parameters
+	const Int npart;			// number of fitting parts
+	VecInt ni;					// number of impurity orbital to be fitted in each part
+	VecInt nb;					// number of bath orbital for fitting in each part
 	UURandomSFMT uur;
-	VecReal ose;			// on-site energies for bath sites
-	VecReal hop;			// hopping coefficients between impurity site and bath sites
-
-	VEC<VecReal> vec_ose,vec_hop;
-	MatReal info;			// save the print out the NAV5(nmin, err, err_crv, err_reg, /*err_bsr,*/ a_norm)
-
+	Vec<Vec<MatReal>> fvb; 		// fvb[nparts][the:0||eps:1][imp_idx][bath_idx]
+	MatReal info;				// save the print out the NAV5(nmin, err, err_crv, err_reg, a_norm)
 private:
-	void regularize_ose_hop() {
-		slctsort(ose, hop);
-		// after a unitary transformation, hop can always be 
-		// non-negative when there is only one impurity site
-		hop = ABS(hop);
-	}
-	
-	void init_ose_hop() {
-		uur(ose);
-		ose -= 0.5;
-		ose *= 4.;
-		uur(hop);
-		hop -= 0.5;
-		hop *= 4.;
-		regularize_ose_hop();
-	}
+	//Block diagonalising hybridisation functions and separating them
+	VEC<ImGreen> generate_hb(const ImGreen& hb) const;
+	Vec<MatReal> generate_bs();
+
+	VecReal number_bath_fit_part(const ImGreen& vhb_i, const MatReal& vbs_i, Int idx);
+
+	std::tuple<Real, VecReal, Int> bath_fit_number_contest(const VecReal& a0, const ImGreen& vhb_i, const MatReal& vbs_i, Int idx);
 
 	VecReal next_initial_fitting_parameters(const VecReal& a0, const Int& ntry_fine, Int& itry);
-	
-	void perturb(VecReal& a, Real amplitude, Real exponent) {
-		for_Int(i, 0, a.size()) {
-			Real ra = uur() - 0.5;
-			Real re = uur() - 0.5;
-			a[i] = a[i] * (1. + amplitude * ra) + SIGN(std::pow(10., (8 * ABS(re) - exponent)), a[i]);
-		}
-	}
 
+	//using Box-Muller method to generate normal distribution random number
+	VecReal perturb(const VecReal& a_i, Real scale) {
+		VecReal a(a_i);
+		for_Int(i, 0, a.size()) {
+			Real u_1 = uur();
+			Real u_2 = uur();
+			Real z_0 = SQRT(-2 * LOG(u_1)) * cos(2 * pi_Real * u_2);
+			//Real z_1 = SQRT(-2 * LOG(u_1)) * sin(2 * pi_Real * u_2);
+			a[i] += scale * z_0;
+		}
+		return a;
+	}
 public:
 	Bath(const MyMpi& mm_i, const Prmtr& prmtr_i);
-	void number_bath_fit(const ImGreen& hb_i, Int iter, Int mode = 1);
+
+	void number_bath_fit(const ImGreen& hb_i, const VecInt or_deg);
+
+	void fvb_init();
+
+	VecReal fvb2arr(const Int idx);
+
+	Vec<Vec<MatReal>> arr2fvb(const Vec<VecReal>& arr);
 	
-	void init_vec_ose_hop();
+	// Roughly making the impurity model symmetric
+	void fix_fvb_symmetry();
 
-	void write_ose_hop(Int iter_cnt = -1, const Str& bath_name = empty_str) const;
-	void read_ose_hop();
+	void bth_write_fvb(Int iter_cnt = -1, const Str bath_name = empty_str) const;
 
-	std::tuple<Real, VecReal, Int> bath_fit_number_contest(const VecReal& a0, Int nb, const ImGreen&hb_i, Int orb_i,Int mode);
+	void bth_read_fvb(const Str& file);
+	
 	MatReal find_hop() const;
-
-
-	void bath_fit(const ImGreen& hb_i, Int iter);
 };
+

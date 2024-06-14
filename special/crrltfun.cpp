@@ -5,29 +5,29 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 #include "crrltfun.h"
 using namespace std;
 
-CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_nosp_i, NocSpace& main_nosp, const VecReal& vgs_i, const Int position)
+CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_nosp_i, const NocSpace& main_nosp, const VecReal& vgs_i, const Int position)
     :Operator(mm_i, prmtr_i, main_nosp),
     old_nosp(old_nosp_i), new_nosp(main_nosp), crtorann(main_nosp.nspa - old_nosp.nspa),
     ex_state(project_uplwer_parical_space(vgs_i, crtorann, position))
 {}
 
-CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_nosp_i, NocSpace& main_nosp, const Operator& oper, const VecReal& vgs_i, const Int position)
+CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_nosp_i, const NocSpace& main_nosp, const Operator& oper, const VecReal& vgs_i, const Int position)
     :Operator(oper),
     old_nosp(old_nosp_i), new_nosp(main_nosp), crtorann(main_nosp.nspa - old_nosp.nspa),
     ex_state(project_uplwer_parical_space(vgs_i, crtorann, position))
 {}
 
-CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_nosp_i, NocSpace& main_nosp, const Operator& oper, const VecReal& vgs_i, const Int pos_in_set, const Int pos_in_div)
+CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& old_nosp_i, const NocSpace& main_nosp, const Operator& oper, const VecReal& vgs_i, const Int pos_in_set, const Int pos_in_div)
     :Operator(oper),
     old_nosp(old_nosp_i), new_nosp(main_nosp), crtorann(main_nosp.nspa - old_nosp.nspa),
     ex_state(project_uplwer_parical_space(vgs_i, crtorann, pos_in_set, pos_in_div))
 {}
 
-// CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const Operator& oper, const VecReal ex_state_i, const Int crtorann_i)
-//     :Operator(oper),
-//     old_nosp(NocSpace(mm_i, prmtr_i)), new_nosp(NocSpace(mm_i, prmtr_i)), crtorann(crtorann_i),
-//     ex_state(ex_state_i)
-// {}
+CrrltFun::CrrltFun(const MyMpi& mm_i, const Prmtr& prmtr_i, const Operator& oper, const VecReal ex_state_i, const Int crtorann_i)
+    :Operator(oper),
+    old_nosp(NocSpace(mm_i, prmtr_i)), new_nosp(NocSpace(mm_i, prmtr_i)), crtorann(crtorann_i),
+    ex_state(ex_state_i)
+{}
 
 
 // ?CrrltFun::CrrltFun(const NocSpace& old_nosp_i, const Operator& main_op, const VecReal& vgs_i, const Int position = 0)
@@ -68,9 +68,7 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
     //VECtrdgnl trdignl(find_trdgnl_first(ex_state));
     VEC<Real> ltd;	        // diagonal elements 
     VEC<Real> lt_sd;	    // sub-diagonal elements
-    new_nosp.clear();
     const SparseMatReal sep_h = find_hmlt(table);
-    clear_TAB();
     VecReal v0(ex_state);
     v0 *= INV(SQRT(mm.Allreduce(DOT(v0, v0))));
     VecReal v0_saved(v0);
@@ -79,7 +77,7 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
     a_i = mm.Allreduce(DOT(v1, v0));
     ltd.push_back(a_i);
     if(g0.type_info() == STR("ImGreen")){
-        for_Int(i, 0, 200) {
+        for_Int(i, 0,  700) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
         ltd.push_back(a_i); lt_sd.push_back(b_i);
         }
@@ -133,9 +131,7 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
     //VECtrdgnl trdignl(find_trdgnl_first(ex_state));
     VEC<Real> ltd;	        // diagonal elements 
     VEC<Real> lt_sd;	    // sub-diagonal elements
-    new_nosp.clear();
     const SparseMatReal sep_h = find_hmlt(table);
-    clear_TAB();
     VecReal v0(ex_state);
     v0 *= INV(SQRT(mm.Allreduce(DOT(v0, v0))));
     VecReal v0_saved(v0);
@@ -144,7 +140,7 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
     a_i = mm.Allreduce(DOT(v1, v0));
     ltd.push_back(a_i);
     if(g0.type_info() == STR("ImGreen")){
-        for_Int(i, 0, 200) {
+        for_Int(i, 0,  700) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
         ltd.push_back(a_i); lt_sd.push_back(b_i);
         }

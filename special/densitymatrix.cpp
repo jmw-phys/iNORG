@@ -6,19 +6,19 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 using namespace std;
 
 DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, bool imp_rotation) :Operator(mm_i, prmtr_i, scsp_i)
-	,dm(dm_initialize()), hopint_size(prmtr_i.norbit * prmtr_i.norbit)
+	,dm(dm_initialize())
 {
 }
 
 DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, Str tab_name, bool imp_rotation) :Operator(mm_i, prmtr_i, scsp_i, tab_name)
-	,dm(dm_initialize()), hopint_size(prmtr_i.norbit * prmtr_i.norbit)
+	,dm(dm_initialize())
 {
 }
 
-// DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, const Tab& tab, bool imp_rotation) :Operator(mm_i, prmtr_i, tab, scsp_i.coefficient)
-// 	,dm(dm_initialize())
-// {
-// }
+DensityMat::DensityMat(const MyMpi& mm_i, const Prmtr& prmtr_i, NocSpace& scsp_i, const Tab& tab, bool imp_rotation) :Operator(mm_i, prmtr_i, tab, scsp_i.coefficient)
+	,dm(dm_initialize())
+{
+}
 
 //----------------------------- basic function -----------------------------
 
@@ -125,19 +125,19 @@ VEC<MatReal> DensityMat::find_one_electron_density_matrix(const MatReal& state, 
 		D_splited.push_back(std::move(temp));
 	}
 
-	const VEC<Int>& hop_op(table_i);
-	for_Idx(pos, 0, hop_op.size()/3)
+	const Tab& hop_op(table_i);
+	for_Idx(pos, 0, hop_op[2].size())
 	{
-		if (abs(hop_op[2+pos*3]) <= hopint_size)
+		if (abs(hop_op[2][pos]) <= scsp.hopint.size())
 		{
-			Int row_n((abs(hop_op[2+pos*3]) - 1) / p.norbit), col_n((abs(hop_op[2+pos*3]) - 1) % p.norbit); // "1" mean the real_length = abs(hop_op[2+pos*3]) - 1, since to distinguish the minus sign.
+			Int row_n((abs(hop_op[2][pos]) - 1) / p.norbit), col_n((abs(hop_op[2][pos]) - 1) % p.norbit); // "1" mean the real_length = abs(hop_op[2][pos]) - 1, since to distinguish the minus sign.
 			Int check_point(0);
 			for_Int(i, 0, p.nI2B.size()) {
 				check_point = 0;
 				if (row_n >= 0 && row_n < (p.nO2sets[i]) && col_n >= 0 && col_n < (p.nO2sets[i]))
 				{
-					Int coefficient_comm = hop_op[2+pos*3] >= 0 ? 1 : -1;
-					Real amplitude = coefficient_comm * state_eff[hop_op[0+pos*3] + row_H.bgn()] * state_eff[hop_op[1+pos*3]];
+					Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
+					Real amplitude = coefficient_comm * state_eff[hop_op[0][pos] + row_H.bgn()] * state_eff[hop_op[1][pos]];
 					D_splited[i][row_n][col_n] += amplitude;
 					check_point++;
 					break;
@@ -172,18 +172,18 @@ MatReal DensityMat::find_imp_double_occupancy() const {
 		VecPartition row_H(mm.np(), mm.id(), scsp.dim);
 
 
-		const VEC<Int>& hop_op(table);
-		for_Idx(pos, 0, hop_op.size()/3) {
-			if (abs(hop_op[2+pos*3]) > hopint_size) {
+		const Tab& hop_op(table);
+		for_Idx(pos, 0, hop_op[2].size()) {
+			if (abs(hop_op[2][pos]) > scsp.hopint.size()) {
 				// four-fermion operator terms for C^+_i C^+_j C_k C_l; 
-				Int tensor_idx = abs(hop_op[2+pos*3]) - hopint_size - 1;
-				Int row_n = Int(tensor_idx / hopint_size) / p.norbit, col_n = Int(tensor_idx / hopint_size) % p.norbit; // N_i:row_n;N_j:col_n;
-				// if (row_n == (tensor_idx % hopint_size) / p.norbit && col_n == (tensor_idx % hopint_size) % p.norbit) {
+				Int tensor_idx = abs(hop_op[2][pos]) - scsp.hopint.size() - 1;
+				Int row_n = Int(tensor_idx / scsp.hopint.size()) / p.norbit, col_n = Int(tensor_idx / scsp.hopint.size()) % p.norbit; // N_i:row_n;N_j:col_n;
+				// if (row_n == (tensor_idx % scsp.hopint.size()) / p.norbit && col_n == (tensor_idx % scsp.hopint.size()) % p.norbit) {
 				if (row_n%p.nO2sets[0] == 0 && col_n%p.nO2sets[0] == 0) {
 					row_n = row_n / p.nO2sets[0]; col_n = col_n / p.nO2sets[0];
-					if(row_n>p.norbs||col_n>p.norbs)WRN(NAV5(tensor_idx, row_n, col_n, (tensor_idx % hopint_size) / p.norbit, (tensor_idx % hopint_size) % p.norbit));
-					Int coefficient_comm = hop_op[2+pos*3] >= 0 ? 1 : -1;
-					Real amplitude = coefficient_comm * state_eff[hop_op[0+pos*3] + row_H.bgn()] * state_eff[hop_op[1+pos*3]];
+					if(row_n>p.norbs||col_n>p.norbs)WRN(NAV5(tensor_idx, row_n, col_n, (tensor_idx % scsp.hopint.size()) / p.norbit, (tensor_idx % scsp.hopint.size()) % p.norbit));
+					Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
+					Real amplitude = coefficient_comm * state_eff[hop_op[0][pos] + row_H.bgn()] * state_eff[hop_op[1][pos]];
 					// WRN(NAV3(row_n, col_n,amplitude));
 					docc_splited[row_n][col_n] += amplitude / p.degel ;
 				}
@@ -203,17 +203,17 @@ MatReal DensityMat::find_full_double_occupancy() const {
 		state_eff.normalize();
 		VecPartition row_H(mm.np(), mm.id(), scsp.dim);
 
-		const VEC<Int>& hop_op(table);
-		for_Idx(pos, 0, hop_op.size()/3) {
-			if (abs(hop_op[2+pos*3]) > hopint_size) {
+		const Tab& hop_op(table);
+		for_Idx(pos, 0, hop_op[2].size()) {
+			if (abs(hop_op[2][pos]) > scsp.hopint.size()) {
 				// four-fermion operator terms for C^+_i C^+_j C_k C_l; 
-				Int tensor_idx = abs(hop_op[2+pos*3]) - hopint_size - 1;
-				Int row_n = Int(tensor_idx / hopint_size) / p.norbit, col_n = Int(tensor_idx / hopint_size) % p.norbit; // N_i:row_n;N_j:col_n;
-				if (row_n == (tensor_idx % hopint_size) / p.norbit && col_n == (tensor_idx % hopint_size) % p.norbit) {
+				Int tensor_idx = abs(hop_op[2][pos]) - scsp.hopint.size() - 1;
+				Int row_n = Int(tensor_idx / scsp.hopint.size()) / p.norbit, col_n = Int(tensor_idx / scsp.hopint.size()) % p.norbit; // N_i:row_n;N_j:col_n;
+				if (row_n == (tensor_idx % scsp.hopint.size()) / p.norbit && col_n == (tensor_idx % scsp.hopint.size()) % p.norbit) {
 						row_n = row_n / p.nO2sets[0]; col_n = col_n / p.nO2sets[0];
-						if(row_n>p.norbs||col_n>p.norbs)WRN(NAV5(tensor_idx, row_n, col_n, (tensor_idx % hopint_size) / p.norbit, (tensor_idx % hopint_size) % p.norbit));
-						Int coefficient_comm = hop_op[2+pos*3] >= 0 ? 1 : -1;
-						Real amplitude = coefficient_comm * state_eff[hop_op[0+pos*3] + row_H.bgn()] * state_eff[hop_op[1+pos*3]];
+						if(row_n>p.norbs||col_n>p.norbs)WRN(NAV5(tensor_idx, row_n, col_n, (tensor_idx % scsp.hopint.size()) / p.norbit, (tensor_idx % scsp.hopint.size()) % p.norbit));
+						Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
+						Real amplitude = coefficient_comm * state_eff[hop_op[0][pos] + row_H.bgn()] * state_eff[hop_op[1][pos]];
 						// WRN(NAV3(row_n, col_n,amplitude));
 						docc_splited[row_n][col_n] += amplitude / p.degel ;
 				}
@@ -266,22 +266,22 @@ void DensityMat::find_density_matrix_by_Crrvec(VEC < MatReal>& D_splited, const 
 	Real d_weight_y = 1.; 		//2times
 	// Real d_weight_y = (8./7.); 	//1times
 
-	const VEC<Int>& hop_op(corstate_i.opr.table);
-	for_Idx(pos, 0, hop_op.size()/3)
+	const Tab& hop_op(corstate_i.opr.table);
+	for_Idx(pos, 0, hop_op[2].size())
 	{
-		if (abs(hop_op[2+pos*3]) <= hopint_size)
+		if (abs(hop_op[2][pos]) <= corstate_i.opr.scsp.hopint.size())
 		{
-			Int row_n((abs(hop_op[2+pos*3]) - 1) / p.norbit), col_n((abs(hop_op[2+pos*3]) - 1) % p.norbit); // "1" mean the real_length = abs(hop_op[2+pos*3]) - 1, since to distinguish the minus sign.
+			Int row_n((abs(hop_op[2][pos]) - 1) / p.norbit), col_n((abs(hop_op[2][pos]) - 1) % p.norbit); // "1" mean the real_length = abs(hop_op[2][pos]) - 1, since to distinguish the minus sign.
 			Int check_point(0);
 			for_Int(i, 0, p.nI2B.size()) {
 				check_point = 0;
 				if (row_n >= 0 && row_n < (p.nO2sets[i]) && col_n >= 0 && col_n < (p.nO2sets[i]))
 				{
-					Int coefficient_comm = hop_op[2+pos*3] >= 0 ? 1 : -1;
+					Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
 					for_Int(j, 0, corstate_i.correct_vecs.nrows()){
-						Real amplitude = coefficient_comm * corrvec_real[j][hop_op[0+pos*3] + row_H.bgn()] * corrvec_real[j][hop_op[1+pos*3]];
-							amplitude += coefficient_comm * corrvec_imag[j][hop_op[0+pos*3] + row_H.bgn()] * corrvec_imag[j][hop_op[1+pos*3]];
-							amplitude += coefficient_comm * oneparticalex[hop_op[0+pos*3] + row_H.bgn()] * oneparticalex[hop_op[1+pos*3]];
+						Real amplitude = coefficient_comm * corrvec_real[j][hop_op[0][pos] + row_H.bgn()] * corrvec_real[j][hop_op[1][pos]];
+							amplitude += coefficient_comm * corrvec_imag[j][hop_op[0][pos] + row_H.bgn()] * corrvec_imag[j][hop_op[1][pos]];
+							amplitude += coefficient_comm * oneparticalex[hop_op[0][pos] + row_H.bgn()] * oneparticalex[hop_op[1][pos]];
 						D_splited[i][row_n][col_n] += d_weight_y * 0.25 * amplitude * INV(corstate_i.correct_vecs.nrows() * 2.);// fist 2: G^gatter, G^lesser; second 2: Rell and imag part.
 					}
 					check_point++;
@@ -311,19 +311,19 @@ VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& stat
 		D_splited.push_back(std::move(temp));
 	}
 	// for the ground state's D.
-	const VEC<Int>& hop_op(table);
-	for_Idx(pos, 0, hop_op.size()/3)
+	const Tab& hop_op(table);
+	for_Idx(pos, 0, hop_op[2].size())
 	{
-		if (abs(hop_op[2+pos*3]) <= hopint_size)
+		if (abs(hop_op[2][pos]) <= scsp.hopint.size())
 		{
-			Int row_n((abs(hop_op[2+pos*3]) - 1) / p.norbit), col_n((abs(hop_op[2+pos*3]) - 1) % p.norbit); // "1" mean the real_length = abs(hop_op[2+pos*3]) - 1, since to distinguish the minus sign.
+			Int row_n((abs(hop_op[2][pos]) - 1) / p.norbit), col_n((abs(hop_op[2][pos]) - 1) % p.norbit); // "1" mean the real_length = abs(hop_op[2][pos]) - 1, since to distinguish the minus sign.
 			Int check_point(0);
 			for_Int(i, 0, p.nI2B.size()) {
 				check_point = 0;
 				if (row_n >= 0 && row_n < (p.nO2sets[i]) && col_n >= 0 && col_n < (p.nO2sets[i]))
 				{
-					Int coefficient_comm = hop_op[2+pos*3] >= 0 ? 1 : -1;
-					Real amplitude = coefficient_comm * state_eff[hop_op[0+pos*3] + row_H.bgn()] * state_eff[hop_op[1+pos*3]];
+					Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
+					Real amplitude = coefficient_comm * state_eff[hop_op[0][pos] + row_H.bgn()] * state_eff[hop_op[1][pos]];
 					D_splited[i][row_n][col_n] += amplitude;
 					check_point++;
 					break;
@@ -373,19 +373,19 @@ VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& stat
 		D_splited.push_back(std::move(temp));
 	}
 	// for the ground state's D.
-	const VEC<Int>& hop_op(table);
-	for_Idx(pos, 0, hop_op.size()/3)
+	const Tab& hop_op(table);
+	for_Idx(pos, 0, hop_op[2].size())
 	{
-		if (abs(hop_op[2+pos*3]) <= hopint_size)
+		if (abs(hop_op[2][pos]) <= scsp.hopint.size())
 		{
-			Int row_n((abs(hop_op[2+pos*3]) - 1) / p.norbit), col_n((abs(hop_op[2+pos*3]) - 1) % p.norbit); // "1" mean the real_length = abs(hop_op[2+pos*3]) - 1, since to distinguish the minus sign.
+			Int row_n((abs(hop_op[2][pos]) - 1) / p.norbit), col_n((abs(hop_op[2][pos]) - 1) % p.norbit); // "1" mean the real_length = abs(hop_op[2][pos]) - 1, since to distinguish the minus sign.
 			Int check_point(0);
 			for_Int(i, 0, p.nI2B.size()) {
 				check_point = 0;
 				if (row_n >= 0 && row_n < (p.nO2sets[i]) && col_n >= 0 && col_n < (p.nO2sets[i]))
 				{
-					Int coefficient_comm = hop_op[2+pos*3] >= 0 ? 1 : -1;
-					Real amplitude = coefficient_comm * state_eff[hop_op[0+pos*3] + row_H.bgn()] * state_eff[hop_op[1+pos*3]];
+					Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
+					Real amplitude = coefficient_comm * state_eff[hop_op[0][pos] + row_H.bgn()] * state_eff[hop_op[1][pos]];
 					D_splited[i][row_n][col_n] += amplitude * 0.5;
 					check_point++;
 					break;
@@ -436,19 +436,19 @@ VEC<MatReal> DensityMat::correct_one_electron_density_matrix(const VecReal& stat
 		D_splited.push_back(std::move(temp));
 	}
 	// for the ground state's D.
-	const VEC<Int>& hop_op(table);
-	for_Idx(pos, 0, hop_op.size()/3)
+	const Tab& hop_op(table);
+	for_Idx(pos, 0, hop_op[2].size())
 	{
-		if (abs(hop_op[2+pos*3]) <= hopint_size)
+		if (abs(hop_op[2][pos]) <= scsp.hopint.size())
 		{
-			Int row_n((abs(hop_op[2+pos*3]) - 1) / p.norbit), col_n((abs(hop_op[2+pos*3]) - 1) % p.norbit); // "1" mean the real_length = abs(hop_op[2+pos*3]) - 1, since to distinguish the minus sign.
+			Int row_n((abs(hop_op[2][pos]) - 1) / p.norbit), col_n((abs(hop_op[2][pos]) - 1) % p.norbit); // "1" mean the real_length = abs(hop_op[2][pos]) - 1, since to distinguish the minus sign.
 			Int check_point(0);
 			for_Int(i, 0, p.nI2B.size()) {
 				check_point = 0;
 				if (row_n >= 0 && row_n < (p.nO2sets[i]) && col_n >= 0 && col_n < (p.nO2sets[i]))
 				{
-					Int coefficient_comm = hop_op[2+pos*3] >= 0 ? 1 : -1;
-					Real amplitude = coefficient_comm * state_eff[hop_op[0+pos*3] + row_H.bgn()] * state_eff[hop_op[1+pos*3]];
+					Int coefficient_comm = hop_op[2][pos] >= 0 ? 1 : -1;
+					Real amplitude = coefficient_comm * state_eff[hop_op[0][pos] + row_H.bgn()] * state_eff[hop_op[1][pos]];
 					D_splited[i][row_n][col_n] += amplitude * 0.25 *d_weight_x;
 					check_point++;
 					break;

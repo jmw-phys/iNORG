@@ -10,9 +10,7 @@ coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
 // impurity model
 // At the Shortcut space(NocSpace) we set first divison as impurity, and the active orbital(bath site) on the middle.  
 
-// typedef Vec<VEC<Int>> Tab;  //! REPLACE by VEC<Int> @2024-05-17
-typedef VEC<Int> Tab;
-
+typedef Vec<VEC<Int>> Tab;
 class NocSpace {
 
 private:
@@ -30,12 +28,12 @@ public:
 	Idx dim;						// the dimension of the Shortcut space.
 	VEC<MatInt> div;				// a set of combined number.
 	std::map<std::string, Idx> divs_to_idx;	// a set of combined number.
-	VEC<int> idx_div;				// a set of idx(The idx of the begining with 0) for each subspace.
-	// VecReal mu;						// -\mu_{k}^{\prime}b_{k,\sigma}^{+}b_{k,\sigma}
-	// VEC<VecReal> t_ose;				// H_0 onset energy
-	// VEC<VecReal> t_hyb;				// hopping parameter from bath to imp.
-	// MatReal hopint;					// transformed hopping integral
-	// VecReal coefficient;			// coefficient for all the H's terms, consturct by t_ose and t_hyb.
+	VEC<Int> idx_div;				// a set of idx(The idx of the begining with 0) for each subspace.
+	VecReal mu;						// -\mu_{k}^{\prime}b_{k,\sigma}^{+}b_{k,\sigma}
+	VEC<VecReal> t_ose;				// H_0 onset energy
+	VEC<VecReal> t_hyb;				// hopping parameter from bath to imp.
+	MatReal hopint;					// transformed hopping integral
+	VecReal coefficient;			// coefficient for all the H's terms, consturct by t_ose and t_hyb.
 	
 	
 	Real u_hbd;						// The Hubbard term U.
@@ -126,17 +124,17 @@ private:
 	VEC<VEC<Int> > cart_product_monitor_row(const VEC<VEC<int> >& v, const VEC<VEC<int> >& a) const;
 	VEC<VEC<Int> > cart_product_monitor_PHS(const VEC<VEC<int> >& v, const VEC<VEC<int> >& a) const;
 
-	// Idx read_the_Tab(Str name) const{
-	// 	Idx temp_dim(-1);	
-	// 	IFS ifs(STR(name + ".inf"));	Str strr;
-	// 	while(1) {// read the table's size's info
-	// 		ifs >> strr;
-	// 		if(strr == "dim")	ifs >> temp_dim;
-	// 		if (!ifs) break;
-	// 	}
-	// 	// WRN(NAV(temp_dim))
-	// 	return temp_dim;
-	// }
+	Idx read_the_Tab(Str name) const{
+		Idx temp_dim(-1);	
+		IFS ifs(STR(name + ".inf"));	Str strr;
+		while(1) {// read the Tab's size's info
+			ifs >> strr;
+			if(strr == "dim")	ifs >> temp_dim;
+			if (!ifs) break;
+		}
+		// WRN(NAV(temp_dim))
+		return temp_dim;
+	}
 	
 public:
 
@@ -146,7 +144,7 @@ public:
 	NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const Int& NumberSpa);
 	NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_i);
 	NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_i, Str tab_name);
-	// NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_i, const Tab& tab);
+	NocSpace(const MyMpi& mm_i, const Prmtr& prmtr_i, const VecInt& nppso_i, const Tab& tab);
 	
 	// bool ifin_NocSpace(VecInt& ud) const;
 	bool ifin_NocSpace(MatInt& ud) const;
@@ -162,24 +160,11 @@ public:
 
 	void print(std::ostream& os = std::cout) const;
 
-	// add from v1.4.01-->v1.4.02, //!now is droped.
-	// MatInt div_matint_2_Int(Int div_idx) const {
-	// 	MatInt return_mat(div[div_idx].nrows(), div[div_idx].ncols());
-	// 	for_Int(i, 0, return_mat.nrows()) for_Int(j, 0, return_mat.ncols()) return_mat[i][j] = div[div_idx][i][j];
-	// 	return return_mat;
-	// }
-
 	Str nppso_str() const	{
 		Str temp; for_Int(i, 0, p.npartical.size()) { if (i == 0) temp += STR(p.npartical[i]); else /*if (i % 2 == 0)*/ temp += "-" + STR(p.npartical[i]); }	return temp;
 	}
 
 	VecInt free_div_base_decode(Idx idx, VEC<VEC<Int> > v) const;
-
-	void clear() {
-		div= std::vector<MatInt>();
-		divs_to_idx = std::map<std::string, Idx>();
-		idx_div = std::vector<Int>();
-	}
 };
 
 

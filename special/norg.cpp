@@ -24,23 +24,22 @@ NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i) :
 // 	show_the_nozero_number_of_tabel();
 // }
 
-// NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab& table) :	
-// 	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()), final_ground_state(oneedm.ground_state),
-// 	occupation_err(1.), energy_err(1.), correctionerr(1.), occnum_pre(prmtr_i.n_rot_orb, 0.),
-// 	iter_norg_cnt(0), groune_pre(1.e99), groune_lst(0.), occnum_lst(prmtr_i.n_rot_orb, 0.),
-// 	scsp(mm_i, prmtr_i, prmtr_i.npartical), oneedm(mm, prmtr_i, scsp, table),norg_stab_cnt(0)
-// {
+NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, const Tab& table) :	
+	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()), final_ground_state(oneedm.ground_state),
+	occupation_err(1.), energy_err(1.), correctionerr(1.), occnum_pre(prmtr_i.n_rot_orb, 0.),
+	iter_norg_cnt(0), groune_pre(1.e99), groune_lst(0.), occnum_lst(prmtr_i.n_rot_orb, 0.),
+	scsp(mm_i, prmtr_i, prmtr_i.npartical, table), oneedm(mm, prmtr_i, scsp, table),norg_stab_cnt(0)
+{
 
-// }
+}
 
 NORG::NORG(const MyMpi& mm_i, const Prmtr& prmtr_i, Str tab_name) :
 	mm(mm_i), p(prmtr_i), impgreen(prmtr_i.norbs, prmtr_i), uormat(uormat_initialize()), final_ground_state(oneedm.ground_state),
 	occupation_err(1.), energy_err(1.), correctionerr(1.), occnum_pre(prmtr_i.n_rot_orb, 0.),
 	iter_norg_cnt(0), groune_pre(1.e99), groune_lst(0.), occnum_lst(prmtr_i.n_rot_orb, 0.),
-	scsp(mm_i, prmtr_i, prmtr_i.npartical), oneedm(mm, prmtr_i, scsp, tab_name),norg_stab_cnt(0)
+	scsp(mm_i, prmtr_i, prmtr_i.npartical, tab_name), oneedm(mm, prmtr_i, scsp, tab_name),norg_stab_cnt(0)
 {
 	show_the_nozero_number_of_tabel();
-	if(mm) scsp.print();
 }
 
 // mode 0: for not rotation; mode 1: for rotation the orbitals; 
@@ -50,7 +49,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	impH = impH_i;
 	// //! testing-20240503 begin
 	// scsp.div = std::vector<MatInt>();
-	// scsp.divs_to_idx = std::map<std::string, Idx>();
+	scsp.divs_to_idx = std::map<std::string, Idx>();
 	// scsp.idx_div = std::vector<Int>();
 	// //! testing-20240503 end
 	if (mm) WRN(NAV2(impH.first,scsp.dim));
@@ -554,12 +553,11 @@ void NORG::show_the_nozero_number_of_tabel()
 	// Real size_one(oneedm.table[2].size()), size_two(n1mone.table[2].size()), size_tree(n1pone.table[2].size());
 	// LLInt size_of_main_t(mm.Allreduce(size_one)), size_of_main_n1mt(mm.Allreduce(size_two)), size_of_main_n1pt(mm.Allreduce(size_tree));
 	// if(mm) PIO(NAV3(size_of_main_t, size_of_main_n1mt, size_of_main_n1pt));
-	Real size_one(oneedm.table.size()/3);
+	Real size_one(oneedm.table[2].size());
 	LLInt size_of_main_t(mm.Allreduce(size_one));
 	if(mm) PIO(NAV2(size_of_main_t, scsp.dim)+"   "+present());
 }
 
-// save the NORG rotation matrix.
 MatReal NORG::save_NTR() {
 	MatReal transform_uormat(see_MatReal(uormat));
 	if(mm) {
@@ -570,7 +568,6 @@ MatReal NORG::save_NTR() {
 	return transform_uormat;
 }
 
-// read the NORG rotation matrix.
 MatReal NORG::read_NTR() {
 	IFS ifs_a("ru" + scsp.nppso_str() + ".bi"); 
 	if (ifs_a) for_Int(i, 0, uormat.size()) biread(ifs_a, CharP(uormat[i].p()), uormat[i].szof());

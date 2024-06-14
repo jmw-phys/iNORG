@@ -37,15 +37,11 @@ class APIedmft{
 	// NORG coding console
 	Str mode;
 	VecInt restrain, distribute;
-	Real weight_nooc, weight_freze;
+	VecReal weight_nooc, weight_freze;
 
 	// NORG test part
 	//Int nimp;
 	VecReal bathose, bathhop;
-
-	// BACK_UP_DATA:
-	Int main_table_size;
-	VecInt orbit_subtable_size;
 
 public:
 	VEC<VecReal> t_ose;						// hopping integral for all sites
@@ -54,8 +50,7 @@ public:
 	Int dmft_cnt;
 private:
 	void update(const Str& file);
-	void edmft_back_up_read();
-	void edmft_back_up_write(const NORG& norg);
+	void edmft_back_up(const Str& status);
 
 	bool if_lock(const Str file) const;
 
@@ -64,12 +59,12 @@ private:
 	// NORG choose_cauculation_style(Str mode, Impurity &imp);
 	// void fitting();
 
-	void test_for_fitting(const Bath& bth, const ImGreen& hby_i, Int num = 666);
 /*
+	void test_for_fitting(const Bath& bth, const ImGreen& hby_i, Int num = 666);
 	ImGreen fix_se(const ImGreen& se) const;
 */
 
-	void read_norg_setting( const std::string& filename, std::vector<double>& Ed, std::vector<int>& Deg, double& J, std::string& CoulombF, double& beta, double& U, std::vector<int>& restrain, std::vector<int>& distribute );
+	void read_norg_setting(const std::string& filename, std::vector<double>& Ed, std::vector<int>& Deg, double& J, std::string& CoulombF, double& beta, double& U, std::vector<double>& noc1, std::vector<double>& noc2, std::vector<int>& restrain, std::vector<int>& distribute);
 
 	void auto_nooc(Str mode, const Impurity &imp);
 

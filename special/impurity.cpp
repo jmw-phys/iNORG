@@ -1,18 +1,20 @@
 #include "impurity.h"
 
-Impurity::Impurity(const MyMpi &mm_i, const Prmtr &prmtr_i, const Bath &bth_i, const Str& file)
-    : mm(mm_i), p(prmtr_i), bth(bth_i), nb(p.nbath), ni(p.norbs), ns(p.norbit), pos_imp(p.norbs), h0(p.norbit, p.norbit, 0.), imp_lvl(p.norbs)
+Impurity::Impurity(const MyMpi &mm_i, const Prmtr &prmtr_i, const Bath &bth_i, const Str& file): mm(mm_i), p(prmtr_i), bth(bth_i),
+    nb(p.nbath), ni(p.norbs), ns(p.norbit), pos_imp(p.norbs), 
+    h0(p.norbit, p.norbit, 0.), imp_lvl(p.norbs), ordeg(0)
 {
+    // find_ve();
     // if (!file.empty()) read(file);
     for_Int(i, 0, ni) imp_lvl[i] = p.eimp[i] - p.mu;
 }
 
-Impurity::Impurity(const MyMpi &mm_i, const Prmtr &prmtr_i, const Bath &bth_i, const VecInt or_deg)
-    : mm(mm_i), p(prmtr_i), bth(bth_i), nb(p.nbath), ni(p.norbs), ns(p.norbit), pos_imp(p.norbs), h0(p.norbit, p.norbit, 0.), imp_lvl(p.norbs, 0.)
+Impurity::Impurity(const MyMpi &mm_i, const Prmtr &prmtr_i, const Bath &bth_i, const VecInt or_deg): mm(mm_i), p(prmtr_i), bth(bth_i),
+    nb(p.nbath), ni(p.norbs), ns(p.norbit), pos_imp(p.norbs),
+    h0(p.norbit, p.norbit, 0.), imp_lvl(p.norbs, 0.), ordeg(or_deg)
 {
+    // find_ve();
     // if (!file.empty()) read(file);
-    // VecInt ordeg(concat(or_deg,or_deg).mat(2, p.nband).tr().vec());
-    VecInt ordeg(or_deg);
     
     VecReal deg_lvl(MAX(ordeg), 0.);
     for_Int(i, 0, ni) deg_lvl[ordeg[i] - 1] += p.eimp[i] - p.mu;
@@ -54,17 +56,67 @@ void Impurity::find_all_g0(Green &g0) const {
 
 //rely on imp model's frame
 void Impurity::find_hb(Green &hb) const {
+    VEC<VecReal> vec_hop,vec_ose;
+    for_Int(i, 0, p.nband) {
+        vec_hop.push_back(bth.fvb[i][0][0]);
+        vec_ose.push_back(bth.fvb[i][1][0]);
+    }
     for_Int(i,0,p.nband){
         const Int nb_i = p.nI2B[2*i];
         for_Int(n,0,hb.nomgs){
             const VecCmplx Z(nb_i, hb.z(n));
-            VecCmplx S = INV(Z - cmplx(bth.vec_ose[i]));
-            VecCmplx V = cmplx(bth.vec_hop[i]);
-            hb[n][i][i] = -SUM(V * S * V.co());
-            //hb[n][i][i] = DOT(cmplx(bth.vec_hop[i]), S * cmplx(bth.vec_hop[i]));
+            VecCmplx S = INV(Z - cmplx(vec_ose[i]));
+            VecCmplx V = cmplx(vec_hop[i]);
+            hb[n][i][i] = SUM(V * S * V.co());
         }
     }
 }
+
+/*
+// rely on NORG's frame
+void Impurity::find_g0(Green& g0) const {
+
+    MatCmplx Z(ns, ns);
+    // for_Int(kind, 0, p.a.size()) {
+    for_Int(n, 0, g0.nomgs) {
+        Z = g0.z(n);
+        MatCmplx g0_z = matinvlu(Z - cmplx(h0));
+        Int id_i = 0;
+        Int idx_i = 0;
+        for_Int(i, 0, p.norg_sets) {
+            Int id_j = 0;
+            Int idx_j = 0;
+            for_Int(j, 0, p.norg_sets) {
+                for_Int(r, 0, p.control_divs[i + 1][0]) {
+                    for_Int(c, 0, p.control_divs[j + 1][0]) {
+                        Int row = idx_i + r;
+                        Int col = idx_j + c;
+                        g0[n][id_i + r][id_j + c] = g0_z[row][col];
+                    }
+                }
+                id_j += p.control_divs[j + 1][0];
+                idx_j += SUM(p.control_divs[j + 1]);
+            }
+            id_i += p.control_divs[i + 1][0];
+            idx_i += SUM(p.control_divs[i + 1]);
+        }
+    }
+}
+
+//rely on imp model's frame
+void Impurity::find_hb(Green& hb) const {
+    for_Int(n, 0, hb.nomgs) {
+        MatCmplx  hb_set(0, 0);
+        for_Int(i, 0, p.norg_sets) {
+            const MatCmplx Z = dmat(E[i].nrows(), hb.z(n));
+            MatCmplx S = matinvlu(Z - cmplx(E[i]));
+            hb_set.reset(direct_sum(hb_set, cmplx(V[i]) * S * cmplx(V[i]).ct()));
+        }
+        hb[n] = hb_set;
+    }
+}
+*/
+
 
 MatReal Impurity::find_hop_for_test() const
 {
@@ -118,10 +170,10 @@ void Impurity::write_H0info(const Bath &b, Int ndeg, Int iter_cnt) const {
     if(iter_cnt > 0) ofs.open(iox + "zic" + prefill0(iter_cnt, 3) +".h0.txt");
     using namespace std;
     if(ndeg > 0) for_Int(i, 0, ndeg)	{
-        ofs << "degeneracy band "<< i+1  << "nmin: " << b.info[i][0] << " err: " << b.info[i][1] << " err_crv: " << b.info[i][2] << " err_regE: " << b.info[i][3] << " err_regV: " << b.info[i][4] << " err_bsr: " << b.info[i][5] <<" norm: " << b.info[i][6]<< "  " << endl;
+        ofs << "degeneracy band "<< i+1  << " nmin: " << b.info[i][0] << " err: " << b.info[i][1] << " err_crv: " << b.info[i][2] << " err_hight_ev: " << b.info[i][3] << " err_regE: " << b.info[i][4] <<" norm: " << b.info[i][5]<< "  " << endl;
     }
     else for_Int(i, 0, p.nband) {
-        ofs << "band "<< i+1  << "nmin: " << b.info[i][0] << " err: " << b.info[i][1] << " err_crv: " << b.info[i][2] << " err_regE: " << b.info[i][3] << " err_regV: " << b.info[i][4] << " err_bsr: " << b.info[i][5] <<" norm: " << b.info[i][6]<< "  " << endl;
+        ofs << "band "<< i+1  << "nmin: " << b.info[i][0] << " err: " << b.info[i][1] << " err_crv: " << b.info[i][2] << " err_hight_ev: " << b.info[i][3] << " err_regE: " << b.info[i][4] <<" norm: " << b.info[i][5]<< "  " << endl;
     }
     for_Int(i, 0, p.nband)	{
         ofs << "band "<< i+1 << endl;
@@ -132,7 +184,7 @@ void Impurity::write_H0info(const Bath &b, Int ndeg, Int iter_cnt) const {
 
 //---------------------------------------------Private function---------------------------------------------
 
-
+//! rely on imp model's frame
 void Impurity::set_factor() {
     // set hyb part and bath part
     h0 = bth.find_hop();
