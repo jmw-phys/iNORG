@@ -108,8 +108,8 @@ void APIedmft::read_eDMFT(const Str& file) {
 		// 	ERR("Now we only support for the t2g and eg orbital.")
 		// }
 		p.beta = beta;
-
-		p.eimp.reset(concat(VecReal(Ed), VecReal(Ed)).mat(2, Ed.size()).tr().vec());
+		p.eimp.reset(norbs, 0.);
+		p.eimp =  concat(VecReal(Ed), VecReal(Ed)).mat(2, Ed.size()).tr().vec();
 		or_deg_idx.reset(concat(VecInt(Deg), VecInt(Deg)).mat(2, Deg.size()).tr().vec());
 		num_nondegenerate = MAX(or_deg_idx);
 		weight_nooc.reset(Vec(weight_noc1));

@@ -15,7 +15,7 @@ Impurity::Impurity(const MyMpi &mm_i, const Prmtr &prmtr_i, const Bath &bth_i, c
 {
     // find_ve();
     // if (!file.empty()) read(file);
-    
+    if(mm) WRN(NAV2(p.eimp,p.mu))
     VecReal deg_lvl(MAX(ordeg), 0.);
     for_Int(i, 0, ni) deg_lvl[ordeg[i] - 1] += p.eimp[i] - p.mu;
     for_Int(i, 0, MAX(ordeg)) {

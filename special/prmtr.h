@@ -22,7 +22,7 @@ public:
 	mutable Real Uprm;				// U^' as U - 2 * Jz
 	mutable Real mu;				// chemical potential
 	mutable Real degel;				// Degenerate energy levels
-	VecReal	eimp;					// the impurity energy (spinless orbital).
+	mutable VecReal	eimp;			// the impurity energy (spinless orbital).
 	VecReal	bsr;					// the vector of bath sum rule.
 	VecReal bethe_t;				// hopping strength t for bethe lattice
 	//ReGreen

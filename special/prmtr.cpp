@@ -94,6 +94,7 @@ void Prmtr::set_values() {
 // we set first divison as impurity. The maximum number of cavity("-"); mean electron("+").
 void Prmtr::after_modify_prmtr() const
 {
+    mu = 0.0;
     nI2B.reset(norg_sets, 0); nO2sets.reset(norg_sets, 0);
     control_divs.reset(norg_sets + 1, ndiv, 0);
     control_divs[0] = templet_restrain;
