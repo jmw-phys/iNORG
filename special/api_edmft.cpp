@@ -252,22 +252,29 @@ bool APIedmft::if_lock(const Str file) const {
 
 
 void APIedmft::print_log(const Str& lbl, std::ostream& os) const {
-	using namespace std;
-	Str temp; for_Int(i, 0, p.nband) { if (i == 0) temp += STR(p.npartical[i * 2]); else temp += "-" + STR(p.npartical[i * 2]); }
+    using namespace std;
+    Str temp; 
+    for_Int(i, 0, p.nband) { 
+        if (i == 0) temp += STR(p.npartical[i * 2]); 
+        else temp += "-" + STR(p.npartical[i * 2]); 
+    }
 
-	os << iofmt();
-	os << setw(4) << iter_count;
-	// os << setw(8) << p.U;
-	os << iofmt("sci");
-	os << "  " << setw(w_Real) << sig_err;
-	os << setw(3 + 2 * p.nband) << temp;
-	os << iofmt() << setprecision(8);
-	for_Int(i, 0, p.nband) {
-		os << setw(15) << fit_err[i] << "~" << n_eles[i * 2];
-	}
-	os << "  " << present();
-	os << "  " << lbl << endl;
+    os << iofmt();
+    os << setw(4) << iter_count;
+    // os << setw(8) << p.U;
+    os << iofmt("sci");
+    os << "  " << setw(w_Real) << sig_err;
+    os << setw(3 + 2 * p.nband) << temp;
+    
+    os << iofmt() << fixed << setprecision(8);
+    for_Int(i, 0, p.nband) {
+        os << "  " << setw(15) << fit_err[i] << "~" << setw(15) << n_eles[i * 2];
+    }
+    
+    os << "  " << present();
+    os << "  " << lbl << endl;
 }
+
 
 
 void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
