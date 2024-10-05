@@ -486,12 +486,17 @@ Version: v1.5.00.p3 @ 2024.05.17
     next do : "Hold_for_a_moment", I will try to fix the fitting function.
     thinking: What kind of data structure do I need to add?
 
-Version: v1.6.00.p3 @ 2024.06.16
+Version: v1.6.00.p3 @ 2024.06.07
     realized: Add the NEW fitting function, and readly for the matrix fitting.
     next do : test for the fitting.
     thinking: this fitting is stable?
 
-Version: v1.6.10.p3 @ 2024.06.17
+Version: v1.6.10.p3 @ 2024.06.14
     realized: Add some modify, add the log for DMFT+NROG iteration, in eDMFTapi
+    next do : (same as prev)
+    thinking: (same as prev)
+
+Version: v1.7.10.p3 @ 2024.10.05
+    realized: 1. Change the V2 to only find_fullH_offdiagonal_idx(); 2. Find the bug for the imprity.cpp; 3. update to fit the "or_deg_idx" situation.
     next do : (same as prev)
     thinking: (same as prev)

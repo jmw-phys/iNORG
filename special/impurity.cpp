@@ -406,7 +406,8 @@ VecReal Impurity::set_edmft_interaction() {
     }
     else if (p.nband == 3) {
         Uc = p.U + (8.0 / 7.0) * p.jz;      // S1
-        Up = p.U + (328.0 / 819.0) * p.jz;  // S2
+        // Up = p.U + (328.0 / 819.0) * p.jz;  // S2
+        Up = p.U - (328.0 / 819.0) * p.jz;  // S2
         Jz = (632.0 / 819.0) * p.jz;        // S6
 
         for_Int(b1, 0, p.nband) { // NO double counting term for impurity
@@ -423,7 +424,8 @@ VecReal Impurity::set_edmft_interaction() {
     else if (p.nband == 2) {
         // See SM of Physical Review B 102.16 (2020): 161118, for equation S1-S9.
         Uc = p.U + (8.0 / 7.0) * p.jz;      // S1
-        Up = p.U + (516.0 / 819.0) * p.jz;  // S4
+        // Up = p.U + (516.0 / 819.0) * p.jz;  // S4
+        Up = p.U - (516.0 / 819.0) * p.jz;  // S4
         Jz = (726.0 / 819.0) * p.jz;        // S7
 
         for_Int(b1, 0, p.nband) { // NO double counting term for impurity

@@ -49,15 +49,21 @@ public:
 	
 	//! abandon
 	// [i][0]row Idx; [i][1]colum Idx;[i][2] for the position for the hopint.
-	Tab find_h_idx();
+	// Tab find_h_idx();
 
 	// [i][0]row Idx; [i][1]colum Idx;[i][2] for the position for the hopint.
 	Tab find_fullH_idx();
+
+	// [i][0]row Idx; [i][1]colum Idx;[i][2] for the position for the hopint.
+	Tab find_fullH_offdiagonal_idx();
 
 	void clear(){ for_Int(i, 0, 3) VEC<int> ().swap(table[i]);}
 
 	// By using the find_h_idx() to find the idx first then speed up the procedure.
 	SparseMatReal find_hmlt(const Tab h_idx) const;
+
+	// By using the find_fullH_offdiagonal_idx() to find all the offdiagonal elements of table.
+	SparseMatReal find_hmlt_V2(const Tab h_idx) const;
 
 
 	// Using Lanczos algorithm to find several lowest eigenpairs of a Hermitian matrix

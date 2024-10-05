@@ -68,7 +68,7 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
     //VECtrdgnl trdignl(find_trdgnl_first(ex_state));
     VEC<Real> ltd;	        // diagonal elements 
     VEC<Real> lt_sd;	    // sub-diagonal elements
-    const SparseMatReal sep_h = find_hmlt(table);
+    const SparseMatReal sep_h = find_hmlt_V2(table);
     VecReal v0(ex_state);
     v0 *= INV(SQRT(mm.Allreduce(DOT(v0, v0))));
     VecReal v0_saved(v0);
@@ -77,7 +77,7 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
     a_i = mm.Allreduce(DOT(v1, v0));
     ltd.push_back(a_i);
     if(g0.type_info() == STR("ImGreen")){
-        for_Int(i, 0,  700) {
+        for_Int(i, 0,  190) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
         ltd.push_back(a_i); lt_sd.push_back(b_i);
         }
@@ -131,7 +131,7 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
     //VECtrdgnl trdignl(find_trdgnl_first(ex_state));
     VEC<Real> ltd;	        // diagonal elements 
     VEC<Real> lt_sd;	    // sub-diagonal elements
-    const SparseMatReal sep_h = find_hmlt(table);
+    const SparseMatReal sep_h = find_hmlt_V2(table);
     VecReal v0(ex_state);
     v0 *= INV(SQRT(mm.Allreduce(DOT(v0, v0))));
     VecReal v0_saved(v0);
@@ -140,7 +140,7 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
     a_i = mm.Allreduce(DOT(v1, v0));
     ltd.push_back(a_i);
     if(g0.type_info() == STR("ImGreen")){
-        for_Int(i, 0,  700) {
+        for_Int(i, 0,  190) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
         ltd.push_back(a_i); lt_sd.push_back(b_i);
         }
@@ -306,7 +306,7 @@ void CrrltFun::find_hd_greater(const Real& ge0, Green &g0, Int position, Int ex_
     // if (mm) WRN(NAV(upper_fraction));
     VEC<Real> ltd;	        // diagonal elements 
     VEC<Real> lt_sd;	    // sub-diagonal elements
-    const SparseMatReal sep_h = find_hmlt(table);
+    const SparseMatReal sep_h = find_hmlt_V2(table);
     VecReal v0(hd_exstate);
     v0 *= INV(SQRT(mm.Allreduce(DOT(v0, v0))));
     VecReal v0_saved(v0);
@@ -360,7 +360,7 @@ void CrrltFun::find_hd_greater(const Real& ge0, Green &g0, Int position, Int ex_
 //     //VECtrdgnl trdignl(find_trdgnl_first(ex_state));
 //     VEC<Real> ltd;	        // diagonal elements 
 //     VEC<Real> lt_sd;	    // sub-diagonal elements
-//     const SparseMatReal sep_h = find_hmlt(table);
+//     const SparseMatReal sep_h = find_hmlt_V2(table);
 //     Cmplx zero(0.,0.);
 //     VecCmplx green_pre(g0.nomgs, zero);
 //     VecCmplx green_error(g0.nomgs, zero);
@@ -419,7 +419,7 @@ void CrrltFun::find_hd_greater(const Real& ge0, Green &g0, Int position, Int ex_
 //     //VECtrdgnl trdignl(find_trdgnl_first(ex_state));
 //     VEC<Real> ltd;	        // diagonal elements 
 //     VEC<Real> lt_sd;	    // sub-diagonal elements
-//     const SparseMatReal sep_h = find_hmlt(table);
+//     const SparseMatReal sep_h = find_hmlt_V2(table);
 //     Cmplx zero(0.,0.);
 //     VecCmplx green_pre(g0.nomgs, zero);
 //     VecCmplx green_error(g0.nomgs, zero);
@@ -479,7 +479,7 @@ CrrltFun::Vectrdgnl CrrltFun::find_trdgnl(const VecReal& initial_vector, const I
     // for tridiagonal matrix
     VEC<Real> ltd;	    // diagonal elements 
     VEC<Real> lt_sd;	// sub-diagonal elements
-    SparseMatReal sep_h = find_hmlt(table);
+    SparseMatReal sep_h = find_hmlt_V2(table);
     VecReal v0(initial_vector);
     v0.normalize();
     VecReal v0_saved(v0);
@@ -512,7 +512,7 @@ CrrltFun::Vectrdgnl CrrltFun::find_trdgnl(const VecReal& initial_vector, const I
 void CrrltFun::find_trdgnl_one_step(const VecReal& initial_vector, VecReal& v0, VecReal& v1, Real&a, Real& b, const SparseMatReal& sep_h){
     v1 -= a * v0;
     b = SQRT(mm.Allreduce(DOT(v1, v1)));
-    v1 -= mm.Allreduce(DOT(v1, initial_vector)) * initial_vector;
+    // v1 -= mm.Allreduce(DOT(v1, initial_vector)) * initial_vector;
     v1 *= INV(SQRT(mm.Allreduce(DOT(v1, v1))));
     SWAP(v0, v1);
     v1 *= -b;

@@ -119,15 +119,51 @@ VEC<MatReal> DensityMat::find_one_electron_density_matrix(const MatReal& state, 
 	state_eff.normalize();
 	VecPartition row_H(mm.np(), mm.id(), scsp.dim);
 
+	MatInt mat_hop_pos(scsp.hopint.nrows(),scsp.hopint.ncols());
+	for_Int(i, 0, mat_hop_pos.nrows()) for_Int(j, 0, mat_hop_pos.ncols()) mat_hop_pos[i][j] = i * mat_hop_pos.ncols() + j;
+
+
 	VEC<MatReal> D_splited;
 	for_Int(i, 0, p.nI2B.size()) {
 		MatReal temp(p.nO2sets[i], p.nO2sets[i], 0.);
 		D_splited.push_back(std::move(temp));
 	}
 
+
+	for_Int(h_i, row_H.bgn(), row_H.end()) {
+		VecInt hop_op(3, 0);
+		Int sparse_idx(h_i - row_H.bgn());
+		StateStatistics a(h_i, scsp.wherein_NocSpace(h_i), scsp);
+
+		//! Diagonal term. n_i
+		for (const auto& x : a.filled_spinless) {
+			for (const auto& i : x) {
+				hop_op = { sparse_idx, h_i, mat_hop_pos[i][i] + 1 };
+				// for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+				// diagonal += h_idx[2] >= 0 ? oper_value[(abs(h_idx[2]))] : -oper_value[(abs(h_idx[2]))];
+				Int row_n(i), col_n(i);
+				for_Int(i, 0, p.nI2B.size()) {
+					// check_point = 0;
+					if (row_n >= 0 && row_n < (p.nO2sets[i]) && col_n >= 0 && col_n < (p.nO2sets[i])) {
+						Int coefficient_comm = 1; // no sign problem since it's dianago term.
+						Real amplitude = coefficient_comm * state_eff[hop_op[1]] * state_eff[hop_op[1]];
+
+						D_splited[i][row_n][col_n] += amplitude;
+						// check_point++;s
+						break;
+					}
+					else {
+						row_n -= p.nO2sets[i];
+						col_n -= p.nO2sets[i];
+					}
+				}
+			}
+		}
+	}
+
+
 	const Tab& hop_op(table_i);
-	for_Idx(pos, 0, hop_op[2].size())
-	{
+	for_Idx(pos, 0, hop_op[2].size()) {
 		if (abs(hop_op[2][pos]) <= scsp.hopint.size())
 		{
 			Int row_n((abs(hop_op[2][pos]) - 1) / p.norbit), col_n((abs(hop_op[2][pos]) - 1) % p.norbit); // "1" mean the real_length = abs(hop_op[2][pos]) - 1, since to distinguish the minus sign.

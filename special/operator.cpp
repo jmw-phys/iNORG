@@ -8,7 +8,8 @@ using namespace std;
 
 
 Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i):
-	mm(mm_i), p(prmtr_i), scsp(s_i), table(find_fullH_idx()), dim(s_i.dim), oper_value(pow(p.norbit, 4) + pow(p.norbit, 2) + 1)
+	mm(mm_i), p(prmtr_i), scsp(s_i), table(find_fullH_offdiagonal_idx()), dim(s_i.dim), oper_value(pow(p.norbit, 4) + pow(p.norbit, 2) + 1)
+	// mm(mm_i), p(prmtr_i), scsp(s_i), table(find_fullH_idx()), dim(s_i.dim), oper_value(pow(p.norbit, 4) + pow(p.norbit, 2) + 1)
 {
 	// for (const auto &i : table[2]) oper_value.insert(std::make_pair(ABS(i), 0.));
 	// if (mm) WRN(NAV2(table[2].size(), oper_value.size()));
@@ -28,189 +29,6 @@ Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i,
 	mm(mm_i), p(prmtr_i), scsp(s_i), table(read_the_Tab(tab_name)), dim(s_i.dim), oper_value(pow(p.norbit, 4) + pow(p.norbit, 2) + 1)
 {
 }
-
-// ! (Abandon), this function can fully represent by the "find_fullH_idx()" function.
-Tab Operator::find_h_idx(){
-	clock_t t_find_hmlt_table;
-	t_find_hmlt_table = clock(); // TIME_BGN("find_hmlt_table" + NAV(mm.id()), t_find_hmlt_table);
-	VecPartition row_H(mm.np(), mm.id(), dim);
-	Tab h_idxs(3);
-	MatInt mat_hop_pos(scsp.hopint.nrows(),scsp.hopint.ncols());
-	for_Int(i, 0, mat_hop_pos.nrows()) for_Int(j, 0, mat_hop_pos.ncols()) mat_hop_pos[i][j] = i * mat_hop_pos.ncols() + j;
-	Int h_hbd_idx(mat_hop_pos.size()	+ 1);
-	Int h_orb_ud_idx(mat_hop_pos.size() + 2);
-	Int h_orb_uu_idx(mat_hop_pos.size() + 3);
-	Int h_orb_dd_idx(mat_hop_pos.size() + 4);
-
-	// Int h_orb_j_idx(mat_hop_pos.size() + 5);
-	for_Int(h_i, row_H.bgn(), row_H.end()) {
-		// To save as sparse matrix, [0]: row number;[1]: colum number;[2]: idx.
-		VecInt h_idx(3, 0);
-		Int sparse_idx(h_i - row_H.bgn());
-		//WRN("wherein_NocSpace" + NAV(h_i - scsp.idx_div[scsp.wherein_NocSpace(h_i)]));
-		StateStatistics a(h_i, scsp.wherein_NocSpace(h_i), scsp);
-		for (const auto &x : a.filled_spinless) {
-			for (const auto &i : x) {
-				h_idx = { sparse_idx, h_i, mat_hop_pos[i][i] + 1 };
-				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-			}
-		}
-
-
-		#define ndiv scsp.ndivs
-		{ // normal form of interation.
-		// add the U.
-		for_Int(i, 0, p.nband) if( a.cfg.cf[(i * 2) * ndiv].isocc(0) && a.cfg.cf[(i * 2 + 1) * ndiv].isocc(0) ){
-			h_idx = { sparse_idx, h_i, h_hbd_idx};
-			for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-		}
-
-		// add the up-down term.
-		for_Int(i, 0, p.nband) {
-			for_Int(j, 0, p.nband) if(i != j && a.cfg.cf[(i * 2) * ndiv].isocc(0) && a.cfg.cf[(j * 2 + 1) * ndiv].isocc(0) ){
-				h_idx = { sparse_idx, h_i, h_orb_ud_idx};
-				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-			}
-		}
-
-		// add the up-up term.
-		for_Int(i, 0, p.nband) {
-			for_Int(j, 0, p.nband) if(i != j && a.cfg.cf[(i * 2) * ndiv].isocc(0) && a.cfg.cf[(j * 2) * ndiv].isocc(0) ){
-				h_idx = { sparse_idx, h_i, h_orb_uu_idx};
-				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-			}
-		}
-
-		// add the down-down term.
-		for_Int(i, 0, p.nband) {
-			for_Int(j, 0, p.nband) if(i != j && a.cfg.cf[(i * 2 + 1) * ndiv].isocc(0) && a.cfg.cf[(j * 2 + 1) * ndiv].isocc(0) ){
-				h_idx = { sparse_idx, h_i, h_orb_dd_idx};
-				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-			}
-		}
-		}
-		// // add the U.
-		// for_Int(i, 0, p.nband) {
-		// 	if((Real(a.cfg.cf[(i * 2) * ndiv][0]) - 0.5) * (Real(a.cfg.cf[(i * 2 + 1) * ndiv][0]) - 0.5) > 0 ) h_idx = { sparse_idx, h_i, h_hbd_idx };
-		// 	else h_idx = { sparse_idx, h_i, -h_hbd_idx };
-		// 	for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-		// }
-
-		// // add the up-down term.
-		// for_Int(i, 0, p.nband) {
-		// 	for_Int(j, 0, p.nband) {
-		// 		if (i != j && (Real(a.cfg.cf[(i * 2) * ndiv][0]) - 0.5) * (Real(a.cfg.cf[(j * 2 + 1) * ndiv][0]) - 0.5) > 0) h_idx = { sparse_idx, h_i, h_hbd_idx };
-		// 		// if (i != j && a.cfg.cf[(i * 2) * ndiv].isocc(0) && a.cfg.cf[(j * 2 + 1) * ndiv].isocc(0)) h_idx = { sparse_idx, h_i, h_hbd_idx };
-		// 		else h_idx = {sparse_idx, h_i, -h_orb_ud_idx};
-		// 		for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-		// 	}
-		// }
-
-		// // add the up-up term.
-		// for_Int(i, 0, p.nband) {
-		// 	for_Int(j, 0, p.nband) {
-		// 	if(i != j && (Real(a.cfg.cf[(i * 2) * ndiv][0]) - 0.5) * (Real(a.cfg.cf[(j * 2) * ndiv][0]) - 0.5) > 0) h_idx = { sparse_idx, h_i, h_orb_uu_idx};
-		// 	else h_idx = { sparse_idx, h_i, -h_orb_uu_idx};
-		// 		for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-		// 	}
-		// }
-
-		// // add the down-down term.
-		// for_Int(i, 0, p.nband) {
-		// 	for_Int(j, 0, p.nband) {
-		// 	if(i != j && (Real(a.cfg.cf[(i * 2 + 1) * ndiv][0]) - 0.5) * (Real(a.cfg.cf[(j * 2 + 1) * ndiv][0]) - 0.5) > 0) h_idx = { sparse_idx, h_i, h_orb_dd_idx};
-		// 	else h_idx = { sparse_idx, h_i, -h_orb_dd_idx};
-		// 		for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-		// 	}
-		// }
- 
-		// for_Int(i, 0, p.nband) {
-		// 	if((Real(a.cfg.cf[0][i]) - 0.5) * (Real(a.cfg.cf[0][p.nband + i]) - 0.5) > 0 ) h_idx = { sparse_idx, h_i, h_hbd_idx };
-		// 	else h_idx = { sparse_idx, h_i, -h_hbd_idx };
-		// 	for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-		// }
-
-		/* 
-		#define ndiv scsp.ndivs
-
-		for_Int(i, 0, p.norg_sets)
-		{
-			for_Int(j, i, p.norg_sets)
-			{
-				if (i != j)
-				{
-					if (i / 2 == j / 2 && i + 1 == j)
-					{
-						if (a.cfg.cf[i * ndiv][0] && a.cfg.cf[j * ndiv][0])
-							h_idx = {sparse_idx, h_i, h_hbd_idx};
-						// if (a.cfg.cf[i * ndiv][0] != a.cfg.cf[j * ndiv][0])
-						// 	h_idx = {sparse_idx, h_i, -h_hbd_idx};
-						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-					}
-					if (i / 2 != j / 2 && i % 2 == 1 && j % 2 == 0)
-					{
-						if (a.cfg.cf[i * ndiv][0] && a.cfg.cf[j * ndiv][0])
-							h_idx = {sparse_idx, h_i, h_orb_ud_idx};
-						// if (a.cfg.cf[i * ndiv][0] != a.cfg.cf[j * ndiv][0])
-						// 	h_idx = {sparse_idx, h_i, -h_orb_ud_idx};
-						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-					}
-					if (i / 2 != j / 2 && i % 2 == 0 && j % 2 == 1)
-					{
-						if (a.cfg.cf[i * ndiv][0] && a.cfg.cf[j * ndiv][0])
-							h_idx = {sparse_idx, h_i, h_orb_ud_idx};
-						// if (a.cfg.cf[i * ndiv][0] != a.cfg.cf[j * ndiv][0])
-						// 	h_idx = {sparse_idx, h_i, -h_orb_ud_idx};
-						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-					}
-					if (i / 2 != j / 2 && i % 2 == 1 && j % 2 == 1)
-					{
-						if (a.cfg.cf[i * ndiv][0] && a.cfg.cf[j * ndiv][0])
-							h_idx = {sparse_idx, h_i, h_orb_uu_idx};
-						// if (a.cfg.cf[i * ndiv][0] != a.cfg.cf[j * ndiv][0])
-						// 	h_idx = {sparse_idx, h_i, -h_orb_uu_idx};
-						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-					}
-					if (i / 2 != j / 2 && i % 2 == 0 && j % 2 == 0)
-					{
-						if (a.cfg.cf[i * ndiv][0] && a.cfg.cf[j * ndiv][0])
-							h_idx = {sparse_idx, h_i, h_orb_dd_idx};
-						// if (a.cfg.cf[i * ndiv][0] != a.cfg.cf[j * ndiv][0])
-						// 	h_idx = {sparse_idx, h_i, -h_orb_dd_idx};
-						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-					}
-				}
-			}
-		}
- 		*/
-
-		for_Int(idx_sets, 0, p.norg_sets)
-		{
-			// off_diagonal_term
-			// i[0]:annihilation orbit's position; i[1]:creation orbit's positon; i[2]:Colum idx(i); i[3]:sign(anticommutativity)
-			VEC<VecInt> off_dt_next(a.find_each_spiless_group_off_diagonal_term(a.divocchop_ingroup(a.div_idx, idx_sets), idx_sets));
-			for (const auto &i : off_dt_next){
-				h_idx = {sparse_idx, i[2], i[3] * (mat_hop_pos[i[1]][i[0]] + 1)};
-				for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-			}
-		}
-
-		// ! The SOC term.(not finished.)
-		// {
-		// 	// off_diagonal_term for SOC
-		// 	// i[0]:annihilation orbit's position; i[1]:creation orbit's positon; i[2]:Colum idx(i); i[3]:sign(anticommutativity)
-		// 	VEC<VecInt> off_d_interation(a.off_diagonal_soc_term(a.interation_soc_hop(a.div_idx)));
-		// 	for (const auto &i : off_d_interation){
-		// 		h_idx = {sparse_idx, i[2], i[3] * (h_orb_j_idx)};
-		// 		for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
-		// 	}
-		// }
-	}
-	// TIME_END("t_find_hmlt_table" + NAV(mm.id()), t_find_hmlt_table);
-	for_Int(jj, 0, 3) h_idxs[jj].shrink_to_fit();
-	return std::move(h_idxs);
-}
-
 
 Tab Operator::find_fullH_idx()
 {
@@ -352,6 +170,135 @@ SparseMatReal Operator::find_hmlt(const Tab h_idx) const
 	return hmlt_splited;
 }
 
+Tab Operator::find_fullH_offdiagonal_idx()
+{
+	clock_t t_find_hmlt_table;
+	t_find_hmlt_table = clock(); // TIME_BGN("find_hmlt_table" + NAV(mm.id()), t_find_hmlt_table);
+	VecPartition row_H(mm.np(), mm.id(), dim);
+	Tab h_idxs(3);
+	MatInt mat_hop_pos(scsp.hopint.nrows(),scsp.hopint.ncols());
+	for_Int(i, 0, mat_hop_pos.nrows()) for_Int(j, 0, mat_hop_pos.ncols()) mat_hop_pos[i][j] = i * mat_hop_pos.ncols() + j;
+	Mat<MatInt> tensor_u(scsp.hopint.nrows(), scsp.hopint.ncols(), mat_hop_pos);
+	for_Int(i, 0, tensor_u.nrows()) for_Int(j, 0, tensor_u.ncols()) for_Int(k, 0, mat_hop_pos.nrows()) for_Int(l, 0, mat_hop_pos.ncols())
+		tensor_u[i][j][k][l] = i * std::pow(p.norbit, 3) + j * std::pow(p.norbit, 2) + k * std::pow(p.norbit, 1) + l;
+	for_Int(h_i, row_H.bgn(), row_H.end()) {
+		// To save as sparse matrix, [0]: row number;[1]: colum number;[2]: idx.
+		VecInt h_idx(3, 0);
+		Int sparse_idx(h_i - row_H.bgn());
+		//WRN("wherein_NocSpace" + NAV(h_i - scsp.idx_div[scsp.wherein_NocSpace(h_i)]));
+
+		StateStatistics a(h_i, scsp.wherein_NocSpace(h_i), scsp);
+		
+		//! off-Diagonal term. C\power-index{i|†}C\index{j}|| C\power-index{i|†}C\power-index{j|†}C\power-index{k}C\index{l}
+		for_Int(sets_i, 0, p.norg_sets) {
+			{
+				// off_diagonal_term Two-Fermi
+				// i[0]:annihilation orbit's position; i[1]:creation orbit's positon; i[2]:Colum idx(i); i[3]:sign(anticommutativity)
+				VEC<VecInt> off_dt_next(a.find_each_spiless_group_off_diagonal_term(a.divocchop_ingroup(a.div_idx, sets_i), sets_i));
+				for (const auto &i : off_dt_next){
+					h_idx = {sparse_idx, i[2], i[3] * (mat_hop_pos[i[1]][i[0]] + 1)};
+					for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+
+					//! Diagonal+off-Diagonal term. n_sC_e^+C_f
+					if (p.if_norg_imp) for (const auto& x : a.filled_spinless) {
+						for (const auto& N_s : x) if (N_s != i[0] && N_s != i[1]) {
+							//																		[i   ][j  ][k  ][l   ]
+							h_idx = { sparse_idx, i[2],-i[3] * int(mat_hop_pos.size() + 1 + tensor_u[N_s][i[1]][N_s][i[0]]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+							h_idx = { sparse_idx, i[2], i[3] * int(mat_hop_pos.size() + 1 + tensor_u[N_s][i[1]][i[0]][N_s]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+							h_idx = { sparse_idx, i[2], i[3] * int(mat_hop_pos.size() + 1 + tensor_u[i[1]][N_s][N_s][i[0]]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+							h_idx = { sparse_idx, i[2],-i[3] * int(mat_hop_pos.size() + 1 + tensor_u[i[1]][N_s][i[0]][N_s]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+						}
+					}
+				}
+			}
+
+			if (p.if_norg_imp) {
+				for_Int(sets_j, 0, p.norg_sets) if (sets_j != sets_i) {
+					// off_diagonal_term Four-Fermi
+					// [0]~[3] i-j-k-l orbit's position(C^+_i C^+_j C_k C_l); [4]:Colum idx(i);[5]:sign(fermion anticommutativity)
+					VEC<array<int, 6>> off_dt_next(a.find_off_diagonal_term_fourFermi(a.divs_change_fourFermi(a.div_idx, sets_i, sets_j), sets_i, sets_j));
+					for (const auto& i : off_dt_next) {
+						h_idx = { sparse_idx, i[4], i[5] * int(mat_hop_pos.size() + 1 + tensor_u[i[0]][i[1]][i[2]][i[3]]) };
+						for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+					}
+				}
+			}
+		}
+	}
+	// TIME_END("t_find_hmlt_table" + NAV(mm.id()), t_find_hmlt_table);
+	for_Int(jj, 0, 3) h_idxs[jj].shrink_to_fit();
+	return std::move(h_idxs);
+}
+
+SparseMatReal Operator::find_hmlt_V2(const Tab h_table) const
+{
+	// clock_t t_find_hmlt;
+	// TIME_BGN("find_hmlt" + NAV(mm.id()), t_find_hmlt);
+	VecPartition row_H(mm.np(), mm.id(), dim);
+	SparseMatReal hmlt_splited(row_H.len(), dim, mm);
+	Tab h_idxs(3);
+	MatInt mat_hop_pos(scsp.hopint.nrows(),scsp.hopint.ncols());
+	for_Int(i, 0, mat_hop_pos.nrows()) for_Int(j, 0, mat_hop_pos.ncols()) mat_hop_pos[i][j] = i * mat_hop_pos.ncols() + j;
+	Mat<MatInt> tensor_u(scsp.hopint.nrows(), scsp.hopint.ncols(), mat_hop_pos);
+	for_Int(i, 0, tensor_u.nrows()) for_Int(j, 0, tensor_u.ncols()) for_Int(k, 0, mat_hop_pos.nrows()) for_Int(l, 0, mat_hop_pos.ncols())
+		tensor_u[i][j][k][l] = i * std::pow(p.norbit, 3) + j * std::pow(p.norbit, 2) + k * std::pow(p.norbit, 1) + l;
+	VEC<Real> diagonals;
+	for_Int(h_i, row_H.bgn(), row_H.end()) {
+		// To save as sparse matrix, [0]: row number;[1]: colum number;[2]: idx.
+		Real diagonal(0.);
+		VecInt h_idx(3, 0);
+		Int sparse_idx(h_i - row_H.bgn());
+		StateStatistics a(h_i, scsp.wherein_NocSpace(h_i), scsp);
+
+		//! Diagonal term. n_i
+		for (const auto& x : a.filled_spinless) {
+			for (const auto& i : x) {
+				h_idx = { sparse_idx, h_i, mat_hop_pos[i][i] + 1 };
+				// for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+				diagonal += h_idx[2] >= 0 ? oper_value[(abs(h_idx[2]))] : -oper_value[(abs(h_idx[2]))];
+			}
+		}
+		//! Diagonal term. n_i n_j
+		for_Int(set_i, 0, p.norg_sets) {
+			for_Int(set_j, 0, p.norg_sets) {
+				VEC<Int> N_veci(a.filled_spinless[set_i]), N_vecj(a.filled_spinless[set_j]);
+				for (const auto& N_i : N_veci) for (const auto& N_j : N_vecj) {
+					// if (N_i != N_j) {
+						h_idx = { sparse_idx, h_i, int(mat_hop_pos.size() + 1 + tensor_u[N_i][N_j][N_j][N_i]) };
+						// for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+						diagonal += h_idx[2] >= 0 ? oper_value[(abs(h_idx[2]))] : -oper_value[(abs(h_idx[2]))];
+						// ? if this term(↓) is necessary? only can mute this term when the interaction happen in different sets.
+						// h_idx = { sparse_idx, h_i,-int(mat_hop_pos.size() + 1 + tensor_u[N_i][N_j][N_i][N_j]) }; for_Int(pos, 0, 3) h_idxs[pos].push_back(h_idx[pos]);
+					// }
+				}
+			}
+		}
+		// hmlt_splited.addelement(diagonal, h_i, sparse_idx);
+		diagonals.push_back(diagonal);
+	}
+	Idx row_idx(0);
+	for_Idx(pos, 0, h_table[2].size()) {
+		if(row_idx == h_table[0][pos]) {
+			hmlt_splited.addelement(diagonals[row_idx], row_idx + row_H.bgn(), row_idx);
+			row_idx++;
+		}
+		Int coeff_comm = h_table[2][pos] >= 0 ? 1 : -1;
+		// if (ABS(oper_value[(abs(h_table[2][pos]))]) > h_pick_up_value) // Picking up significant values in H.
+		hmlt_splited.addelement(coeff_comm * oper_value[(abs(h_table[2][pos]))], h_table[1][pos], h_table[0][pos]);
+		
+	}
+	/*	
+
+	TIME_END("find_hmlt" + NAV(mm.id()), t_find_hmlt);
+	VecReal c = ABS(Vec(hmlt_splited.get_va()));
+	Real size_one(c.size());
+	LLInt size(mm.Allreduce(size_one));
+	if (mm) WRN(NAV2(h_pick_up_value, size));
+	*/
+	hmlt_splited.shrink_to_fit();
+	hmlt_splited.fix();
+	return hmlt_splited;
+}
 
 // Try to find the Ground state.
 MatReal Operator::lowest_eigpairs(const Idx n, bool if_need_fast, Int wish_nev)
@@ -366,7 +313,8 @@ MatReal Operator::lowest_eigpairs(const Idx n, bool if_need_fast, Int wish_nev)
 	MatReal eigenvec_i(wish_nev, n);		// a VEC to contain all the eigenvector.
 	Int gs_dgcy(1);							// cotain ground state degeneracy.
 	// if (mm)PIO("find_hmlt BEGIN :::");
-	SparseMatReal sep_hmltoperator = find_hmlt(table);
+	// SparseMatReal sep_hmltoperator = find_hmlt(table);
+	SparseMatReal sep_hmltoperator = find_hmlt_V2(table);
 	// if(mm) WRN("finished fiding the hmlt")
 //#ifdef _ASSERTION_
 //	if (mm.np() == 1) {
@@ -508,7 +456,7 @@ MatReal Operator::local_multiplets_state(const MatReal& g_state) const {
 	for_Int(h_i, 0, dim) {
 		StateStatistics a(h_i, scsp.wherein_NocSpace(h_i), scsp);
 		VecInt imp(4, 0);// the last one left for check the right.
-		for_Int(i, 0, p.norbs) imp[i] = a.cfg.cf[(i)*ndiv].isocc(0) ? 1 : 0;
+		for_Int(i, 0, p.norbs) imp[i] = a.cfg.cf[(i)*scsp.ndivs].isocc(0) ? 1 : 0;
 		switch (SUM(imp)) {
 		case 0:
 			local_multiplets_state[2][0] += gs_p[h_i] * gs_p[h_i];

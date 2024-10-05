@@ -25,6 +25,7 @@ APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i
 
 	imp.update("eDMFT");																			if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 	ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_edmft("hb_fit.txt", or_deg_idx);
+	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_edmft("g0imp.txt", or_deg_idx);
 	edmft_back_up("read");
 	auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
 	if (!norg.check_NTR()) norg.uormat = p.rotationU;
@@ -33,8 +34,8 @@ APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i
 	// MatReal tmp_e = norg.save_NTR();
 	// MatReal local_multiplets_state = norg.oneedm.local_multiplets_state(norg.oneedm.ground_state);	if (mm)WRN(NAV(local_multiplets_state));
 	edmft_back_up("save");
-	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_edmft("g0imp.txt", or_deg_idx);
 	ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp, or_deg_idx);							if (mm) gfimp.write_edmft("Gf.out", or_deg_idx);
+	{ mm.barrier(); SLEEP(1); }
 	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();
 	fit_err = bth.info.tr()[1];
 	{ mm.barrier(); SLEEP(1); }
@@ -267,8 +268,9 @@ void APIedmft::print_log(const Str& lbl, std::ostream& os) const {
     os << setw(3 + 2 * p.nband) << temp;
     
     os << iofmt() << fixed << setprecision(8);
+    // for_Int(i, 0, p.nband) {
     for_Int(i, 0, p.nband) {
-        os << "  " << setw(15) << fit_err[i] << "~" << setw(15) << n_eles[i * 2];
+        os << "  " << setw(15) << fit_err[or_deg_idx[i * 2] - 1] << "~" << setw(10) << n_eles[i * 2];
     }
     
     os << "  " << present();
@@ -297,7 +299,7 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 		} else {
 			Prmtr p_temp(p);
 			// p_temp.nooc_mode = STR("nooc"); // ! abandoned on 2024-05-24
-			p_temp.nooc_mode = STR("phss_v2");
+			// p_temp.nooc_mode = STR("phss_v2");
 			p_temp.templet_restrain[1] = -1; p_temp.templet_restrain[p_temp.ndiv - 1] = 1;
 			p_temp.according_nppso(p_temp.npartical);
 
@@ -315,7 +317,8 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 			Int o(0), freze_o(0), e(0), freze_e(0), orb_rep(0), nooc_o(0), nooc_e(0);
 			Int keep_o(0), keep_e(0);
 			for_Int(j, 0, p.norg_sets) { orb_rep = j; if (ordeg[j] == i + 1) break; }
-			o = nppso[orb_rep] - 1; e = p.nI2B[orb_rep] - nppso[orb_rep];
+			if(o % 2 == 0) {o = nppso[orb_rep]; e = p.nI2B[orb_rep] - nppso[orb_rep];}
+			else {o = nppso[orb_rep] - 1; e = p.nI2B[orb_rep] - nppso[orb_rep];}
 			for_Int(j, 0, o) {
 				if (occweight[orb_rep][j] < weight_freze[int(orb_rep/2)]) freze_o++;
 				else if (occweight[orb_rep][j] < weight_nooc[int(orb_rep/2)]) nooc_o++;
@@ -325,7 +328,8 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 				else if (occweight[orb_rep][j] < weight_nooc[int(orb_rep/2)]) nooc_e++;
 			}
 			keep_o = o - nooc_o - freze_o; keep_e = e - nooc_e - freze_e;
-			controler[i + 1] = p.if_norg_imp ? VecInt{ freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{ 1, freze_o, nooc_o, keep_o, 1, keep_e, nooc_e, freze_e };
+			if(o % 2 == 0) {controler[i + 1] = p.if_norg_imp ? VecInt{ freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{ 1, freze_o, nooc_o, keep_o, 0, keep_e, nooc_e, freze_e };}
+			else {controler[i + 1] = p.if_norg_imp ? VecInt{ freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{ 1, freze_o, nooc_o, keep_o, 1, keep_e, nooc_e, freze_e };}
 		}
 		VecInt DIV_constrain = VecInt{controler[0][p.ndiv/2+1], controler[0][p.ndiv/2+2], controler[0][p.ndiv/2+3]};
 		if (mm) WRN(NAV5(p.if_norg_degenerate, p.nooc_mode, DIV_constrain, weight_nooc, weight_freze)+"   "+present());
