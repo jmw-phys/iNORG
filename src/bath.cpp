@@ -1,3 +1,7 @@
+/*
+code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
+*/
+
 #include "bath.h"
 
 Bath::Bath(const MyMpi& mm_i, const Prmtr& prmtr_i) :mm(mm_i), p(prmtr_i), uur(mm.id()),

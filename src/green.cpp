@@ -1,5 +1,9 @@
 #include "green.h"
 
+/*
+code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
+*/
+
 using namespace std;
 
 void Green::read(const Str& file) {

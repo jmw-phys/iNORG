@@ -1,5 +1,5 @@
 /*
-coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022
+code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022
 */
 //! not finished yet 
 

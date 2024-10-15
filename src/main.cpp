@@ -1,3 +1,6 @@
+/*
+code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
+*/
 
 #include "specs.h"
 #include "prmtr.h"

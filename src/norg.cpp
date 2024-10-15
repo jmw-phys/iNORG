@@ -1,5 +1,5 @@
 /*
-coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2021 - 2023
+code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2021 - 2024
 */
 
 #include "norg.h"

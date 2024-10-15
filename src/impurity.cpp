@@ -1,5 +1,9 @@
 #include "impurity.h"
 
+/*
+code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
+*/
+
 Impurity::Impurity(const MyMpi &mm_i, const Prmtr &prmtr_i, const Bath &bth_i, const Str& file): mm(mm_i), p(prmtr_i), bth(bth_i),
     nb(p.nbath), ni(p.norbs), ns(p.norbit), pos_imp(p.norbs), 
     h0(p.norbit, p.norbit, 0.), imp_lvl(p.norbs), ordeg(0)

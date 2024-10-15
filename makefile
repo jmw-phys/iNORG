@@ -1,10 +1,10 @@
 PRES_DIR = .
-WORK_DIR = ./bi
+WORK_DIR = ./testing
 console_DIR = ./console
 DIRG = ${PRES_DIR}/gen
 # DIRR = ${PRES_DIR}/randomc
 DIRS = ${PRES_DIR}/src
-norg  = ${WORK_DIR}/norg
+norg  = ${WORK_DIR}/inorg
 VPATH = ${DIRG}:${DIRR}:${DIRS}
 
 CC       = mpiicpc
@@ -43,7 +43,7 @@ ${norg}: compile $(DEPS) $(OBJS)
 	$(CC) $(CPPFLAGS) $(CXXFLAGS) -o ${norg} $(OBJS) $(LIBS)
 
 manpower: ${norg}
-	@echo '_____________________________ Now you can test by: mpirun -n 24 ./norg _____________________________'
+	@echo '_____________________________ Now you can test by: mpirun -n 24 ./inorg _____________________________'
 
 start:
 	@echo '______________________________________________ start ______________________________________________'
@@ -70,25 +70,26 @@ compile:
 	$(COMPILE) -o $@ $<
 
 clean:
-	-rm -rf $(OBJS) $(DEPS) $(norg)
+	-rm -rf $(OBJS) $(DEPS)
 
 clear:
 
-	-rm -rf bi/*.txt $(norg)
-	-rm -rf bi/*.out
-	-rm -rf io/output.*
-	-rm -rf io/*.txt
+	-rm -rf $(norg)
+	# -rm -rf bi/*.txt
+	# -rm -rf bi/*.out
+	# -rm -rf io/output.*
+	# -rm -rf io/*.txt
 	# -rm -rf tso/*
-	-rm -rf jmwang.*
-	-rm -rf *jmw*
-	-rm -rf log.*
+	# -rm -rf jmwang.*
+	# -rm -rf *jmw*
+	# -rm -rf log.*
 deepclean:
-	-rm -rf general/*.cpp
-	-rm -rf general/*.h
-	-rm -rf special/*.cpp
-	-rm -rf special/*.h
-	-rm -rf randomc/*.cpp
-	-rm -rf randomc/*.h
+	# -rm -rf general/*.cpp
+	# -rm -rf general/*.h
+	# -rm -rf special/*.cpp
+	# -rm -rf special/*.h
+	# -rm -rf randomc/*.cpp
+	# -rm -rf randomc/*.h
 	
 
 depend:$(DEPS)

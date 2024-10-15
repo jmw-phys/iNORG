@@ -1,7 +1,7 @@
 /*
 code developed by
     Rong-Qiang He (rqhe@ruc.edu.cn, RUC, China) date 2013 - 2017
-	Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2020 - 2022
+	Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2020 - 2024
 */
 
 #ifndef _MILAPACKE_H_

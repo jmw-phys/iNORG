@@ -1,11 +1,9 @@
-#include "comdivs.h"
-
 /*
-coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2021-2022
+code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2021-2024
 */
 
+#include "comdivs.h"
 const BnmlFast ComDivs::bf = BnmlFast();
-
 using namespace std;
 
 ComDivs::ComDivs(Int i_i, VecInt ne_i, VecInt ns_i, bool quick) : idx(i_i), ne(ne_i), ns(ns_i), cf(cf_ComDivs(i_i))

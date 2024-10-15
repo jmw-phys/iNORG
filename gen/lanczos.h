@@ -2,7 +2,7 @@
 
 /*
 code developed by
-    Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2020 - 2022
+    Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2020 - 2024
 */
 
 

@@ -1,14 +1,13 @@
 #pragma once
 
 /*
-coded by Rong-Qiang He (rqhe@ruc.edu.cn, RUC, China) date 2013 - 2017
-coded by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2022 - 2023
+code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
 */
 
 #ifdef _MSC_VER
-#include "..\\general\\toolbox.h"
+#include "..\\gen\\toolbox.h"
 #else
-#include "../general/toolbox.h"
+#include "../gen/toolbox.h"
 #endif
 
 // directory prefix

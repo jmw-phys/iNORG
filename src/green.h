@@ -1,8 +1,7 @@
 #pragma once
 
 /*
-coded by Rong-Qiang He (rqhe@ruc.edu.cn, RUC, China)
-date 20201106
+code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
 */
 
 #include "specs.h"
