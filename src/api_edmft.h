@@ -7,7 +7,7 @@ code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
 #include "specs.h"
 #include "prmtr.h"
 #include "bath.h"
-#include "model.h"
+// #include "model.h"
 #include "green.h"
 #include "impurity.h"
 #include "norg.h"

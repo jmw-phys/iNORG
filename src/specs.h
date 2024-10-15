@@ -5,9 +5,9 @@ code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
 */
 
 #ifdef _MSC_VER
-#include "..\\gen\\toolbox.h"
+#include ".\\gen\\toolbox.h"
 #else
-#include "../gen/toolbox.h"
+#include "./gen/toolbox.h"
 #endif
 
 // directory prefix

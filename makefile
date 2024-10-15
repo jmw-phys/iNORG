@@ -1,8 +1,8 @@
 PRES_DIR = .
 WORK_DIR = ./testing
 console_DIR = ./console
-DIRG = ${PRES_DIR}/gen
 # DIRR = ${PRES_DIR}/randomc
+DIRG = ${PRES_DIR}/src/gen
 DIRS = ${PRES_DIR}/src
 norg  = ${WORK_DIR}/inorg
 VPATH = ${DIRG}:${DIRR}:${DIRS}

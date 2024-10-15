@@ -9,7 +9,7 @@ code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
 #include "green.h"
 #include "bath.h"
 // #include "ph-symm_bath.h"
-#include "model.h"
+// #include "model.h"
 
 // a basis state (i.e., a configuration) is represented by an integer.
 // the lower 16 bits represent a spin-down configuration
