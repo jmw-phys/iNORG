@@ -4,3 +4,4 @@ archive/
 makefile
 .vscode/*
 testing/*
+z-release_version/*

@@ -503,3 +503,9 @@ Version: v1.7.10.p3 @ 2024.10.05
 
 
 # iNORG - First fock version
+
+
+Version: v1.8.00.p3 @ 2024.10.17
+    realized: Change the "random.h" file, and merge this random.h to the powerful C++ stdlib.
+    next do : reduce the .cpp / .h in the "general" dir.
+    thinking: up data the control panel fro iNORG.

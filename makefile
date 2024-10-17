@@ -70,11 +70,21 @@ compile:
 	$(COMPILE) -o $@ $<
 
 clean:
-	-rm -rf $(OBJS) $(DEPS)
+	-rm -rf $(OBJS) $(DEPS) $(norg)
 
 clear:
-
-	-rm -rf $(norg)
+	-rm -rf testing/edmft_back_up
+	-rm -rf testing/g0imp.txt
+	-rm -rf testing/Gf.out
+	-rm -rf testing/h0.txt
+	-rm -rf testing/hb_fit.txt
+	-rm -rf testing/hb_read.txt
+	-rm -rf testing/inorg
+	-rm -rf testing/log.norg
+	-rm -rf testing/nmat.txt
+	-rm -rf testing/nohup.txt
+	-rm -rf testing/ose_hop
+	-rm -rf testing/Sig.out
 	# -rm -rf bi/*.txt
 	# -rm -rf bi/*.out
 	# -rm -rf io/output.*
