@@ -22,6 +22,8 @@ public:
 private:
 	//Block diagonalising hybridisation functions and separating them
 	VEC<ImGreen> generate_hb(const ImGreen& hb) const;
+	VEC<ImGreen> generate_hb(const ImGreen& hb, const VecInt or_deg) const;
+	
 	Vec<MatReal> generate_bs();
 
 	VecReal number_bath_fit_part(const ImGreen& vhb_i, const MatReal& vbs_i, Int idx);

@@ -26,6 +26,7 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb, const MatReal& bs, const Int
     vdyda.reset(ndata);
     a_old.reset((ni + 1) * nb, 0.);
 
+    Int curve_shift = 3;
 	{// curve
 		//only pick the upper triangular part of the matrix
 		VecReal mag_real(data_n[0] / (2 * nw), 0.);
@@ -43,7 +44,8 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb, const MatReal& bs, const Int
 					x[im_i] = im_i;
 					y[im_i] = imag(hb[n][i][j]);
 					mag_imag[idx] += SQR(y[im_i]);
-					wght[re_i] = wght[im_i] = (i == j) ? 1 : 2;
+                    if(n < curve_shift) wght[re_i] = wght[im_i] = (i == j) ? 1E-5 : 2E-5;
+                    else wght[re_i] = wght[im_i] = (i == j) ? 1 : 2;
 					//wght[re_i] = wght[im_i] = 1.;
 				}
 				mag_real[idx] = SQRT(1 + mag_real[idx] / nw);

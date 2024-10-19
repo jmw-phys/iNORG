@@ -5,7 +5,7 @@ code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
 #include "bath.h"
 
 Bath::Bath(const MyMpi& mm_i, const Prmtr& prmtr_i) :mm(mm_i), p(prmtr_i), uur(mm.id()),
-	nb(npart), ni(npart), npart(p.nband), info(p.nband, 6, 0.)
+	npart(p.nband), nb(npart), ni(npart), info(p.nband, 6, 0.)
 {
 	{ SLEEP(1); mm.barrier(); }		// make random seed output together
 
@@ -28,14 +28,14 @@ Bath::Bath(const MyMpi& mm_i, const Prmtr& prmtr_i) :mm(mm_i), p(prmtr_i), uur(m
 
 void Bath::number_bath_fit(const ImGreen& hb_i, const VecInt or_deg)
 {
-	VEC<ImGreen> v_hb = generate_hb(hb_i);      // vec of hyb function
-	Vec<MatReal> v_bs = generate_bs(); 			// bath sum rule //! Here set for empty
-	Vec<VecReal> v_a(npart);
-	for_Int(degi, 0, MAX(or_deg)) {
+	VEC<ImGreen> v_hb = generate_hb(hb_i, or_deg);      // vec of hyb function
+	Vec<MatReal> v_bs = generate_bs(); 					// bath sum rule //! Here set for empty
+	Vec<VecReal> v_a(npart), v_a_temp(MAX(or_deg));
+	for_Int(i, 0, MAX(or_deg)) {
 		// if (mm) WRN("HERE is fine ")
-		v_a[degi].reset(number_bath_fit_part(v_hb[degi], v_bs[degi], degi));
-		for_Int(i, 0, p.nband) if (or_deg[i * 2] - 1 == degi) v_a[i] = v_a[degi];
+		v_a_temp[i].reset(number_bath_fit_part(v_hb[i], v_bs[i], i));
 	}
+	for_Int(i, 0, npart) v_a[i] = v_a_temp[or_deg[i * 2] - 1];
 	fvb = arr2fvb(v_a);
 	//fix_fvb_symmetry();
 	// if (mm) bth_write_fvb(iter);
@@ -239,6 +239,20 @@ VEC<ImGreen> Bath::generate_hb(const ImGreen& hb) const {
 		ImGreen vhb_i(ni[i], p);
 		vhb_i = ImGreen(hb, i, i);
 		vhb.push_back(vhb_i);
+	}
+	return vhb;
+}
+
+VEC<ImGreen> Bath::generate_hb(const ImGreen& hb, const VecInt or_deg) const {
+	VEC<ImGreen> vhb;
+	Idx deg_idx(0);
+	for_Int(i, 0, hb.norbs) {
+		if (deg_idx < or_deg[i*2]) {
+			ImGreen vhb_i(ni[i], p);
+			vhb_i = ImGreen(hb, i, i);
+			vhb.push_back(vhb_i);
+			++deg_idx;
+		}
 	}
 	return vhb;
 }

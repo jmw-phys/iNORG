@@ -20,6 +20,7 @@ APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i
 	Bath bth(mm, p);
 	Impurity imp(mm, p, bth, or_deg_idx);
 	ImGreen hb(p.nband, p);	hb.read_edmft("Delta.inp", or_deg_idx);									if (mm) hb.write_edmft("hb_read.txt", or_deg_idx);
+	if(mm) WRN(NAV(or_deg_idx))
 	bth.bth_read_fvb("ose_hop");	 bth.number_bath_fit(hb, or_deg_idx);							if (mm) bth.bth_write_fvb();
 	{ mm.barrier(); SLEEP(1); }
 
@@ -128,6 +129,7 @@ void APIedmft::read_eDMFT(const Str& file) {
 
 	imfrq_hybrid_function.reset(num_omg, num_nondegenerate, 0.);
 
+	/*
 	{// Delta.inp: to get the hyb function.
 		Str hybdata("Delta.inp");
 		IFS ifs(hybdata);
@@ -152,6 +154,7 @@ void APIedmft::read_eDMFT(const Str& file) {
 		}
 		ifs.close();
 	}
+	*/
 }
 
 
