@@ -193,8 +193,8 @@ void Green::write_edmft(const Str& green_name, const VecInt& or_deg) const {
 			if (deg_idx < or_deg[m * 2]) {
 				ofs << "  " << setw(w_Real) << real(g[i][m][m]);
 				ofs << "  " << setw(w_Real) << imag(g[i][m][m]);
+				deg_idx++;
 			}
-			deg_idx++;
 		}
 		ofs << endl;
 	}

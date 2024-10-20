@@ -71,7 +71,8 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
     const SparseMatReal sep_h = find_hmlt_V2(table);
     VecReal v0(ex_state);
     v0 *= INV(SQRT(mm.Allreduce(DOT(v0, v0))));
-    VecReal v0_saved(v0);
+    VEC<VecReal> v0_saved;
+    v0_saved.push_back(v0);
     VecReal v1(sep_h * v0);
     Real a_i(0.), b_i(0.);
     a_i = mm.Allreduce(DOT(v1, v0));
@@ -79,13 +80,15 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
     if(g0.type_info() == STR("ImGreen")){
         for_Int(i, 0,  190) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
-        ltd.push_back(a_i); lt_sd.push_back(b_i);
+        ltd.push_back(a_i); lt_sd.push_back(b_i); v0_saved.push_back(v0);
+        if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
         }
     }
     if(g0.type_info() == STR("ReGreen")){
         for_Int(i, 0, 3000) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
-        ltd.push_back(a_i); lt_sd.push_back(b_i);
+        ltd.push_back(a_i); lt_sd.push_back(b_i); v0_saved.push_back(v0);
+        if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
         }
     }
     // ImGreen last_green(1, p);
@@ -93,9 +96,10 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
     VecCmplx green_pre(g0.nomgs, zero);
     VecCmplx green_error(g0.nomgs, zero);
     // while (true) {
-    for_Int(iter_time, 0, 10) {
+    for_Int(iter_time, 0, 50) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
-        ltd.push_back(a_i); lt_sd.push_back(b_i);
+        ltd.push_back(a_i); lt_sd.push_back(b_i); v0_saved.push_back(v0);
+        if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
         VecReal a(ltd), b(lt_sd);
         Int n(a.size());
         //ImGreen green_i(1, p);
@@ -116,6 +120,7 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
         // }
         // if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) break;
         // if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
+        if(compare_error(ltd[ltd.size() - 1], ltd[ltd.size() - 2]) < 1E-6) break;
     }
     VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
     if(mm) WRN(NAV(ABS(SUM(check_err))/check_err.size()));
@@ -134,7 +139,8 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
     const SparseMatReal sep_h = find_hmlt_V2(table);
     VecReal v0(ex_state);
     v0 *= INV(SQRT(mm.Allreduce(DOT(v0, v0))));
-    VecReal v0_saved(v0);
+    VEC<VecReal> v0_saved;
+    v0_saved.push_back(v0);
     VecReal v1(sep_h * v0);
     Real a_i(0.), b_i(0.);
     a_i = mm.Allreduce(DOT(v1, v0));
@@ -142,13 +148,15 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
     if(g0.type_info() == STR("ImGreen")){
         for_Int(i, 0,  190) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
-        ltd.push_back(a_i); lt_sd.push_back(b_i);
+        ltd.push_back(a_i); lt_sd.push_back(b_i); v0_saved.push_back(v0);
+        if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
         }
     }
     if(g0.type_info() == STR("ReGreen")){
         for_Int(i, 0, 3000) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
-        ltd.push_back(a_i); lt_sd.push_back(b_i);
+        ltd.push_back(a_i); lt_sd.push_back(b_i); v0_saved.push_back(v0);
+        if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
         }
     }
     // ImGreen last_green(1, p);
@@ -156,9 +164,10 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
     VecCmplx green_pre(g0.nomgs, zero);
     VecCmplx green_error(g0.nomgs, zero);
     // while (true) {
-    for_Int(iter_time, 0, 10) {
+    for_Int(iter_time, 0, 50) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
-        ltd.push_back(a_i); lt_sd.push_back(b_i);
+        ltd.push_back(a_i); lt_sd.push_back(b_i); v0_saved.push_back(v0);
+        if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
         VecReal a(ltd), b(lt_sd);
         Int n(a.size());
         //ImGreen green_i(1, p);
@@ -179,6 +188,7 @@ void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0)
         // }
         // if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) break;
         // if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
+        if(compare_error(ltd[ltd.size() - 1], ltd[ltd.size() - 2]) < 1E-6) break;
     }
     VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
     if(mm) WRN(NAV(ABS(SUM(check_err))/check_err.size()));
@@ -229,6 +239,7 @@ VecReal CrrltFun::find_hd_exstate(Int position, Int ex_idx) {
     return hdex_state;
 }
 */
+
 
 // ! only suit for the three orbital cases.
 VecReal CrrltFun::find_hd_exstate(Int position, Int ex_idx) {
@@ -309,7 +320,8 @@ void CrrltFun::find_hd_greater(const Real& ge0, Green &g0, Int position, Int ex_
     const SparseMatReal sep_h = find_hmlt_V2(table);
     VecReal v0(hd_exstate);
     v0 *= INV(SQRT(mm.Allreduce(DOT(v0, v0))));
-    VecReal v0_saved(v0);
+    VEC<VecReal> v0_saved;
+    v0_saved.push_back(v0);
     VecReal v1(sep_h * v0);
     Real a_i(0.), b_i(0.);
     a_i = mm.Allreduce(DOT(v1, v0));
@@ -317,13 +329,15 @@ void CrrltFun::find_hd_greater(const Real& ge0, Green &g0, Int position, Int ex_
     if(g0.type_info() == STR("ImGreen")){
         for_Int(i, 0, 200) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
-        ltd.push_back(a_i); lt_sd.push_back(b_i);
+        ltd.push_back(a_i); lt_sd.push_back(b_i); v0_saved.push_back(v0);
+        if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
         }
     }
     if(g0.type_info() == STR("ReGreen")){
         for_Int(i, 0, 3000) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
-        ltd.push_back(a_i); lt_sd.push_back(b_i);
+        ltd.push_back(a_i); lt_sd.push_back(b_i); v0_saved.push_back(v0);
+        if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
         }
     }
     // ImGreen last_green(1, p);
@@ -509,10 +523,14 @@ CrrltFun::Vectrdgnl CrrltFun::find_trdgnl(const VecReal& initial_vector, const I
     return std::make_tuple(va_i, vb_i);
 }
 
-void CrrltFun::find_trdgnl_one_step(const VecReal& initial_vector, VecReal& v0, VecReal& v1, Real&a, Real& b, const SparseMatReal& sep_h){
+void CrrltFun::find_trdgnl_one_step(const VEC<VecReal>& initial_vector, VecReal& v0, VecReal& v1, Real&a, Real& b, const SparseMatReal& sep_h){
     v1 -= a * v0;
     b = SQRT(mm.Allreduce(DOT(v1, v1)));
     // v1 -= mm.Allreduce(DOT(v1, initial_vector)) * initial_vector;
+    for_Int(i, 0, initial_vector.size() - 1) {
+        v1 -= mm.Allreduce(DOT(v1, initial_vector[i])) * initial_vector[i];
+        // WRN("For the iter" + NAV(i));
+    }
     v1 *= INV(SQRT(mm.Allreduce(DOT(v1, v1))));
     SWAP(v0, v1);
     v1 *= -b;

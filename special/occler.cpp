@@ -69,7 +69,7 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_
     Int counter_norg(0);
     std::map<std::string, Real> sub_energy_data;
     // tp.nooc_mode = STR("nooc"); // ! abandoned on 2024-05-24
-    // tp.nooc_mode = STR("phss_v2");
+    tp.nooc_mode = STR("phss_v2");
     tp.templet_restrain[1] = -1; tp.templet_restrain[tp.ndiv - 1] = 1;
     while(1){
             Int counter(0);

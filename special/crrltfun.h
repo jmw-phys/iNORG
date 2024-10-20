@@ -40,7 +40,7 @@ private:
 	//VECtrdgnl find_trdgnl_first(const VecReal& initial_vector);
 
 	// Using the Lanczos to mapping H to the tridiagonal matrix(step by step).
-	void find_trdgnl_one_step(const VecReal& initial_vector, VecReal& v0, VecReal& v1, Real& a, Real& b, const SparseMatReal& sep_h);
+	void find_trdgnl_one_step(const VEC<VecReal>& initial_vector, VecReal& v0, VecReal& v1, Real& a, Real& b, const SparseMatReal& sep_h);
 
 	// mapping the state by using the project operator.
 	VecReal project_uplwer_parical_space(const VecReal &initial_vector, const Int crtann, const Int norg_set, const Int orbit_pos_in_div = 0) const;
