@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 	using namespace std;
 	MPI_Init(&argc, &argv);
 	MyMpi mm;
-	if (mm) cout << "\n\nVersion: v1.8.01.p3@2024.10.19\
+	if (mm) cout << "\n\nVersion: v1.9.00.p3@2024.10.29\
 (running "<< present() <<")\n\n" << endl;
 	if (mm) cout << NAV(pwd()) << endl; 
 	use_mkl(mm);

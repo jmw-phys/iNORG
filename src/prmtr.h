@@ -96,7 +96,6 @@ private:
 		os << rght_justify(true_var, 16) << (true_var == "" ? "   " : " = ") << left_justify(val, w_Real)
 			<< "    # " + comment << endl;
 	}
-	void derive();
 
 	VEC<MatReal> uormat_initialize() const {
 		VEC<MatReal> uormat_i;
@@ -118,6 +117,8 @@ public:
 	void print(std::ostream &os = std::cout) const;
 	void change_the_norg_restrain_and_div(VecInt new_restrain, VecInt new_control) const;
 
+
+	void derive();
 	// Imag frequency
 	Real Imomg(Int n) const { return imag(Im_z[n]); }
 	Cmplx Imz(Int n) const { return Im_z[n]; }

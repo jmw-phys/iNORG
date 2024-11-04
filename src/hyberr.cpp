@@ -26,7 +26,7 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb, const MatReal& bs, const Int
     vdyda.reset(ndata);
     a_old.reset((ni + 1) * nb, 0.);
 
-    Int curve_shift = 3;
+    Int curve_shift = 0;
 	{// curve
 		//only pick the upper triangular part of the matrix
 		VecReal mag_real(data_n[0] / (2 * nw), 0.);

@@ -230,7 +230,8 @@ void APIedmft::update(const Str& file) {
 	{// modify the parameters from edmft.in
 		read_eDMFT(file);	p.U = Uc; p.mu = mu; p.jz = Jz; p.nband = nband; p.norg_sets = p.norbs = norbs;
 		p.templet_restrain = restrain; p.templet_control = distribute; p.project = NAV(nband) + "band";
-		p.after_modify_prmtr(); p.recalc_partical_number();
+		if(p.if_norg_degenerate == 1) p.bandw = 4 * Uc;
+		p.after_modify_prmtr(); p.recalc_partical_number(); p.derive();
 		p.Uprm = p.U - 2 * p.jz;
 		p.degel = 0;
 		n_eles.reset(norbs, 0); fit_err.reset(nband, 0);
