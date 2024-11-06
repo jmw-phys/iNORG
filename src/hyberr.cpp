@@ -6,7 +6,7 @@ code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
 
 
 HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb, const MatReal& bs, const Int nb_i) :
-    p(p_i), nw(p.fit_num_omg), nb(nb_i), bw(p.fit_max_omg), data_n(3), nw_hterm(10)
+    p(p_i), nw(p.fit_num_omg), nb(nb_i), bw(p.fit_max_omg), data_n(3), nw_hterm(1)
 {
     Int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -115,9 +115,9 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb, const MatReal& bs, const Int
 		for_Int(i, 0, ni) {
 			for_Int(j, i, ni) {
 				for_Int(n, 0, nw_hterm) {
-					sig[bgn + idx * 2 * nw_hterm + n] = mag_real[idx] / SQRT(wght[idx * 2 * nw_hterm + n]);
+					sig[bgn + idx * 2 * nw_hterm + n] = 2E-3 * mag_real[idx] / SQRT(wght[idx * 2 * nw_hterm + n]);
+					sig[bgn + idx * 2 * nw_hterm + nw_hterm + n] = 2E-3 * mag_imag[idx] / SQRT(wght[idx * 2 * nw_hterm + nw_hterm + n]);
                     // sig[bgn + idx * 2 * nw_hterm + n] *= std::pow(10, 2 + (nb / 2 - 4) / 11) * sqrt(nb) * 4 * (bw);
-					sig[bgn + idx * 2 * nw_hterm + nw_hterm + n] = mag_imag[idx] / SQRT(wght[idx * 2 * nw_hterm + nw_hterm + n]);
                     // sig[bgn + idx * 2 * nw_hterm + nw_hterm + n] *= std::pow(10, 2 + (nb / 2 - 4) / 11) * sqrt(nb) * 4 * (bw);
 				}
 				++idx;

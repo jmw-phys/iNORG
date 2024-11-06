@@ -13,7 +13,7 @@ code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
 
 
 APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i), p(prmtr_i), num_omg(prmtr_i.num_omg), 
-	ful_pcl_sch(1), iter_count(0), sig_err(0.), n_eles(p.norbs, 0.), fit_err(p.nband, 0.),
+	ful_pcl_sch(1), iter_count(0), sig_err(0.), n_eles(p.norbs, 0.), fit_err(p.nband, 0.), fit_range (5.0),
 	num_nondegenerate(-1), weight_nooc(5, 1E-4), weight_freze(5, 1E-13) 
 {
 	update(file);
@@ -230,7 +230,8 @@ void APIedmft::update(const Str& file) {
 	{// modify the parameters from edmft.in
 		read_eDMFT(file);	p.U = Uc; p.mu = mu; p.jz = Jz; p.nband = nband; p.norg_sets = p.norbs = norbs;
 		p.templet_restrain = restrain; p.templet_control = distribute; p.project = NAV(nband) + "band";
-		if(p.if_norg_degenerate == 1) p.bandw = 4 * Uc;
+		// if(p.if_norg_degenerate == 1) p.bandw = 4 * Uc;
+		p.bandw = 4 * fit_range;
 		p.after_modify_prmtr(); p.recalc_partical_number(); p.derive();
 		p.Uprm = p.U - 2 * p.jz;
 		p.degel = 0;
@@ -392,6 +393,9 @@ void APIedmft::read_norg_setting(
 		}
 		else if (key == "CoulombF") {
 			iss >> CoulombF;
+		}
+		else if (key == "fit_range") {
+			iss >> fit_range;
 		}
 		else if (key == "NOOC") {
 			iss >> p.nooc_mode;

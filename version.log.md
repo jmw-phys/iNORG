@@ -515,3 +515,8 @@ Version: v1.9.00.p3 @ 2024.10.29
     realized: Fix the bug for the 2 or 3 orbital cases
     next do : (same as prev)
     thinking: (same as prev)
+
+Version: v1.9.01.p3 @ 2024.11.06
+    realized: Corrected the fitting to ensure high-frequency alignment at all times, while opening the low-frequency err_crv interface.
+    next do : (same as prev)
+    thinking: (same as prev)

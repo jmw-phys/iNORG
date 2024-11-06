@@ -36,6 +36,7 @@ class APIedmft{
 	
 	// NORG coding console
 	Str mode;
+	Real fit_range;
 	VecInt restrain, distribute;
 	VecReal weight_nooc, weight_freze;
 
