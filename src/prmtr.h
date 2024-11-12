@@ -42,6 +42,7 @@ public:
 	mutable VecCmplx Im_z;
 
 	//fitting related		
+	mutable VEC<Int> fit_points;				// number of positive imaginary frequencies used for bath fitting
 	mutable Real fit_max_omg;				// imaginary frequency upper bound used for bath fitting
 	mutable Int fit_num_omg;				// number of positive imaginary frequencies used for bath fitting
 	mutable Real fit_pow;					// 1 / (omg_n + fit_rsd) ^ fit_pow is the weight used in bath fitting

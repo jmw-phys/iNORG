@@ -39,10 +39,10 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb, const MatReal& bs, const Int
 					Int re_i(idx * 2 * nw + n);
 					Int im_i(idx * 2 * nw + n + nw);
 					x[re_i] = re_i;
-					y[re_i] = real(hb[n][i][j]);
+                    y[re_i] = p.fit_points.empty() ? real(hb[n][i][j]):real(hb[p.fit_points[n]][i][j]);
 					mag_real[idx] += SQR(y[re_i]);
 					x[im_i] = im_i;
-					y[im_i] = imag(hb[n][i][j]);
+                    y[im_i] = p.fit_points.empty() ? imag(hb[n][i][j]):imag(hb[p.fit_points[n]][i][j]);
 					mag_imag[idx] += SQR(y[im_i]);
                     if(n < curve_shift) wght[re_i] = wght[im_i] = (i == j) ? 1E-5 : 2E-5;
                     else wght[re_i] = wght[im_i] = (i == j) ? 1 : 2;
@@ -139,7 +139,7 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb, const MatReal& bs, const Int
 		}
 	}
 
-    // if (rank == 0) WRN(NAV3(x, y, sig));
+    // if (rank == 0) WRN(NAV4(nw,x, y, sig));
     
 }
 
@@ -244,7 +244,8 @@ void HybErr::get_value_mrq(const VecReal& a)
         Mat<MatCmplx> dydV;
         Mat<MatCmplx> dydE;
         if (n < nw) {                   // the part of lower ev term of hybber curve
-            MatCmplx Z = dmat(E.nrows(), p.Imz(n));
+            Cmplx tem_z = p.fit_points.empty() ? p.Imz(n):p.Imz(p.fit_points[n]);
+            MatCmplx Z = dmat(E.nrows(), tem_z);
             MatCmplx S = matinvlu(Z - E);
             MatCmplx hb_n = V * S * V.ct();
             dydV = Mat<MatCmplx>(V.nrows(), V.ncols(), MatCmplx(ni, ni, 0.));

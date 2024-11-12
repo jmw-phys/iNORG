@@ -48,7 +48,7 @@ void Prmtr::set_values() {
     // Uprm = U - 2 * jz;
     jz = 0;
     Uprm = U - delta;
-    bandw = 20.;                                        //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
+    bandw = 40.;                                        //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
     eimp = VecReal(norbs, 0.);
     degel = 2;                                          // Degenerate energy levels
     bethe_t.reset(nband, 0.5);
@@ -210,7 +210,7 @@ void Prmtr::derive() {
 	for_Int(n, 0, num_omg) Im_z[n] = Cmplx(0., (2 * n + 1) * unit_omg);
 
     fit_max_omg = bandw / 4. ;
-    fit_num_omg = Int_ROUND(fit_max_omg / unit_omg / 2); // The default value: Int_ROUND(fit_max_omg / unit_omg / 2) change for speed reason.
+    fit_num_omg = fit_points.empty() ? Int_ROUND(fit_max_omg / unit_omg / 2):fit_points.size(); // The default value: Int_ROUND(fit_max_omg / unit_omg / 2) change for speed reason.
 
     Str key_prmtr_val = STR("prmtr");
     ofx = iox + key_prmtr_val;
@@ -228,7 +228,7 @@ void Prmtr::derive_ImGreen() const {
     fit_num_omg = Int_ROUND(fit_max_omg / unit_omg / 2); // The default value: Int_ROUND(fit_max_omg / unit_omg / 2) change for speed reason.
 }
 
-void Prmtr::print(std::ostream &os) const {
+void Prmtr::print(std::ostream &os) const { // ! not in used in DFT+DMFT
 #define prmtr_print(var, comment) print(os, NAME(var), STR(var), comment)
 
     using namespace std;
@@ -254,6 +254,7 @@ void Prmtr::print(std::ostream &os) const {
     prmtr_print(eta_freq, "eta of omega + i * eta");
     prmtr_print(dlt_freq, "The real x-axis unit for retarded green function");
     prmtr_print(fit_max_omg, "The fitting max omg");
+    prmtr_print(VecInt(fit_points), "to set the fix fitting points.");
     prmtr_print(fit_num_omg, "The max number of fitting points.");
     prmtr_print(unit_omg*2, "The image x-axis unit for Matsubara Green's function");
     // prmtr_print(imp_backup, "if you have the impurity's back up?");

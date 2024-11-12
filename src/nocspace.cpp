@@ -1084,6 +1084,7 @@ void NocSpace::print(std::ostream& os) const {
 	nocspace_print(p.jz, "The hund coupling");
 	nocspace_print(p.mu, "The hund coupling");
     nocspace_print(p.fit_max_omg, "The fitting max omg");
+    if(!p.fit_points.empty()) nocspace_print(VecInt(p.fit_points).mat(1, p.fit_points.size()), "to set the fix fitting points.");
     nocspace_print(p.fit_num_omg, "The max number of fitting points.");
 	// u_hbd, p.U12, p.U12, p.U12
 

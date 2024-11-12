@@ -423,6 +423,17 @@ void APIedmft::read_norg_setting(
 				}
 			}
 		}
+		else if (key == "fit_points") {
+			char ch;
+			while (iss >> ch && ch != ']') {
+				if (ch != ',' && ch != '[') {
+					double value;
+					iss.unget();
+					iss >> value;
+					p.fit_points.push_back(value);
+				}
+			}
+		}
 		else if (key == "weight_freze") {
 			char ch;
 			while (iss >> ch && ch != ']') {

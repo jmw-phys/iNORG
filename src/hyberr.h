@@ -16,6 +16,7 @@ public:
 	const Int nw_hterm;		// nw_hterm = 10
 	VecInt data_n;			//number of data of hyb,bsr,reg
 
+
 	VecReal vy;
 	Vec<VecReal> vdyda;
 	VecReal a_old;
