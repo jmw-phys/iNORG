@@ -525,3 +525,8 @@ Version: v1.9.11.p3 @ 2024.11.12
     realized: The position that needs to be fitted is controlled by passing parameters through eDMFT.
     next do : (same as prev)
     thinking: (same as prev)
+
+Version: v1.9.12.p3 @ 2024.11.18
+    realized: Adjust the fitting with less ose regularization, and fix the occupancy controler for always use cnooc mode.
+    next do : (same as prev)
+    thinking: (same as prev)

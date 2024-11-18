@@ -133,7 +133,7 @@ HybErr::HybErr(const Prmtr& p_i, const ImGreen& hb, const MatReal& bs, const Int
 			x[i + bgn] = i + bgn;
 			y[i + bgn] = 0.;
 			//sig[i + bgn] = std::pow(4 * 256 * p.fit_max_omg, 2);  //Change to the part of ose regularization
-			sig[i + bgn] = std::pow(10, 2 + (nb / 2 - 4) / 11) * sqrt(nb) * 4 * (bw);
+			sig[i + bgn] = 1E2 * std::pow(10, 2 + (nb / 2 - 4) / 11) * sqrt(nb) * 4 * (bw);
 			// if(rank == 0 && i == 0)  WRN(NAV(sig[i+bgn])) 
 			// sig[i + bgn] =0.0000001;
 		}

@@ -27,7 +27,9 @@ APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i
 	imp.update("eDMFT");																			if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
 	ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_edmft("hb_fit.txt", or_deg_idx);
 	edmft_back_up("read");
-	auto_nooc("ful_pcl_sch", imp);	NORG norg(mm, p);
+	auto_nooc("ful_pcl_sch", imp);	
+	if(mm) WRN(NAV(p.control_divs));
+	NORG norg(mm, p);
 	if (!norg.check_NTR()) norg.uormat = p.rotationU;
 	else MatReal tmp_b = norg.read_NTR();
 	norg.up_date_h0_to_solve(imp.impH, 1);															n_eles = norg.write_impurtiy_occupation();
@@ -303,8 +305,9 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 		} else {
 			Prmtr p_temp(p);
 			// p_temp.nooc_mode = STR("nooc"); // ! abandoned on 2024-05-24
-			p_temp.nooc_mode = STR("phss_v2");
-			p_temp.templet_restrain[1] = -1; p_temp.templet_restrain[p_temp.ndiv - 1] = 1;
+			// p_temp.nooc_mode = STR("phss_v2");
+			p_temp.nooc_mode = STR("cnooc");
+			// p_temp.templet_restrain[1] = -1; p_temp.templet_restrain[p_temp.ndiv - 1] = 1;
 			p_temp.according_nppso(p_temp.npartical);
 
 			NORG norg(mm, p_temp);	norg.read_NTR(); 	norg.up_date_h0_to_solve(imp.impH, 1);
@@ -335,7 +338,7 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 		}
 		VecInt DIV_constrain = VecInt{controler[0][p.ndiv/2+1], controler[0][p.ndiv/2+2], controler[0][p.ndiv/2+3]};
 		if (mm) WRN(NAV5(p.if_norg_degenerate, p.nooc_mode, DIV_constrain, weight_nooc, weight_freze)+"   "+present());
-		// if(mm) WRN(NAV(controler));
+		// if (mm) WRN(NAV(controler)+"   "+present());
 		// p.nooc_mode = STR("cpnooc");
 		// controler[0][1] = -0; controler[0][p.ndiv - 1] = 0;
 		p.according_controler(controler, ordeg);
