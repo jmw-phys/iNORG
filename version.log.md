@@ -530,3 +530,8 @@ Version: v1.9.12.p3 @ 2024.11.18
     realized: Adjust the fitting with less ose regularization, and fix the occupancy controler for always use cnooc mode.
     next do : (same as prev)
     thinking: (same as prev)
+
+Version: v1.9.13.p3 @ 2024.11.28
+    realized: Different impurity orbitals can now use different numbers of bath sites during NORG process.
+    next do : Check if it can support matrix fitting?
+    thinking: Start thinking about how to implement SOC form of NORG solver iteration.

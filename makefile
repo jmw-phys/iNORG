@@ -5,7 +5,7 @@ console_DIR = ./console
 DIRG = ${PRES_DIR}/src/gen
 DIRS = ${PRES_DIR}/src
 norg  = ${WORK_DIR}/inorg
-VPATH = ${DIRG}:${DIRR}:${DIRS}
+VPATH = ${DIRG}:${DIRS}
 
 CC       = mpiicpc
 # CPPFLAGS = -std=c++17 -qmkl -O3
@@ -14,9 +14,12 @@ CFLAGS   =
 CXXFLAGS = $(CFLAGS)
 COMPILE  = $(CC) $(CPPFLAGS) $(CXXFLAGS) -c
 
-SRCS := $(wildcard ${DIRG}/*.cpp) $(wildcard ${DIRR}/*.cpp) $(wildcard ${DIRS}/*.cpp)
+SRCS := $(wildcard ${DIRG}/*.cpp) $(wildcard ${DIRS}/*.cpp)
 OBJS := $(patsubst %.cpp,%.o,$(SRCS))
 DEPS := $(patsubst %.cpp,%.d,$(SRCS))
+
+# 添加头文件搜索路径
+HEADERS := $(wildcard ${DIRG}/*.h) $(wildcard ${DIRS}/*.h)
 
 default: manpower
 
@@ -62,9 +65,13 @@ compile:
 	@echo '_____________________________________________ compile _____________________________________________'
 	@echo ''
 
+# %.d:%.cpp
+# 	$(CC) -MM $(CPPFLAGS) $< > $@
+# 	$(CC) -MM $(CPPFLAGS) $< | sed s/\\.o/\\.d/   >> $@
 %.d:%.cpp
-	$(CC) -MM $(CPPFLAGS) $< > $@
-	$(CC) -MM $(CPPFLAGS) $< | sed s/\\.o/\\.d/   >> $@
+	@$(CC) -MM -MP -MF"$@" -MT"$*.o" $(CPPFLAGS) $<
+	@$(CC) -MM -MP -MF"$@" -MT"$@" $(CPPFLAGS) $< >> $@
+	@if [ -f $*.h ]; then echo "$*.o: $*.h" >> $@; fi
 
 %.o:%.cpp
 	$(COMPILE) -o $@ $<

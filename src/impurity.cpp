@@ -172,17 +172,28 @@ void Impurity::write_H0info(const Bath &b, Int ndeg, Int iter_cnt) const {
     OFS ofs;
     if(iter_cnt < 0) ofs.open("h0.txt");
     if(iter_cnt > 0) ofs.open(iox + "zic" + prefill0(iter_cnt, 3) +".h0.txt");
-    using namespace std;
-    if(ndeg > 0) for_Int(i, 0, ndeg)	{
-        ofs << "degeneracy band "<< i+1  << " nmin: " << b.info[i][0] << " err: " << b.info[i][1] << " err_crv: " << b.info[i][2] << " err_hight_ev: " << b.info[i][3] << " err_regE: " << b.info[i][4] <<" norm: " << b.info[i][5]<< "  " << endl;
+    
+    // Write band info
+    if(ndeg > 0) for_Int(i, 0, ndeg) {
+        ofs << "degeneracy band "<< i+1  << " nmin: " << b.info[i][0] << " err: " << b.info[i][1] 
+            << " err_crv: " << b.info[i][2] << " err_hight_ev: " << b.info[i][3] 
+            << " err_regE: " << b.info[i][4] <<" norm: " << b.info[i][5]<< "  " << endl;
     }
     else for_Int(i, 0, p.nband) {
-        ofs << "band "<< i+1  << "nmin: " << b.info[i][0] << " err: " << b.info[i][1] << " err_crv: " << b.info[i][2] << " err_hight_ev: " << b.info[i][3] << " err_regE: " << b.info[i][4] <<" norm: " << b.info[i][5]<< "  " << endl;
+        ofs << "band "<< i+1  << "nmin: " << b.info[i][0] << " err: " << b.info[i][1] 
+            << " err_crv: " << b.info[i][2] << " err_hight_ev: " << b.info[i][3] 
+            << " err_regE: " << b.info[i][4] <<" norm: " << b.info[i][5]<< "  " << endl;
     }
-    for_Int(i, 0, p.nband)	{
+
+    // Calculate correct matrix positions
+    Int pos = 0;
+    for_Int(i, 0, p.nband) {
         ofs << "band "<< i+1 << endl;
-        Int begin(i*2 * (p.nI2B[i*2] + 1)), end((i*2 + 1) * (p.nI2B[i*2] + 1));
+        Int begin = pos;
+        Int size = 2 * (p.nI2B[2*i] + 1);  // Size for this band
+        Int end = begin + size;
         ofs << iofmt() << h0.truncate(begin, begin, end, end) << endl;
+        pos += size;  // Update position for next band
     }
 }
 

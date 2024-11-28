@@ -68,7 +68,7 @@ public:
 
 	mutable MatInt control_divs;	// to set the number of division and the shortcut restratin.
 	mutable VecInt templet_restrain;// to set the restrain templet one for all distribute;
-	mutable VecInt templet_control;	// to set the control templet one for all distribute;
+	// mutable VecInt templet_control;	// to set the control templet one for all distribute;
 	mutable VecInt stage2_restrain;	// to set the stage2 restrain one for all distribute;
 	mutable VecInt stage2_control;	// to set the stage2 control one for all distribute;
 	mutable Int ndiv;				// the the divsion's nubmer.
@@ -110,13 +110,15 @@ private:
 
 public:
 	Prmtr(const MyMpi& mm);
-	void after_modify_prmtr() const;
+	// void after_modify_prmtr() const;
+	void after_modify_prmtr(const VecInt& nbaths) const;
+
 	void according_nppso(const VecInt& nppsos) const;
 	void according_controler(const Vec<VecInt>& controler, const VecInt& or_deg) const;
 	void derive_ImGreen() const;
 	void recalc_partical_number() const;
 	void print(std::ostream &os = std::cout) const;
-	void change_the_norg_restrain_and_div(VecInt new_restrain, VecInt new_control) const;
+	// void change_the_norg_restrain_and_div(VecInt new_restrain, VecInt new_control) const;
 
 
 	void derive();

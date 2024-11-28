@@ -13,56 +13,6 @@ Occler::Occler(const MyMpi& mm_i, Prmtr& prmtr_i):
 }
 
 
-// old version
-NORG Occler::find_ground_state_partical(const Impdata &impH_i){
-    Int counter(0);
-    while(1){
-        if(mm) std::cout << "The " << ++counter << "-th NORG begin" << std::endl;	// norg counter
-        NORG a(mm, tp);                          IFS ifs_a("ru"+nppso_str(a.scsp.nppso)+".bi"); 
-        if(ifs_a) {for_Int(i, 0, a.uormat.size()) biread(ifs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());}
-        a.up_date_h0_to_solve(impH_i);            sub_energy[0] = a.groune_lst;
-        if(mm){
-            OFS ofs_a; ofs_a.open("ru"+nppso_str(a.scsp.nppso)+".bi"); 
-            for_Int(i, 0, a.uormat.size()) biwrite(ofs_a, CharP(a.uormat[i].p()), a.uormat[i].szof());}
-
-        tp.templet_control[1]--;                 tp.templet_control[tp.ndiv-1]++;  tp.after_modify_prmtr(); tp.recalc_partical_number();
-            if(mm) std::cout << "The " << ++counter << "-th NORG begin" << std::endl;	// norg counter
-            NORG a_m(mm, tp);                    IFS ifs_m("ru"+nppso_str(a_m.scsp.nppso)+".bi"); 
-            if(ifs_m) {for_Int(i, 0, a_m.uormat.size()) biread(ifs_m, CharP(a_m.uormat[i].p()), a_m.uormat[i].szof());}
-            a_m.up_date_h0_to_solve(impH_i);      sub_energy[1] = a_m.groune_lst;
-        if(mm){
-            OFS ofs_m; ofs_m.open("ru"+nppso_str(a_m.scsp.nppso)+".bi"); 
-            for_Int(i, 0, a_m.uormat.size()) biwrite(ofs_m, CharP(a_m.uormat[i].p()), a_m.uormat[i].szof());}
-            
-            if(tp.templet_control[1] == 0 && sub_energy[1] < sub_energy[0])  return a_m;
-            tp.templet_control[1]++;             tp.templet_control[tp.ndiv-1]--;  tp.after_modify_prmtr(); tp.recalc_partical_number();
-
-        tp.templet_control[1]++;     tp.templet_control[tp.ndiv-1]--;  tp.after_modify_prmtr(); tp.recalc_partical_number();
-            if(mm) std::cout << "The " << ++counter << "-th NORG begin" << std::endl;	// norg counter
-            NORG a_p(mm, tp);                    IFS ifs_p("ru"+nppso_str(a_p.scsp.nppso)+".bi"); 
-            if(ifs_p) {for_Int(i, 0, a_p.uormat.size()) biread(ifs_p, CharP(a_p.uormat[i].p()), a_p.uormat[i].szof());}
-            a_p.up_date_h0_to_solve(impH_i);          sub_energy[2] = a_p.groune_lst;
-        if(mm){
-            OFS ofs_p; ofs_p.open("ru"+nppso_str(a_p.scsp.nppso)+".bi"); 
-            for_Int(i, 0, a_p.uormat.size()) biwrite(ofs_p, CharP(a_p.uormat[i].p()), a_p.uormat[i].szof());}
-
-            if(tp.templet_control[tp.ndiv-1] == 0 && sub_energy[2] < sub_energy[0])  return a_p;
-            tp.templet_control[1]--;     tp.templet_control[tp.ndiv-1]++;  tp.after_modify_prmtr(); tp.recalc_partical_number();
-
-        Int check = if_ground_state();
-        if (check == 0) return a;
-        // if (check == 1 && counter == 3) return a_p;
-        // if (check == 2 && counter == 3) return a_m;
-        if (check == 3) {
-            if(mm) WRN("the occler is not converged.");
-            return a;
-        }
-    }
-    ERR("There some thing wrong in Occler.cpp!")
-}
-
-
-
 // ! tested.
 NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_deg)
 {
@@ -77,7 +27,8 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_
             VEC<VecInt> nppsos = list_all_posible_nppsos(tp.npartical, or_deg);
             sub_energy.reset(nppsos.size(),0.); sub_energy = 0.;
         for(const auto& nppso: nppsos) {
-            if(MIN(nppso)==0 || MAX(nppso)==tp.nO2sets[0]) break;
+            if(MIN(nppso)==0) break;
+            for_Int(i, 0, nppso.size()) if(nppso[i] >= tp.nO2sets[i]) break;
             if (mm) std::cout << "The " << ++counter_norg << "-th NORG begin" << std::endl; // norg counter
 
             tp.according_nppso(tp.npartical = nppso);
@@ -180,23 +131,6 @@ VecInt Occler::find_gs_nppso(const Impdata &impH_i, const VecInt& or_deg)
 // 	}
 // }
 
-Int Occler::if_ground_state() {
-    if(sub_energy[0] <= sub_energy[1] && sub_energy[0] <= sub_energy[2]) return 0;
-    else
-    {
-        if (sub_energy[1] >= sub_energy[0] && sub_energy[0] > sub_energy[2]) {
-            tp.templet_control[1]++;     tp.templet_control[tp.ndiv-1]--;  tp.after_modify_prmtr(); tp.recalc_partical_number();
-            return 1;
-        }
-        if ( sub_energy[1] < sub_energy[0] && sub_energy[0] <= sub_energy[2]) {
-            tp.templet_control[1]--;     tp.templet_control[tp.ndiv-1]++;  tp.after_modify_prmtr(); tp.recalc_partical_number();
-            return 2;
-        };
-        if ( sub_energy[1] > sub_energy[0] && sub_energy[0] > sub_energy[2])
-            ERR("The form of energy is no longer dominated by the quadratic form, and the Occler class needs to be changed.");
-    }
-    return 3;
-}
 
 // bool Occler::if_ground_state(VecReal sub_energy) {
 // }
@@ -204,6 +138,7 @@ Int Occler::if_ground_state() {
 VEC<VecInt> Occler::list_all_posible_nppsos(const VecInt& nppso_i, const VecInt& or_deg) const {
     if(nppso_i.size() != or_deg.size()) ERR("The or_deg's number should same as the nppso.")
 	VEC<Int> idx(MAX(or_deg),0); Int cter(0);
+    if(mm) WRN(NAV(nppso_i)); // temporary@2024-11-28
 	// for_Int(i, 0, or_deg.size()*2) if(cter < or_deg[i/2]) idx[cter++] = i; // for spin inversion symmetry
 	for_Int(i, 0, or_deg.size()) if(cter < or_deg[i]) idx[cter++] = i;           // list all the possible
     VEC<VEC<Int>> nppsos_ii(MAX(or_deg)), nppsos_idx;

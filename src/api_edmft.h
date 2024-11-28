@@ -37,7 +37,7 @@ class APIedmft{
 	// NORG coding console
 	Str mode;
 	Real fit_range;
-	VecInt restrain, distribute;
+	VecInt restrain, fit_nbaths;
 	VecReal weight_nooc, weight_freze;
 
 	// NORG test part
@@ -68,7 +68,19 @@ private:
 	ImGreen fix_se(const ImGreen& se) const;
 */
 
-	void read_norg_setting(const std::string& filename, std::vector<double>& Ed, std::vector<int>& Deg, double& J, std::string& CoulombF, double& beta, double& U, std::vector<double>& noc1, std::vector<double>& noc2, std::vector<int>& restrain, std::vector<int>& distribute);
+void read_norg_setting(
+	const std::string& filename,
+	std::vector<double>& Ed,
+	std::vector<int>& Deg,
+	double& J,
+	std::string& CoulombF,
+	double& beta,
+	double& U,
+	std::vector<double>& noc1,
+	std::vector<double>& noc2,
+	std::vector<int>& restrain,
+	std::vector<int>& fit_nbaths
+);
 
 	void auto_nooc(Str mode, const Impurity &imp);
 

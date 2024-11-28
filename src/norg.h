@@ -193,12 +193,56 @@ public:
 	VecReal write_impurtiy_occupation(Int iter_cnt = -1, const Str& phy_name = empty_str) const;
 
 	void PIO_occweight(VecReal occnum_lst) const {
-		MatReal occnum, occweight;
-		occnum = occnum_lst.mat(p.norg_sets, p.n_rot_orb/p.norg_sets);
-		occweight = occnum;
-		for_Int(i, 0, p.norg_sets) for_Int(j, 0, occnum.ncols()) occweight[i][j] = MIN(occweight[i][j],1 - occnum[i][j]) < 1e-14 ? 0 : MIN(occweight[i][j],1 - occnum[i][j]);
+		// Calculate sizes for each set
+		VecInt row_sizes(p.norg_sets);
+		Int start_idx = 0;
+		
+		// Create vectors to store matrices for each set
+		VEC<MatReal> occnums(p.norg_sets);
+		VEC<MatReal> occweights(p.norg_sets);
+		
+		// Process each set separately
+		for_Int(i, 0, p.norg_sets) {
+			row_sizes[i] = p.nI2B[i];
+			
+			// Create matrices for current set
+			occnums[i] = MatReal(row_sizes[i], 1);
+			occweights[i] = MatReal(row_sizes[i], 1);
+			
+			// Fill matrices for current set
+			for_Int(j, 0, row_sizes[i]) {
+				occnums[i][j][0] = occnum_lst[start_idx + j];
+				occweights[i][j][0] = MIN(occnum_lst[start_idx + j], 
+					1 - occnum_lst[start_idx + j]) < 1e-14 ? 0 : 
+					MIN(occnum_lst[start_idx + j], 1 - occnum_lst[start_idx + j]);
+			}
+			start_idx += row_sizes[i];
+		}
+		
 		Str nppso = scsp.nppso_str();
-		if (mm) PIO(NAV4(p.if_norg_imp, nppso, occnum, occweight));
+		if (mm) {
+			std::cout << "NORG Set Information:" << std::endl;
+			std::cout << "if_norg_imp: " << p.if_norg_imp << std::endl;
+			std::cout << "nppso: " << nppso << std::endl;
+			
+			// // Output all occupation numbers first
+			// std::cout << "Occupation numbers:" << std::endl;
+			// for_Int(i, 0, p.norg_sets) {
+			// 	for_Int(j, 0, occnums[i].nrows()) {
+			// 		std::cout << occnums[i][j][0] << " ";
+			// 	}
+			// 	std::cout << std::endl;
+			// }
+			
+			// Then output all occupation weights
+			std::cout << "Occupation weights:" << std::endl;
+			for_Int(i, 0, p.norg_sets) {
+				for_Int(j, 0, occweights[i].nrows()) {
+					std::cout << occweights[i][j][0] << " ";
+				}
+				std::cout << std::endl;
+			}
+		}
 	}
 
 	// print the Double Occupancy matrix

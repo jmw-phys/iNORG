@@ -68,7 +68,7 @@ void Prmtr::set_values() {
     if_norg_imp = false;
     imp_backup = false;
     templet_restrain = !if_norg_imp ? VecInt{0, -0, -2, -3,  0,  3,  2,  0} : VecInt{-1, -4, -4,  4,  4,  1};
-    templet_control  = !if_norg_imp ? VecInt{1,  0,  0,  3,  1,  3,  0,  0} : VecInt{ 0,  1,  1,  1,  1,  0};
+    VecInt templet_control  = !if_norg_imp ? VecInt{1,  0,  0,  3,  1,  3,  0,  0} : VecInt{ 0,  1,  1,  1,  1,  0};
     ndiv = templet_control.size();
     norg_sets = norbs;                                  // default value: 1
     nI2B = SUM(templet_control) - templet_control[0];   // default value:
@@ -79,7 +79,6 @@ void Prmtr::set_values() {
     // nooc_mode = STR("cnooc");
     // nooc_mode = STR("phess");
     nooc_mode = STR("phss_v2");
-    after_modify_prmtr();
     // control_divs[4] = control_divs[3] = {1,  0,  1,  2,  1,  2,  1,  0};
     // control_divs[6] = control_divs[5] = {1,  0,  1,  2,  1,  2,  1,  0};//! set band 0 same as band 1.
     // control_divs[1] = {1,  0,  3,  0,  1,  0,  3,  0};
@@ -88,17 +87,53 @@ void Prmtr::set_values() {
     // control_divs[4] = {1,  1,  2,  0,  1,  0,  2,  1};
     // control_divs[3] = {1,  0,  3,  0,  1,  0,  3,  0};
     // control_divs[4] = {1,  0,  3,  0,  1,  0,  3,  0};
-    recalc_partical_number();
+    // after_modify_prmtr();
+    // recalc_partical_number();
 }
 
 // we set first divison as impurity. The maximum number of cavity("-"); mean electron("+").
-void Prmtr::after_modify_prmtr() const
+// void Prmtr::after_modify_prmtr() const
+// {
+//     mu = 0.0;
+//     nI2B.reset(norg_sets, 0); nO2sets.reset(norg_sets, 0);
+//     control_divs.reset(norg_sets + 1, ndiv, 0);
+//     control_divs[0] = templet_restrain;
+//     for_Int(i, 0, norg_sets) control_divs[i + 1] = templet_control;
+
+//     MatInt sit_mat(control_divs.truncate_row(1,norg_sets + 1));
+//     for_Int(i, 0, norg_sets) nI2B[i] = SUM(sit_mat[i]) - sit_mat[i][0];
+//     for_Int(i, 0, norg_sets) nO2sets[i] = SUM(sit_mat[i]);
+//     norbit = SUM(sit_mat);
+//     nbath = norbit - 2 * nband;
+//     if (if_norg_imp) {
+//         for_Int(i, 0, norg_sets) nI2B[i] = nbath/norg_sets;
+//         for_Int(i, 0, norg_sets) nO2sets[i] = norbit/norg_sets;
+//     }
+//     // npartical.reset(norg_sets, 0);
+//     // for_Int(i, 0, norg_sets) npartical[i] = SUM(control_divs[i + 1])/2;
+//     // Uprm = U - 2 * jz;
+//     n_rot_orb = if_norg_imp ? norbit : nbath;
+//     if(if_norg_imp) {
+//         if (control_divs[0][0] == control_divs[0][ndiv / 2]) ERR("For full orbit rotation mode, The restrain is not suit for" + NAV(control_divs[0]))
+//     } else {
+//         if (control_divs[0][0] != control_divs[0][ndiv / 2]) ERR("For only baths rotation mode, The restrain is not suit for" + NAV(control_divs[0]))
+//     }
+//     derive_ImGreen();
+//     rotationU = uormat_initialize();
+// }
+
+// Adjust the NORG bath orbitals numbers according to the nbaths, only suit for the one impurity for a norg_set.
+void Prmtr::after_modify_prmtr(const VecInt& nbaths) const
 {
     mu = 0.0;
     nI2B.reset(norg_sets, 0); nO2sets.reset(norg_sets, 0);
     control_divs.reset(norg_sets + 1, ndiv, 0);
     control_divs[0] = templet_restrain;
-    for_Int(i, 0, norg_sets) control_divs[i + 1] = templet_control;
+    for_Int(i, 0, norg_sets) {
+        Int temp_baths_orbitals = nbaths[i];
+        control_divs[i + 1] = VecInt{1,  int(temp_baths_orbitals/2),  0,  0,  1,  0,  0,  int((temp_baths_orbitals-1)/2)};
+    }
+
 
     MatInt sit_mat(control_divs.truncate_row(1,norg_sets + 1));
     for_Int(i, 0, norg_sets) nI2B[i] = SUM(sit_mat[i]) - sit_mat[i][0];
@@ -129,7 +164,7 @@ void Prmtr::according_nppso(const VecInt& nppsos) const
     control_divs[0] = templet_restrain;
     for_Int(i, 0, norg_sets) {
         if (if_norg_imp) {
-            control_divs[i + 1] = templet_control;
+            // control_divs[i + 1] = templet_control;
             control_divs[i + 1][0] = nppsos[i] - SUM(control_divs[i + 1].truncate(1, Int(ndiv / 2)));
             control_divs[i + 1][ndiv - 1] = (nO2sets[i] - nppsos[i]) - SUM(control_divs[i + 1].truncate(Int(ndiv / 2), ndiv - 1));
             // control_divs[i + 1][0] = nppsos[i] != SUM(control_divs[i + 1]) ? nppsos[i] - SUM(control_divs[i + 1].truncate(1, Int(ndiv / 2)))       : SUM(control_divs[i + 1]) - control_divs[i + 1][0];
@@ -146,7 +181,7 @@ void Prmtr::according_nppso(const VecInt& nppsos) const
                 }
             }
         } else {
-            control_divs[i + 1] = templet_control;
+            // control_divs[i + 1] = templet_control; //! delete in v1.9.13.p3@2024.11.28
             control_divs[i + 1][1] = nppsos[i] - ((control_divs[i + 1][0] + control_divs[i + 1][ndiv / 2]) / 2) \
                 - SUM(control_divs[i + 1].truncate(2, Int(ndiv / 2)));
             control_divs[i + 1][ndiv - 1] = (nO2sets[i] - nppsos[i])\
@@ -187,13 +222,6 @@ void Prmtr::recalc_partical_number() const
     }
 }
 
-void Prmtr::change_the_norg_restrain_and_div(VecInt new_restrain, VecInt new_control) const {
-    templet_restrain = new_restrain;
-    templet_control = new_control;
-    // nooc_mode = STR("nooc");
-    ndiv = new_control.size();
-    after_modify_prmtr();
-}
 
 void Prmtr::derive() {
 

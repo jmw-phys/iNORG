@@ -22,6 +22,6 @@ Version: v1.9.00.p3 @ 2024.10.29
 
 Version: v1.9.11.p3 @ 2024.11.12
     realized: The position that needs to be fitted is controlled by passing parameters through eDMFT.
-    next do : (same as prev)
-    thinking: (same as prev)
 
+Version: v1.9.13.p3 @ 2024.11.28
+    realized: Different impurity orbitals can now use different numbers of bath sites during NORG process.

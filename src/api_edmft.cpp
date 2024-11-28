@@ -14,14 +14,14 @@ code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
 
 APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i), p(prmtr_i), num_omg(prmtr_i.num_omg), 
 	ful_pcl_sch(1), iter_count(0), sig_err(0.), n_eles(p.norbs, 0.), fit_err(p.nband, 0.), fit_range (5.0),
-	num_nondegenerate(-1), weight_nooc(5, 1E-4), weight_freze(5, 1E-13) 
+	num_nondegenerate(-1), weight_nooc(5, 1E-4), weight_freze(5, 1E-13), fit_nbaths(p.norg_sets, 0)
 {
 	update(file);
 	Bath bth(mm, p);
 	Impurity imp(mm, p, bth, or_deg_idx);
 	ImGreen hb(p.nband, p);	hb.read_edmft("Delta.inp", or_deg_idx);									if (mm) hb.write_edmft("hb_read.txt", or_deg_idx);
 	if(mm) WRN(NAV(or_deg_idx))
-	bth.bth_read_fvb("ose_hop");	 bth.number_bath_fit(hb, or_deg_idx);							if (mm) bth.bth_write_fvb();
+	bth.bth_read_fvb("ose_hop");	bth.number_bath_fit(hb, or_deg_idx);							if (mm) bth.bth_write_fvb();
 	{ mm.barrier(); SLEEP(1); }
 
 	imp.update("eDMFT");																			if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
@@ -94,8 +94,9 @@ void APIedmft::read_eDMFT(const Str& file) {
 		std::vector<double> weight_noc1;
 		std::vector<double> weight_noc2;
 		std::vector<int> restrain_t;
-		std::vector<int> distribute_t;
-		read_norg_setting("PARAMS.norg", Ed, Deg, J, CoulombF, beta, U, weight_noc1, weight_noc2, restrain_t, distribute_t);
+		std::vector<int> fit_nbaths_t;
+		// std::vector<int> distribute_t; //! delete in v1.9.13.p3@2024.11.28
+		read_norg_setting("PARAMS.norg", Ed, Deg, J, CoulombF, beta, U, weight_noc1, weight_noc2, restrain_t, fit_nbaths_t);
 		//--------------------------------------------------
 		// ! Here only suit for the t2g orbital.
 		// nband = 3;	norbs = 6;	mu = 0;	
@@ -119,14 +120,15 @@ void APIedmft::read_eDMFT(const Str& file) {
 		weight_nooc.reset(Vec(weight_noc1));
 		weight_freze.reset(Vec(weight_noc2));
 		restrain = VecInt(restrain_t);
-		distribute = VecInt(distribute_t);
+		fit_nbaths.reset(fit_nbaths_t);
+		// distribute = VecInt(distribute_t); //! delete in v1.9.13.p3@2024.11.28
 		// if (mm) WRN(NAV2(VecReal(Ed), VecInt(Deg)));
 		//--------------------------------------------------
 
 	}
 
 	if (mm) WRN(NAV2(p.eimp, or_deg_idx));
-	if (mm) WRN(NAV7(restrain, distribute, Uc, Jz, p.beta, weight_nooc, weight_freze));
+	if (mm) WRN(NAV7(restrain, fit_nbaths, Uc, Jz, p.beta, weight_nooc, weight_freze));
 
 
 	imfrq_hybrid_function.reset(num_omg, num_nondegenerate, 0.);
@@ -230,11 +232,16 @@ ImGreen APIedmft::fix_se(const ImGreen& se) const{
 // to up date the whole date for the impurity system
 void APIedmft::update(const Str& file) {
 	{// modify the parameters from edmft.in
-		read_eDMFT(file);	p.U = Uc; p.mu = mu; p.jz = Jz; p.nband = nband; p.norg_sets = p.norbs = norbs;
-		p.templet_restrain = restrain; p.templet_control = distribute; p.project = NAV(nband) + "band";
+		read_eDMFT(file);
+		p.U = Uc; p.mu = mu; p.jz = Jz; p.nband = nband; p.norg_sets = p.norbs = norbs;
+		p.templet_restrain = restrain;
+		p.project = NAV(nband) + "band";
 		// if(p.if_norg_degenerate == 1) p.bandw = 4 * Uc;
 		p.bandw = 4 * fit_range;
-		p.after_modify_prmtr(); p.recalc_partical_number(); p.derive();
+
+		p.after_modify_prmtr(fit_nbaths);
+		p.recalc_partical_number(); p.derive();
+		if(mm) WRN(NAV(p.control_divs));
 		p.Uprm = p.U - 2 * p.jz;
 		p.degel = 0;
 		n_eles.reset(norbs, 0); fit_err.reset(nband, 0);
@@ -359,7 +366,7 @@ void APIedmft::read_norg_setting(
 	std::vector<double>& noc1,
 	std::vector<double>& noc2,
 	std::vector<int>& restrain,
-	std::vector<int>& distribute
+	std::vector<int>& fit_nbaths
 ) {
 	std::ifstream file(filename);
 	std::string line;
@@ -448,6 +455,17 @@ void APIedmft::read_norg_setting(
 				}
 			}
 		}
+		else if (key == "fit_nbaths") {
+			char ch;
+			while (iss >> ch && ch != ']') {
+				if (ch != ',' && ch != '[') {
+					iss.unget();
+					int value;
+					iss >> value;
+					fit_nbaths.push_back(value);
+				}
+			}
+		}
 		else if (key == "restrain") {
 			char ch;
 			while (iss >> ch && ch != ']') {
@@ -462,22 +480,27 @@ void APIedmft::read_norg_setting(
 				}
 			}
 		}
-		else if (key == "distribute") {
-			char ch;
-			while (iss >> ch && ch != ']') {
-				if (ch == '0') {
-					distribute.push_back(0);
-				}
-				else if (ch == '-' || isdigit(ch)) {
-					iss.unget();
-					int value;
-					iss >> value;
-					distribute.push_back(value);
-				}
-			}
-		}
+		// else if (key == "distribute") {
+		// 	char ch;
+		// 	while (iss >> ch && ch != ']') {
+		// 		if (ch == '0') {
+		// 			distribute.push_back(0);
+		// 		}
+		// 		else if (ch == '-' || isdigit(ch)) {
+		// 			iss.unget();
+		// 			int value;
+		// 			iss >> value;
+		// 			distribute.push_back(value);
+		// 		}
+		// 	}
+		// }
 	}
 }
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Input parameter validation check
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 /*
 int main() {
