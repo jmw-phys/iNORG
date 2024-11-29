@@ -299,12 +299,20 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 		VecInt ordeg(p.norbs, 0), nppso;
 		for_Int(i, 0, p.nband) for_Int(j, 0, 2) ordeg[i * 2 + j] = i + 1;
 		Vec<VecInt> controler(MAX(ordeg) + 1, VecInt(p.ndiv, 0));
-		MatReal occnum, occweight;
+		// MatReal occnum, occweight;
+		VEC<VecReal> occnums(p.norg_sets);
+		VEC<VecReal> occweights(p.norg_sets);
+		VecInt row_sizes(p.norg_sets);
+		Int start_idx = 0;
 		controler[0] = p.control_divs[0];
 		if(ful_pcl_sch) {
 			NORG norg(opcler.find_ground_state_partical(imp.impH, or_deg_idx));
 			uormat = norg.uormat;
-			occnum = norg.occnum.mat(p.norg_sets, p.n_rot_orb / p.norg_sets);occweight = occnum;
+						
+			// Process occupation sets
+			VecReal occnum_lst = VECVectoVec(norg.oneedm.occupationnumber);
+			process_occupation_sets(occnums, occweights, p.nI2B, occnum_lst);
+			
 			nppso = norg.scsp.nppso;
 			p.npartical = norg.scsp.nppso;
 			p.rotationU = uormat;
@@ -319,13 +327,18 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 
 			NORG norg(mm, p_temp);	norg.read_NTR(); 	norg.up_date_h0_to_solve(imp.impH, 1);
 			uormat = norg.uormat;
-			occnum = norg.occnum.mat(p_temp.norg_sets, p_temp.n_rot_orb / p_temp.norg_sets);occweight = occnum;
+			// occnum = norg.occnum.mat(p_temp.norg_sets, p_temp.n_rot_orb / p_temp.norg_sets);occweight = occnum;
+
+			// Process occupation sets
+			VecReal occnum_lst = VECVectoVec(norg.oneedm.occupationnumber);
+			process_occupation_sets(occnums, occweights, p.nI2B, occnum_lst);
+
 			nppso = norg.scsp.nppso;
 			p.rotationU = uormat;
 			norg.PIO_occweight(norg.occnum);
 		}
 		
-		for_Int(i, 0, p.norg_sets) for_Int(j, 0, p.n_rot_orb / p.norg_sets) occweight[i][j] = occnum[i][j] > 0.5 ? (1 - occnum[i][j]) : occnum[i][j];
+		// for_Int(i, 0, p.norg_sets) for_Int(j, 0, p.n_rot_orb / p.norg_sets) occweight[i][j] = occnum[i][j] > 0.5 ? (1 - occnum[i][j]) : occnum[i][j];
 
 		for_Int(i, 0, MAX(ordeg)) {
 			Int o(0), freze_o(0), e(0), freze_e(0), orb_rep(0), nooc_o(0), nooc_e(0);
@@ -333,12 +346,12 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 			for_Int(j, 0, p.norg_sets) { orb_rep = j; if (ordeg[j] == i + 1) break; }
 			o = nppso[orb_rep] - 1; e = p.nI2B[orb_rep] - nppso[orb_rep];
 			for_Int(j, 0, o) {
-				if (occweight[orb_rep][j] < weight_freze[int(orb_rep/2)]) freze_o++;
-				else if (occweight[orb_rep][j] < weight_nooc[int(orb_rep/2)]) nooc_o++;
+				if (occweights[orb_rep][j] < weight_freze[int(orb_rep/2)]) freze_o++;
+				else if (occweights[orb_rep][j] < weight_nooc[int(orb_rep/2)]) nooc_o++;
 			}
 			for_Int(j, nppso[orb_rep], p.nI2B[orb_rep]) {
-				if (occweight[orb_rep][j] < weight_freze[int(orb_rep/2)]) freze_e++;
-				else if (occweight[orb_rep][j] < weight_nooc[int(orb_rep/2)]) nooc_e++;
+				if (occweights[orb_rep][j] < weight_freze[int(orb_rep/2)]) freze_e++;
+				else if (occweights[orb_rep][j] < weight_nooc[int(orb_rep/2)]) nooc_e++;
 			}
 			keep_o = o - nooc_o - freze_o; keep_e = e - nooc_e - freze_e;
 			controler[i + 1] = p.if_norg_imp ? VecInt{ freze_o, nooc_o, 1, 1, nooc_e, freze_e } : VecInt{ 1, freze_o, nooc_o, keep_o, 1, keep_e, nooc_e, freze_e };
@@ -566,4 +579,29 @@ void APIedmft::edmft_back_up(const Str& status) {
 		// }
 		ofs.close();
 	}
+}
+
+// Extract occupation numbers and weights from bath orbitals.
+void APIedmft::process_occupation_sets(
+	VEC<VecReal>& occnums,
+	VEC<VecReal>& occweights,
+	const VecInt& row_sizes,
+    const VecReal& occnum_lst) 
+{
+    Int start_idx = 0;
+    // Process each set separately
+    for_Int(i, 0, p.norg_sets) {
+        // Create vectors for current set
+        occnums[i] = VecReal(row_sizes[i]);
+        occweights[i] = VecReal(row_sizes[i]);
+        
+        // Fill vectors for current set
+        for_Int(j, 0, row_sizes[i]) {
+            occnums[i][j] = occnum_lst[start_idx + j];
+            occweights[i][j] = MIN(occnum_lst[start_idx + j], 
+                    1 - occnum_lst[start_idx + j]) < 1e-14 ? 0 : 
+                    MIN(occnum_lst[start_idx + j], 1 - occnum_lst[start_idx + j]);
+        }
+        start_idx += row_sizes[i];
+    }
 }

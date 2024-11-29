@@ -79,8 +79,13 @@ void read_norg_setting(
 	std::vector<double>& noc1,
 	std::vector<double>& noc2,
 	std::vector<int>& restrain,
-	std::vector<int>& fit_nbaths
-);
+	std::vector<int>& fit_nbaths);
+
+	void process_occupation_sets(
+		VEC<VecReal>& occnums,
+		VEC<VecReal>& occweights,
+		const VecInt& row_sizes,
+		const VecReal& occnum_lst);
 
 	void auto_nooc(Str mode, const Impurity &imp);
 

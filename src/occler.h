@@ -58,9 +58,9 @@ private:
 
 public:
 	Occler(const MyMpi& mm_i, Prmtr& prmtr_i);
-    NORG find_ground_state_partical(const Impdata &impH_i);
     NORG find_ground_state_partical(const Impdata &impH_i, const VecInt& or_deg);
-    VecInt find_gs_nppso(const Impdata &impH_i, const VecInt& or_deg);
+    // NORG find_ground_state_partical(const Impdata &impH_i);
+    // VecInt find_gs_nppso(const Impdata &impH_i, const VecInt& or_deg);
 
 
 };

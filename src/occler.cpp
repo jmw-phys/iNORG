@@ -29,7 +29,7 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_
         for(const auto& nppso: nppsos) {
             if(MIN(nppso)==0) break;
             for_Int(i, 0, nppso.size()) if(nppso[i] >= tp.nO2sets[i]) break;
-            if (mm) std::cout << "The " << ++counter_norg << "-th NORG begin" << std::endl; // norg counter
+            if (mm) std::cout << "The " << ++counter_norg << "-th NORG begin "<< present() << std::endl; // norg counter
 
             tp.according_nppso(tp.npartical = nppso);
             auto iter = sub_energy_data.find(nppso.string());
@@ -85,7 +85,7 @@ NORG Occler::find_ground_state_partical(const Impdata &impH_i, const VecInt& or_
     }
 }
 
-
+/*
 VecInt Occler::find_gs_nppso(const Impdata &impH_i, const VecInt& or_deg)
 {
     Int counter_norg(0);
@@ -96,7 +96,7 @@ VecInt Occler::find_gs_nppso(const Impdata &impH_i, const VecInt& or_deg)
             sub_energy.reset(nppsos.size(),0.); sub_energy = 0.;
         for(const auto& nppso: nppsos) {
             if(MIN(nppso)==0 || MAX(nppso)==tp.nO2sets[0]) break;
-            if (mm) std::cout << "The " << ++counter_norg << "-th NORG begin" << std::endl; // norg counter
+            if (mm) std::cout << "The " << ++counter_norg << "-th NORG begin" << present() << std::endl; // norg counter
 
             tp.according_nppso(tp.npartical = nppso);
             NORG a(mm, tp);
@@ -120,7 +120,7 @@ VecInt Occler::find_gs_nppso(const Impdata &impH_i, const VecInt& or_deg)
         }
     }
 }
-
+*/
 //-----------------------------------------private-----------------------------------------
 
 

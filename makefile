@@ -21,6 +21,9 @@ DEPS := $(patsubst %.cpp,%.d,$(SRCS))
 # 添加头文件搜索路径
 HEADERS := $(wildcard ${DIRG}/*.h) $(wildcard ${DIRS}/*.h)
 
+# 添加并行编译支持
+MAKEFLAGS += -j8
+
 default: manpower
 
 srun: ${EXE}
@@ -65,16 +68,19 @@ compile:
 	@echo '_____________________________________________ compile _____________________________________________'
 	@echo ''
 
-# %.d:%.cpp
-# 	$(CC) -MM $(CPPFLAGS) $< > $@
-# 	$(CC) -MM $(CPPFLAGS) $< | sed s/\\.o/\\.d/   >> $@
-%.d:%.cpp
-	@$(CC) -MM -MP -MF"$@" -MT"$*.o" $(CPPFLAGS) $<
-	@$(CC) -MM -MP -MF"$@" -MT"$@" $(CPPFLAGS) $< >> $@
-	@if [ -f $*.h ]; then echo "$*.o: $*.h" >> $@; fi
+# Optimize dependency file generation rules
+%.d: %.cpp
+	@echo "Generating dependency for $<"
+	@$(CC) -MM -MP -MF"$@" -MT"$*.o $@" $(CPPFLAGS) $< > $@
+	@if [ -f $*.h ]; then \
+		echo "$*.o: $*.h" >> $@; \
+		echo "$@: $*.h" >> $@; \
+	fi
 
-%.o:%.cpp
-	$(COMPILE) -o $@ $<
+# Optimize object file compilation rules
+%.o: %.cpp
+	@echo "Compiling $<"
+	@$(COMPILE) -o $@ $<
 
 clean:
 	-rm -rf $(OBJS) $(DEPS) $(norg)

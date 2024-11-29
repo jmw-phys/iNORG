@@ -197,22 +197,22 @@ public:
 		VecInt row_sizes(p.norg_sets);
 		Int start_idx = 0;
 		
-		// Create vectors to store matrices for each set
-		VEC<MatReal> occnums(p.norg_sets);
-		VEC<MatReal> occweights(p.norg_sets);
+		// Create vectors to store values for each set
+		VEC<VecReal> occnums(p.norg_sets);
+		VEC<VecReal> occweights(p.norg_sets);
 		
 		// Process each set separately
 		for_Int(i, 0, p.norg_sets) {
 			row_sizes[i] = p.nI2B[i];
 			
-			// Create matrices for current set
-			occnums[i] = MatReal(row_sizes[i], 1);
-			occweights[i] = MatReal(row_sizes[i], 1);
+			// Create vectors for current set
+			occnums[i] = VecReal(row_sizes[i]);
+			occweights[i] = VecReal(row_sizes[i]);
 			
-			// Fill matrices for current set
+			// Fill vectors for current set
 			for_Int(j, 0, row_sizes[i]) {
-				occnums[i][j][0] = occnum_lst[start_idx + j];
-				occweights[i][j][0] = MIN(occnum_lst[start_idx + j], 
+				occnums[i][j] = occnum_lst[start_idx + j];
+				occweights[i][j] = MIN(occnum_lst[start_idx + j], 
 					1 - occnum_lst[start_idx + j]) < 1e-14 ? 0 : 
 					MIN(occnum_lst[start_idx + j], 1 - occnum_lst[start_idx + j]);
 			}
@@ -221,9 +221,9 @@ public:
 		
 		Str nppso = scsp.nppso_str();
 		if (mm) {
-			std::cout << "NORG Set Information:" << std::endl;
-			std::cout << "if_norg_imp: " << p.if_norg_imp << std::endl;
-			std::cout << "nppso: " << nppso << std::endl;
+			// std::cout << "NORG Set Information:" << std::endl;
+			// std::cout << "if_norg_imp: " << p.if_norg_imp << std::endl;
+			// std::cout << "nppso: " << nppso << std::endl;
 			
 			// // Output all occupation numbers first
 			// std::cout << "Occupation numbers:" << std::endl;
@@ -237,8 +237,8 @@ public:
 			// Then output all occupation weights
 			std::cout << "Occupation weights:" << std::endl;
 			for_Int(i, 0, p.norg_sets) {
-				for_Int(j, 0, occweights[i].nrows()) {
-					std::cout << occweights[i][j][0] << " ";
+				for_Int(j, 0, occweights[i].size()) {
+					std::cout << occweights[i][j] << " ";
 				}
 				std::cout << std::endl;
 			}

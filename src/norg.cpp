@@ -492,6 +492,7 @@ bool NORG::converged(Real ge_err)
 		else if (ABS(energy_err) < 1.E-7) { 
 			norg_stab_cnt++;
 			if (norg_stab_cnt > 20) return true;
+			if (norg_stab_cnt > 10 && ABS(energy_err) < 1.E-9 && energy_err < 0) return true;
 			}
 		else if (iter_norg_cnt > 40) {
 			const Real occerr = ABS(occupation_err);
