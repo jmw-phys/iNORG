@@ -57,7 +57,8 @@ VecReal Bath::number_bath_fit_part(const ImGreen& vhb_i, const MatReal& vbs_i, I
 		Real err_reg = hyberr.err_reg(a);
 		Real a_norm = a.norm();
 		using namespace std;
-		cout << setw(4) << "  " << NAV6(nmin, err, err_crv, err_bsr, err_reg, a_norm) << "  " << present() << endl;
+		Int i = idx;
+		cout << setw(4) << "  " << NAV7(nb[i],nmin, err, err_crv, err_bsr, err_reg, a_norm) << "  " << present() << endl;
 		NAV6(Int(info[idx][0]=Real(nmin)), info[idx][1]=err, info[idx][2]=err_crv, info[idx][3]=err_bsr, info[idx][4]=err_reg, info[idx][5]=a_norm);
 	}
 

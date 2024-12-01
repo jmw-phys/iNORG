@@ -175,7 +175,7 @@ void Impurity::write_H0info(const Bath &b, Int ndeg, Int iter_cnt) const {
     
     // Write band info
     if(ndeg > 0) for_Int(i, 0, ndeg) {
-        ofs << "degeneracy band "<< i+1  << " nmin: " << b.info[i][0] << " err: " << b.info[i][1] 
+        ofs << "deg-band "<< i+1  <<  " nbath: "<< b.nb[i] <<  " nmin: " << b.info[i][0] << " err: " << b.info[i][1] 
             << " err_crv: " << b.info[i][2] << " err_hight_ev: " << b.info[i][3] 
             << " err_regE: " << b.info[i][4] <<" norm: " << b.info[i][5]<< "  " << endl;
     }
