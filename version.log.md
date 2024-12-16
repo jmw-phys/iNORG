@@ -540,3 +540,8 @@ Version: v1.9.14.p3 @ 2024.12.16
     realized: Implemented orthogonalization of all orbitals during Green's function calculation.
     next do : Check if it can support **matrix fitting**?
     thinking: Start thinking about how to implement **SOC** form of NORG solver iteration.
+
+Version: v1.9.14.p3 @ 2024.12.16
+    realized: Modified regularization function y=E*exp(0.5*(E/bw)^2) to achieve better regularization.
+    next do : (same as prev)
+    thinking: (same as prev)

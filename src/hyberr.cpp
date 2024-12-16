@@ -309,14 +309,19 @@ void HybErr::get_value_mrq(const VecReal& a)
             hb[n].reset(bsr);
         }
 		*/
-        else {                          // regularization
+        else {            // regularization,y=E*exp(0.5*(E/bw)^2)
             MatCmplx reg(1, E.ncols());
             reg[0] = E.diagonal();
             dydE = Mat<MatCmplx>(1, E.ncols(), MatCmplx(1, E.ncols(), 0.));
+            Vec<Cmplx> reg_reg = Cmplx(INV(bw)) * E.diagonal();                 //regularized onsite energy
+            for_Int(r, 0, E.ncols()) {
+                reg[0][r] = reg[0][r] * EXP(0.5 * SQR(reg_reg[r]));
+            }
+            Vec<Cmplx> temp(E.ncols(), 0.);
             for_Int(r, 0, E.nrows()) {
                 MatCmplx dEde(1, E.ncols(), 0.);
                 dEde[0][r] = 1.;
-                dydE[0][r] = dEde;
+                dydE[0][r] = (1. + SQR(reg_reg[r])) * EXP(0.5 * SQR(reg_reg[r])) * dEde;
             }
             exchange_idx(dydE);
             dydV = Mat<MatCmplx>(1, E.ncols(), MatCmplx(V.nrows(), V.ncols(), 0.));
@@ -378,3 +383,18 @@ void HybErr::fill2array(const Vec<MatCmplx>& hb, const Vec<Mat<MatCmplx>>& dydB)
 
 
 // ------------------------------------------------------------------🪦 code grave 🪦------------------------------------------------------------------
+        /* old regularization before 20241216
+        else {                          // regularization
+            MatCmplx reg(1, E.ncols());
+            reg[0] = E.diagonal();
+            dydE = Mat<MatCmplx>(1, E.ncols(), MatCmplx(1, E.ncols(), 0.));
+            for_Int(r, 0, E.nrows()) {
+                MatCmplx dEde(1, E.ncols(), 0.);
+                dEde[0][r] = 1.;
+                dydE[0][r] = dEde;
+            }
+            exchange_idx(dydE);
+            dydV = Mat<MatCmplx>(1, E.ncols(), MatCmplx(V.nrows(), V.ncols(), 0.));
+            hb[n].reset(reg);
+        }
+        */
