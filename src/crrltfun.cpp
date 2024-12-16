@@ -61,14 +61,19 @@ ImGreen CrrltFun::find_density_density_correlation_function(const Real &ge0) {
 }
 
 
-void CrrltFun::find_gf_greater(const Real& ge0, Green &g0) 
+void CrrltFun::find_gf(const Real& ge0, Green &g0, bool is_greater) 
 {
+    // Control sign: 1 for greater, -1 for lesser
+    const Int sign = is_greater ? 1 : -1;
+    
     Real upper_fraction(mm.Allreduce(DOT(ex_state, ex_state)));
     // if (mm) WRN(NAV(upper_fraction));
     //VECtrdgnl trdignl(find_trdgnl_first(ex_state));
     VEC<Real> ltd;	        // diagonal elements 
     VEC<Real> lt_sd;	    // sub-diagonal elements
     const SparseMatReal sep_h = find_hmlt_V2(table);
+    
+    // Initialize vectors
     VecReal v0(ex_state);
     v0 *= INV(SQRT(mm.Allreduce(DOT(v0, v0))));
     VEC<VecReal> v0_saved;
@@ -77,124 +82,63 @@ void CrrltFun::find_gf_greater(const Real& ge0, Green &g0)
     Real a_i(0.), b_i(0.);
     a_i = mm.Allreduce(DOT(v1, v0));
     ltd.push_back(a_i);
-    if(g0.type_info() == STR("ImGreen")){
-        for_Int(i, 0,  190) {
+
+    // Initial iterations based on Green function type
+    const Int init_iters = g0.type_info() == STR("ImGreen") ? 300 : 3000;
+    for_Int(i, 0, init_iters) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
-        ltd.push_back(a_i); lt_sd.push_back(b_i); v0_saved.push_back(v0);
-        if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
-        }
+        ltd.push_back(a_i); 
+        lt_sd.push_back(b_i); 
+        v0_saved.push_back(v0);
+        // if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
     }
-    if(g0.type_info() == STR("ReGreen")){
-        for_Int(i, 0, 3000) {
-        find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
-        ltd.push_back(a_i); lt_sd.push_back(b_i); v0_saved.push_back(v0);
-        if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
-        }
-    }
-    // ImGreen last_green(1, p);
+
+    // Calculate Green function
     Cmplx zero(0.,0.);
     VecCmplx green_pre(g0.nomgs, zero);
     VecCmplx green_error(g0.nomgs, zero);
-    // while (true) {
-    for_Int(iter_time, 0, 50) {
+    
+    for_Int(iter_time, 0, 500) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
-        ltd.push_back(a_i); lt_sd.push_back(b_i); v0_saved.push_back(v0);
-        if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
+        ltd.push_back(a_i); 
+        lt_sd.push_back(b_i); 
+        v0_saved.push_back(v0);
+        // if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
         VecReal a(ltd), b(lt_sd);
         Int n(a.size());
-        //ImGreen green_i(1, p);
+
         for_Int(w, 0, g0.nomgs) {
-            Cmplx z = g0.z(w) + ge0;
-            Cmplx c(z - a[n - 2] - b[n - 2] * b[n - 2] / (z - a[n - 1]));
-            for (Int i = n; i >= 3; i--) c = z - a[i - 3] - b[i - 3] * b[i - 3] / c;
-            //Cmplx under_fraction(c);
+            // Use sign parameter to control the signs
+            Cmplx z = g0.z(w) + sign * ge0;
+            Cmplx c(z - sign * a[n - 2] - b[n - 2] * b[n - 2] / (z - sign * a[n - 1]));
+            for (Int i = n; i >= 3; i--) c = z - sign * a[i - 3] - b[i - 3] * b[i - 3] / c;
             Cmplx gaz = upper_fraction / c;
             green_error[w] = gaz - green_pre[w];
             green_pre[w] = gaz;
         }
-        // VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
-        // if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) {
-        //     MatReal ev(ltd.size(), ltd.size(), 0.);
-        //     trd_heevr_qr(a, b, ev);
-        //     if (mm) WRN(NAV(a.truncate(0,200)));
-        // }
-        // if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) break;
-        // if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
-        if(compare_error(ltd[ltd.size() - 1], ltd[ltd.size() - 2]) < 1E-6) break;
+
+        // Convergence check
+        if(iter_time % 50 == 0 && iter_time != 0){
+            if(compare_error(ltd[ltd.size() - 1], ltd[ltd.size() - 2]) < 1E-6) break;
+            VecCmplx check_err = g0.type_info() == STR("ImGreen") ? 
+                green_error.truncate(0,int(p.fit_num_omg/2)) : green_error;
+            if(mm) WRN(NAV(ABS(SUM(check_err))/check_err.size()));
+            if(ABS(SUM(check_err))/check_err.size() < 1E-14) break;
+        }
     }
-    VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
-    if(mm) WRN(NAV(ABS(SUM(check_err))/check_err.size()));
+
+    // Update results
     for_Int(w, 0, g0.nomgs) g0[w][0][0] += green_pre[w];
-    if (mm) PIO("The size of a and b in greaer:" + NAV2(ltd.size(), lt_sd.size()));
-    // return last_green;
+    if (mm) PIO("The size of a and b in " + STR(is_greater ? "greater" : "lesser") + 
+                ":" + NAV2(ltd.size(), lt_sd.size()));
 }
 
-void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0) 
-{
-    Real upper_fraction(mm.Allreduce(DOT(ex_state, ex_state)));
-    // if (mm) WRN(NAV(upper_fraction));
-    //VECtrdgnl trdignl(find_trdgnl_first(ex_state));
-    VEC<Real> ltd;	        // diagonal elements 
-    VEC<Real> lt_sd;	    // sub-diagonal elements
-    const SparseMatReal sep_h = find_hmlt_V2(table);
-    VecReal v0(ex_state);
-    v0 *= INV(SQRT(mm.Allreduce(DOT(v0, v0))));
-    VEC<VecReal> v0_saved;
-    v0_saved.push_back(v0);
-    VecReal v1(sep_h * v0);
-    Real a_i(0.), b_i(0.);
-    a_i = mm.Allreduce(DOT(v1, v0));
-    ltd.push_back(a_i);
-    if(g0.type_info() == STR("ImGreen")){
-        for_Int(i, 0,  190) {
-        find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
-        ltd.push_back(a_i); lt_sd.push_back(b_i); v0_saved.push_back(v0);
-        if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
-        }
-    }
-    if(g0.type_info() == STR("ReGreen")){
-        for_Int(i, 0, 3000) {
-        find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
-        ltd.push_back(a_i); lt_sd.push_back(b_i); v0_saved.push_back(v0);
-        if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
-        }
-    }
-    // ImGreen last_green(1, p);
-    Cmplx zero(0.,0.);
-    VecCmplx green_pre(g0.nomgs, zero);
-    VecCmplx green_error(g0.nomgs, zero);
-    // while (true) {
-    for_Int(iter_time, 0, 50) {
-        find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
-        ltd.push_back(a_i); lt_sd.push_back(b_i); v0_saved.push_back(v0);
-        if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
-        VecReal a(ltd), b(lt_sd);
-        Int n(a.size());
-        //ImGreen green_i(1, p);
-        for_Int(w, 0, g0.nomgs) {
-            Cmplx z = g0.z(w) - ge0;
-            Cmplx c(z + a[n - 2] - b[n - 2] * b[n - 2] / (z + a[n - 1]));
-            for (Int i = n; i >= 3; i--) c = z + a[i - 3] - b[i - 3] * b[i - 3] / c;
-            //Cmplx under_fraction(c);
-            Cmplx gaz = upper_fraction / c;
-            green_error[w] = gaz - green_pre[w];
-            green_pre[w] = gaz;
-        }
-        // VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
-        // if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) {
-        //     MatReal ev(ltd.size(), ltd.size(), 0.);
-        //     trd_heevr_qr(a, b, ev);
-        //     if (mm) WRN(NAV(a.truncate(0,200)));
-        // }
-        // if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) break;
-        // if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
-        if(compare_error(ltd[ltd.size() - 1], ltd[ltd.size() - 2]) < 1E-6) break;
-    }
-    VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
-    if(mm) WRN(NAV(ABS(SUM(check_err))/check_err.size()));
-    for_Int(w, 0, g0.nomgs) g0[w][0][0] += green_pre[w];
-    if (mm) PIO("The size of a and b in lesser:" + NAV2(ltd.size(), lt_sd.size()));
-	// return last_green;
+void CrrltFun::find_gf_greater(const Real& ge0, Green &g0) {
+    find_gf(ge0, g0, true);
+}
+
+void CrrltFun::find_gf_lesser(const Real& ge0, Green &g0) {
+    find_gf(ge0, g0, false);
 }
 
 /*
@@ -330,20 +274,21 @@ void CrrltFun::find_hd_greater(const Real& ge0, Green &g0, Int position, Int ex_
         for_Int(i, 0, 200) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
         ltd.push_back(a_i); lt_sd.push_back(b_i); v0_saved.push_back(v0);
-        if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
+        // if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
         }
     }
     if(g0.type_info() == STR("ReGreen")){
         for_Int(i, 0, 3000) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
         ltd.push_back(a_i); lt_sd.push_back(b_i); v0_saved.push_back(v0);
-        if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
+        // if(v0_saved.size() > 10) v0_saved.erase(v0_saved.begin());
         }
     }
     // ImGreen last_green(1, p);
     Cmplx zero(0.,0.);
     VecCmplx green_pre(g0.nomgs, zero);
     VecCmplx green_error(g0.nomgs, zero);
+    Int iter_time(0);
     while (true) {
         find_trdgnl_one_step(v0_saved, v0, v1, a_i, b_i, sep_h);
         ltd.push_back(a_i); lt_sd.push_back(b_i);
@@ -359,8 +304,13 @@ void CrrltFun::find_hd_greater(const Real& ge0, Green &g0, Int position, Int ex_
             green_error[w] = gaz - green_pre[w];
             green_pre[w] = gaz;
         }
-        VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
-        if (ABS(SUM(check_err)) < 1.E-10 * check_err.size()) break;
+        if(iter_time % 50 == 0 && iter_time != 0){
+            if(compare_error(ltd[ltd.size() - 1], ltd[ltd.size() - 2]) < 1E-6) break;
+            VecCmplx check_err = g0.type_info() == STR("ImGreen") ? green_error.truncate(0,int(p.fit_num_omg/2)): green_error;
+            if(mm) WRN(NAV(ABS(SUM(check_err))/check_err.size()));
+            if(ABS(SUM(check_err))/check_err.size() < 1E-14) break;
+        }
+        iter_time++;
         // if (mm && ltd.size() > 200 && g0.type_info() == STR("ImGreen")) PIO("The size of a and b in greaer:" + NAV3(ltd.size(), lt_sd.size(), SUM(green_error)));
     }
     for_Int(w, 0, g0.nomgs) g0[w][0][0] += green_pre[w];

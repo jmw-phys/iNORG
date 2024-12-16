@@ -35,7 +35,6 @@ private:
 	//  (Deactivate) Using the Lanczos to find the tridiagonal matrix.
 	Vectrdgnl find_trdgnl(const VecReal& initial_vector, const Int crtann);
 
-
 	// Using the Lanczos to mapping H to the tridiagonal matrix(First step).
 	//VECtrdgnl find_trdgnl_first(const VecReal& initial_vector);
 
@@ -62,6 +61,8 @@ public:
 	// // (Deactivate) Caluate the density-density correlation function.
 	// $$G_{A}(Z)=\left\langle\psi_{0}\left|A^{\dagger}(Z-H)^{-1}A\right|\psi_{0}\right\rangle,(Z=\omega+i\eta+E_{0})$$
 	ImGreen find_density_density_correlation_function(const Real &ge0);
+
+	void find_gf(const Real& ge0, Green &g0, bool is_greater = true);
 
 	void find_gf_greater(const Real& ge0, Green &g0);
 

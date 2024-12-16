@@ -535,3 +535,8 @@ Version: v1.9.13.p3 @ 2024.11.28
     realized: Different impurity orbitals can now use different numbers of bath sites during NORG process.
     next do : Check if it can support matrix fitting?
     thinking: Start thinking about how to implement SOC form of NORG solver iteration.
+
+Version: v1.9.14.p3 @ 2024.12.16
+    realized: Implemented orthogonalization of all orbitals during Green's function calculation.
+    next do : Check if it can support **matrix fitting**?
+    thinking: Start thinking about how to implement **SOC** form of NORG solver iteration.
