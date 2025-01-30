@@ -1,6 +1,15 @@
 # iNORG - First fock version
 
-Now this package is currently under developement. **IT DOESN'T WORK NOW!**
+Now this package is currently under developement. 
+
+
+References
+
+[1] R.-Q. He and Z.-Y. Lu*, Quantum renormalization groups based on natural orbitals, Phys. Rev. B 89, 085108 (2014).
+
+[2] Jia-Ming Wang#, Jing-Xuan Wang#, Rong-Qiang He*, Li Huang*, and Zhong-Yi Lu*, Ab initio dynamical mean-field theory with natural orbitals renormalization group impurity solver: Formalism and applications, arXiv:2410.16791 (2024).
+
+
 
 ## Version
 
