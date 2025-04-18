@@ -547,4 +547,4 @@ Version: v1.9.14.p3 @ 2024.12.16
     thinking: (same as prev)
 
 Version: v1.9.15.p3 @ 2025.03.26
-    realized: 
+    realized: Improved Lanczos stability and added the functionality to specify the number of degeneracies.
