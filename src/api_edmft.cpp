@@ -322,7 +322,7 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 			// p_temp.nooc_mode = STR("nooc"); // ! abandoned on 2024-05-24
 			// p_temp.nooc_mode = STR("phss_v2");
 			p_temp.nooc_mode = STR("cnooc");
-			p_temp.templet_restrain[1] = -1; p_temp.templet_restrain[p_temp.ndiv - 1] = 1;
+			// p_temp.templet_restrain[1] = -1; p_temp.templet_restrain[p_temp.ndiv - 1] = 1;
 			p_temp.according_nppso(p_temp.npartical);
 
 			NORG norg(mm, p_temp);	norg.read_NTR(); 	norg.up_date_h0_to_solve(imp.impH, 1);

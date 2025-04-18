@@ -51,6 +51,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	// scsp.div = std::vector<MatInt>();
 	scsp.divs_to_idx = std::map<std::string, Idx>();
 	// scsp.idx_div = std::vector<Int>();
+	if(p.if_norg_degenerate > 0) p.degel = p.if_norg_degenerate;
 	// //! testing-20240503 end
 	if (mm) WRN(NAV2(impH.first,scsp.dim));
 	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);

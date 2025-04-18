@@ -99,8 +99,8 @@ VEC<MatReal> DensityMat::find_unitary_orbital_rotation_matrix()
 
 void DensityMat::update(Int mode) {
 	dm = dm_initialize();
-	if (mode == 1) {
-		MatReal egses(lowest_eigpairs(scsp.dim, false, p.degel + 2));
+	if (mode >= 1) {
+		MatReal egses(lowest_eigpairs(scsp.dim, false, p.degel + 1));
 		for_Int(egs_idx, 0, p.degel) {
 			VEC<MatReal> temp_dm;
 			temp_dm = find_one_electron_density_matrix(egses[egs_idx].mat(1, scsp.dim), table);

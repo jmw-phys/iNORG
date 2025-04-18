@@ -27,4 +27,7 @@ Version: v1.9.13.p3 @ 2024.11.28
     realized: Different impurity orbitals can now use different numbers of bath sites during NORG process.
 
 Version: v1.9.14.p3 @ 2024.12.16
-        realized: Implemented orthogonalization of all orbitals during Green's function calculation.
+    realized: Implemented orthogonalization of all orbitals during Green's function calculation.
+
+Version: v1.9.15.p3 @ 2025.03.26
+    realized: Improved Lanczos stability and added the functionality to specify the number of degeneracies.

@@ -91,6 +91,9 @@ VecInt lanczos(VecReal& evals, Mat<T>& evecs, Int& gs_dgcy, Idx n, Int evals_siz
         VecReal v1(H * v0);
         Idx k = 0;
         Real a(0.), b(0.);
+        // Store all previous Lanczos vectors for reorthogonalization
+        VEC<VecReal> v_saved;
+        v_saved.push_back(v0);
         while (true)
         {
             a = mm.Allreduce(DOT(v1, v0));
@@ -103,11 +106,18 @@ VecInt lanczos(VecReal& evals, Mat<T>& evecs, Int& gs_dgcy, Idx n, Int evals_siz
             }
             k++;
             v1 -= a * v0;
+            
+            // Reorthogonalize v1 against all previous Lanczos vectors
+            for_Int(i, 0, v_saved.size()) {
+                v1 -= mm.Allreduce(DOT(v_saved[i], v1)) * v_saved[i];
+            }
+            
             b = SQRT(mm.Allreduce(DOT(v1, v1)));
             lt_sd.push_back(b);
             if (e > 0) orthogonalization_one_to_multiple(mm, v1, evec, e);
             v1 *= INV(SQRT(mm.Allreduce(DOT(v1, v1)))); //v1 *= (1 / b);
             SWAP(v0, v1);
+            v_saved.push_back(v0);  // Store the new normalized Lanczos vector
             v1 *= -b;
             v1 += H * v0;
         }
@@ -119,6 +129,7 @@ VecInt lanczos(VecReal& evals, Mat<T>& evecs, Int& gs_dgcy, Idx n, Int evals_siz
         MatReal ev(ltd.size(), ltd.size(), 0.);
         trd_heevr_qr(va, vb, ev);
         VecReal gs_kvsp(ev.tr()[0]);                //ground state at Krylov space.
+        /*
         VecReal gs(v0.size(), 0.);
         v0 = temp;
         gs += gs_kvsp[0] * v0;
@@ -139,11 +150,19 @@ VecInt lanczos(VecReal& evals, Mat<T>& evecs, Int& gs_dgcy, Idx n, Int evals_siz
         Krylovsize.push_back(k);
         evec.push_back(gs);
         eval.push_back(va[0]);
+        */
+        VecReal gs(v0.size(), 0.);
+        for_Int(i, 0, v_saved.size()) {
+            gs += gs_kvsp[i] * v_saved[i];
+        }
+        Krylovsize.push_back(v_saved.size());
+        evec.push_back(gs);
+        eval.push_back(va[0]);
         e++;
         if (fast_mode) break;
         if (e == evals_size) {// verify if finding all the degeneracy
             Int ndeg = 1;
-            for_Int(i, 1, eval.size()) if (compare_error(eval[0], eval[i]) < 2E-6) ndeg++;
+            for_Int(i, 1, eval.size()) if (compare_error(eval[0], eval[i]) < 2E-5) ndeg++;
             if (evals_size == ndeg) evals_size++;
         }
     }
@@ -152,7 +171,7 @@ VecInt lanczos(VecReal& evals, Mat<T>& evecs, Int& gs_dgcy, Idx n, Int evals_siz
     evals.reset(eval);
 
     slctsort(evals, evecs);
-    for_Int(i, 1, evals.size()) if(compare_error(evals[0], evals[i]) < 1E-6) gs_dgcy++;
+    for_Int(i, 1, evals.size()) if(compare_error(evals[0], evals[i]) < 1E-5) gs_dgcy++;
     // if(mm) WRN(NAV(evals))    
     VecInt krylov_size(Krylovsize);
     return krylov_size;
