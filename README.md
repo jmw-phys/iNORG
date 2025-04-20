@@ -1,10 +1,10 @@
 # iNORG - First fock version
 
-Now this package is currently under developement. **IT DOESN'T WORK NOW!**
+Now this package is currently under developement. 
 
 ## Version
 
-v1.9.00
+v1.9.16
 
 ## License
 
@@ -31,3 +31,6 @@ Version: v1.9.14.p3 @ 2024.12.16
 
 Version: v1.9.15.p3 @ 2025.03.26
     realized: Improved Lanczos stability and added the functionality to specify the number of degeneracies.
+
+Version: v1.9.16 @ 2025.04.20
+    realized: Beging begin the example code for the CPC paper.
