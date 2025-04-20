@@ -6,6 +6,33 @@ Now this package is currently under developement.
 
 v1.9.16
 
+## Installation
+
+To install iNORG, follow these steps:
+
+1. Clone the repository:
+```bash
+git clone [https://github.com/jmw-phys/iNORG.git]
+cd iNORG
+```
+
+2. Compile the code:
+```bash
+make clean
+make
+```
+
+3. Run the program:
+```bash
+mpirun -n [number_of_processes] ./testing/inorg
+```
+
+Note: 
+- The code requires MPI and MKL libraries
+- Make sure you have the necessary compilers and libraries installed
+- The number of processes should be adjusted based on your system configuration
+
+
 ## License
 
 GNU AFFERO General Public License Version 3
