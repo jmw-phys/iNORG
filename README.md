@@ -12,7 +12,7 @@ To install iNORG, follow these steps:
 
 1. Clone the repository:
 ```bash
-git clone [https://github.com/jmw-phys/iNORG.git]
+git clone https://github.com/jmw-phys/iNORG.git
 cd iNORG
 ```
 

@@ -1,5 +1,5 @@
 /*
-code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
+code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2025
 */
 
 #include "specs.h"
@@ -50,7 +50,7 @@ int get_run_mode(const MyMpi& mm) {
                 }
             } else {
                 std::cerr << "Error: PARAMS.norg is empty or could not read the first line." << std::endl;
-                mode = -1; // Set mode to error value
+                mode = 1; // Set as APIedmft mode
             }
             params_file.close();
         }
