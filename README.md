@@ -1,6 +1,6 @@
-# iNORG - First fock version
+# iNORG - First version
 
-Now this package is currently under developement. 
+Now this package is currently under heavy development. 
 
 ## Version
 
@@ -12,19 +12,19 @@ To install iNORG, follow these steps:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/jmw-phys/iNORG.git
-cd iNORG
+$ git clone https://github.com/jmw-phys/iNORG.git
+$ cd iNORG
 ```
 
 2. Compile the code:
 ```bash
-make clean
-make
+$ make clean
+$ make
 ```
 
 3. Run the program:
 ```bash
-mpirun -n [number_of_processes] ./testing/inorg
+$ mpirun -n [number_of_processes] ./testing/inorg
 ```
 
 Note: 
@@ -39,9 +39,9 @@ GNU AFFERO General Public License Version 3
 
 ## Documentation
 
-The reference guide is placed in the `docs` folder.
+A tutorial is planned to be included in the `docs` folder.
 
-## Published papers by using iNORG impurity solver
+## Research Publications with iNORG
 
 1. Jia-Ming Wang, *et al*., *Low-energy inter-band kondo bound states in orbital-selective mott phases*, [Phys. Rev. B, **111**, 155107 (2025)](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.111.155107).
 
@@ -56,7 +56,7 @@ The reference guide is placed in the `docs` folder.
 
 
 -------------------------------------------------------------------------------------------
-recent big up data:
+## Recent Updates:
 
 Version: v1.9.00.p3 @ 2024.10.29
     realized: Fix the bug for the 2 or 3 orbital cases
