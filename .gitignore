@@ -5,3 +5,4 @@ makefile
 .vscode/*
 testing/*
 z-release_version/*
+inorg
