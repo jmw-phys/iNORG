@@ -53,7 +53,7 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 		if (!(fitdata && iter_cnt == 1)) {
 			hb = (mode == 1) ? find_hb_by_se(se):find_hb(g_loc);							if (mm) hb.write("hb", iter_cnt);
 			// bth.number_bath_fit(hb, iter_cnt, 1);										if (mm) bth.write_ose_hop(iter_cnt);
-			bth.bth_read_fvb("ose_hop");	bth.number_bath_fit(hb);						if (mm) bth.bth_write_fvb();
+			bth.bth_read_fvb("ose_hop");	bth.number_bath_fit(hb);						if (mm) bth.bth_write_fvb(iter_cnt);
 		}
 		imp.update("behte");																if (mm) imp.write_H0info(bth, -1, iter_cnt);
 		// imp.update("behte_alpha");															if (mm) imp.write_H0info(bth, -1, iter_cnt);

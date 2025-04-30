@@ -244,7 +244,7 @@ void read_params_norg(const MyMpi& mm, Prmtr& p, const Str& filename) {
     p.templet_restrain = VecInt(restrain_values);
     // p.distribute = VecInt(distribute_values);
     
-    if (mm) WRN(NAV9(mode, mu, band, t_vals, u, uprim, fit_nbaths_vals, VecInt(restrain_values), VecInt(distribute_values)));
+    if (mm) WRN(NAV9(mu, band, t_vals, u, uprim, pred_gs_deg, fit_nbaths_vals, VecInt(restrain_values), VecInt(distribute_values)));
 
     // Call the function to set control_divs if distribute_values is not empty before calling after_modify_prmtr
     if (!distribute_values.empty()) {

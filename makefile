@@ -53,6 +53,7 @@ compile:
 
 clean:
 	-rm -rf $(OBJS) $(DEPS) $(norg)
+	-rm -rf testing/ose_hop
 
 clear:
 	-rm -rf testing/edmft_back_up
@@ -65,7 +66,6 @@ clear:
 	-rm -rf testing/log.norg
 	-rm -rf testing/nmat.txt
 	-rm -rf testing/nohup.txt
-	-rm -rf testing/ose_hop
 	-rm -rf testing/Sig.out
 	-rm -rf testing/zic0*
 	-rm -rf testing/nohup.txt
