@@ -51,12 +51,12 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	// scsp.div = std::vector<MatInt>();
 	scsp.divs_to_idx = std::map<std::string, Idx>();
 	// scsp.idx_div = std::vector<Int>();
-	if(p.if_norg_degenerate > 0) p.degel = p.if_norg_degenerate;
+	// if(p.if_norg_degenerate > 0) p.degel = p.if_norg_degenerate;
 	// //! testing-20240503 end
 	if (mm) WRN(NAV2(impH.first,scsp.dim));
 	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 
-	oneedm.update(p.if_norg_degenerate); 
+	oneedm.update(p.degel); 
 	// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 	groune_lst = oneedm.groundstate_energy;
 	if (mm)	{
@@ -78,7 +78,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 		set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
 		// if (mm)PIO("ground_state size" + NAV(oneedm.ground_state.size()));
 		groune_pre = groune_lst;	occnum_pre = occnum_lst;
-		oneedm.update(p.if_norg_degenerate);
+		oneedm.update(p.degel);
 		// if (mm) PIO(NAV(see_MatReal(oneedm.dm)));
 		// if(mm) PIO(NAV(oneedm.sum_off_diagonal()));
 		occnum_lst = VECVectoVec(oneedm.occupationnumber);				PIO_occweight(occnum_lst);

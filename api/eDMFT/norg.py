@@ -1,6 +1,7 @@
-#!/usr/bin/env python
-# @Copyright 2025 Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2025
-# 
+#!/usr/bin/env python2
+# @Copyright 2007 Kristjan Haule
+# @Modified by Jia-Ming Wang (jmw@ruc.edu.cn, RUC, China) date 2025
+
 import sys, re, os, glob, shutil, types
 from scipy import *
 from scipy import interpolate
@@ -198,7 +199,7 @@ class IMP_NORG(object):
         # norg_eimps = ones(len(norg_degs)) * (Eimp-Edc)                                                            #! test for the t2g, eg and full-d system.
         norg_eimps = ones(len(self.Eimps)) * (Eimp-Edc)                                                           #! test for deg-d system.
         params['Ed'] = [norg_eimps, "# Impurity levels"]
-        params['Deg'] = [norg_degs, "# Impurity leve degs"]
+        params['deg_idx'] = [norg_degs, "# Impurity leve degs"]
         # params['restrain'] = [numpy.array([0, -2, -3, 0, 3, 2]), "# norg restraion"]
         # params['restrain'] = [numpy.array([0, -1, -1, 0, 1, 1]), "# norg restraion"] ##! for testing
         # params['distribute'] = [numpy.array([1, 3, 0, 1, 0, 3]), "# norg distribute"]
@@ -332,7 +333,7 @@ class IMP_NORG(object):
         '''
         # Preparing params.dat file
         fp = open(self.dir+self.PARAMS, 'w')
-        for p in ['Ed', 'Deg', 'J', 'CoulombF', 'beta', 'fit_range', 'fit_points', 'U', 'NOOC', 'restrain', 'distribute', 'Minsulator', 'ful_pcl_sch', 'weight_nooc', 'weight_freze']:
+        for p in ['mode', 'Ed', 'deg_idx', 'U', 'J', 'CoulombF', 'beta', 'fit_range', 'fit_points', 'fit_nbaths', 'NOOC', 'restrain', 'distribute', 'pred_gs_deg', 'ful_pcl_sch', 'weight_nooc', 'weight_freze']:
             if p in params:
                 print >> fp, "%s  %s " % (p, params[p][0]), '\t ', params[p][1]
         fp.close()
@@ -459,7 +460,7 @@ class IMP_NORG(object):
         mom = []
         nf = None  # It's also a good practice to initialize variables like nf
         # (Eimp_old, Olap_old, Edc_old) = loadtxtE(self.dir+'/Eimp.inp')
-        total_lines_numbaers = len(params['Deg'][0])*2 + 4
+        total_lines_numbaers = len(params['deg_idx'][0])*2 + 4
         
         with open(self.dir + 'nmat.txt', 'r') as file:
             lines = file.readlines()
@@ -490,12 +491,12 @@ class IMP_NORG(object):
 
 
         #! The CODE is under testing jmw@ruc.edu.cn
-        # Merge the mom array based on the Deg array
-        Deg = params['Deg'][0]  # Example Deg array
-        Max_Deg = max(Deg)  # Get the maximum degeneracy value
+        # Merge the mom array based on the deg_idx array
+        deg_idx = params['deg_idx'][0]  # Example deg_idx array
+        Max_Deg = max(deg_idx)  # Get the maximum degeneracy value
         filtered_mom = [0] * Max_Deg  # Initialize a new array
 
-        for deg, m in zip(Deg, mom):
+        for deg, m in zip(deg_idx, mom):
             filtered_mom[deg - 1] += m  # Accumulate elements with the same degeneracy
 
         mom = filtered_mom  # Update the mom array

@@ -67,6 +67,9 @@ clear:
 	-rm -rf testing/nohup.txt
 	-rm -rf testing/ose_hop
 	-rm -rf testing/Sig.out
+	-rm -rf testing/zic0*
+	-rm -rf testing/nohup.txt
+	-rm -rf testing/log.*
 	
 
 depend:$(DEPS)

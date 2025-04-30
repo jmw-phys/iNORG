@@ -71,7 +71,7 @@ private:
 void read_norg_setting(
 	const std::string& filename,
 	std::vector<double>& Ed,
-	std::vector<int>& Deg,
+	std::vector<int>& deg_idx,
 	double& J,
 	std::string& CoulombF,
 	double& beta,

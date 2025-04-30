@@ -1,0 +1,15 @@
+mode          1                                                                                                           # "0" for multi-orbital Bethe lattice DMFT iteration; "1" for one-shot impurity model solution.
+Ed            [-11.61347089 -11.62251229 -11.63870539]                                                                    # Impurity levels
+deg_idx       [1, 2, 3]                                                                                                   # Impurity level degeneracies
+U             8.0                                                                                                         # Coulomb repulsion (F0)
+J             0.8                                                                                                         # Coulomb J
+CoulombF      'Ising'                                                                                                     # Form of Coulomb repulsion. 'Full' allows rotational invariant form of C.I.
+beta          200.0                                                                                                       # Fictitious temperature 0.005 eV
+fit_points    [0, 1, 2, 3, 4, 5, 7, 10, 13, 18, 24, 33, 46, 60, 81, 108, 146, 192, 252, 325, 439, 658, 1088, 2164, 3780]  # DLR: Euv = 10, beta = 200, rtol = 1e-6
+fit_nbaths    [11, 11, 11, 11, 11, 11]                                                                                    # Number of baths used for each irreducible representation (good quantum number) set
+NOOC          phss_v2                                                                                                     # Type of norg constraint
+restrain      [0, -2, -3, -4, 0, 4, 3, 2]                                                                                 # Distribution of norg constraints
+pred_gs_deg   2                                                                                                           # Predicted ground state degeneracy; if set to 0, ground state degeneracy is not checked to speed up calculation
+ful_pcl_sch   1                                                                                                           # Check for particle number subspaces
+weight_nooc   [1e-05, 1e-05, 1e-05, 1e-05, 1e-05]                                                                         # First-stage screening factor for norg natural orbital weights
+weight_freze  [1e-07, 1e-07, 1e-07, 1e-07, 1e-07]                                                                         # Second-stage screening factor for norg natural orbital weights

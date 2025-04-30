@@ -86,7 +86,7 @@ APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i
 void APIedmft::read_eDMFT(const Str& file) {
 	{
 		std::vector<double> Ed;
-		std::vector<int> Deg;
+		std::vector<int> deg_idx;
 		double J;
 		std::string CoulombF;
 		double beta;
@@ -96,7 +96,7 @@ void APIedmft::read_eDMFT(const Str& file) {
 		std::vector<int> restrain_t;
 		std::vector<int> fit_nbaths_t;
 		// std::vector<int> distribute_t; //! delete in v1.9.13.p3@2024.11.28
-		read_norg_setting("PARAMS.norg", Ed, Deg, J, CoulombF, beta, U, weight_noc1, weight_noc2, restrain_t, fit_nbaths_t);
+		read_norg_setting("PARAMS.norg", Ed, deg_idx, J, CoulombF, beta, U, weight_noc1, weight_noc2, restrain_t, fit_nbaths_t);
 		//--------------------------------------------------
 		// ! Here only suit for the t2g orbital.
 		// nband = 3;	norbs = 6;	mu = 0;	
@@ -114,7 +114,7 @@ void APIedmft::read_eDMFT(const Str& file) {
 		p.beta = beta;
 		p.eimp.reset(norbs, 0.);
 		// p.eimp =  concat(VecReal(Ed), VecReal(Ed)).mat(2, Ed.size()).tr().vec();
-		or_deg_idx.reset(concat(VecInt(Deg), VecInt(Deg)).mat(2, Deg.size()).tr().vec());
+		or_deg_idx.reset(concat(VecInt(deg_idx), VecInt(deg_idx)).mat(2, deg_idx.size()).tr().vec());
 		for_Int(i, 0, p.eimp.size()) p.eimp[i] =  Ed[or_deg_idx[i] - 1];
 		num_nondegenerate = MAX(or_deg_idx);
 		weight_nooc.reset(Vec(weight_noc1));
@@ -122,7 +122,7 @@ void APIedmft::read_eDMFT(const Str& file) {
 		restrain = VecInt(restrain_t);
 		fit_nbaths.reset(fit_nbaths_t);
 		// distribute = VecInt(distribute_t); //! delete in v1.9.13.p3@2024.11.28
-		// if (mm) WRN(NAV2(VecReal(Ed), VecInt(Deg)));
+		// if (mm) WRN(NAV2(VecReal(Ed), VecInt(deg_idx)));
 		//--------------------------------------------------
 
 	}
@@ -371,7 +371,7 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 void APIedmft::read_norg_setting(
 	const std::string& filename,
 	std::vector<double>& Ed,
-	std::vector<int>& Deg,
+	std::vector<int>& deg_idx,
 	double& J,
 	std::string& CoulombF,
 	double& beta,
@@ -398,17 +398,17 @@ void APIedmft::read_norg_setting(
 				}
 			}
 		}
-		else if (key == "Deg") {
+		else if (key == "deg_idx") {
 			char ch;
 			while (iss >> ch && ch != ']') {
 				if (ch != ',' && ch != '[') {
 					int value;
 					iss.unget();
 					iss >> value;
-					Deg.push_back(value);
+					deg_idx.push_back(value);
 				}
 			}
-			nband = Deg.size();
+			nband = deg_idx.size();
 			norbs = 2 * nband;
 		}
 		else if (key == "J") {
@@ -429,7 +429,7 @@ void APIedmft::read_norg_setting(
 		else if (key == "U") {
 			iss >> U;
 		}
-		else if (key == "Minsulator") {
+		else if (key == "pred_gs_deg") {
 			iss >> p.if_norg_degenerate;
 		}
 		else if (key == "ful_pcl_sch") {
@@ -514,36 +514,6 @@ void APIedmft::read_norg_setting(
 // Input parameter validation check
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-/*
-int main() {
-	std::vector<double> Ed;
-	std::vector<int> Deg;
-	double J;
-	std::string CoulombF;
-	double beta;
-	double U;
-	std::vector<int> restrain;
-	std::vector<int> distribute;
-
-	read_data("data.txt", Ed, Deg, J, CoulombF, beta, U, restrain, distribute);
-
-
-	// Print the values
-	std::cout << "Ed: ";
-	for (double e : Ed) std::cout << e << " ";
-	std::cout << "\nDeg: ";
-	for (int d : Deg) std::cout << d << " ";
-	std::cout << "\nJ: " << J << "\nCoulombF: " << CoulombF << "\nbeta: " << beta << "\nU: " << U << std::endl;
-	std::cout << "restrain: ";
-	for (int r : restrain) std::cout << r << " ";
-	std::cout << "\ndistribute: ";
-	for (int d : distribute) std::cout << d << " ";
-	std::cout << std::endl;
-
-	return 0;
-}
-*/
 
 void APIedmft::edmft_back_up(const Str& status) {
 	using namespace std;

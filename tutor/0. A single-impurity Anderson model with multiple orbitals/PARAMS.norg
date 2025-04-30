@@ -1,0 +1,11 @@
+mode         0                           # "0" for multi-orbital Bethe lattice DMFT iteration; "1" for one-shot impurity model solution.
+bethe_mu     0                           # Chemical potential for the Bethe lattice.
+bethe_band   2                           # Number of orbitals per site in the Bethe lattice.
+bethe_t      [0.5, 0.25]                 # Hopping coefficients for each orbital in one site.
+fit_nbaths   [7, 7, 7, 7]                # Number of baths used for each irreducible representation (good quantum number) set
+bethe_u      4                           # Intra-orbital interaction coefficient.
+bethe_uprim  3.7                         # Inter-orbital interaction coefficient.
+pred_gs_deg  1                           # Predicted ground state degeneracy; if set to 0, ground state degeneracy is not checked to speed up calculation
+NOOC         phss_v2                     # Type of natural orbital occupancy constraint (NOOC).
+restrain     [0, -2, -3, -4, 0, 4, 3, 2] # Details of NOOC
+distribute   [1,  0,  1,  2, 1, 2, 1, 0] # Template for the positions of specific orbitals in NOOC

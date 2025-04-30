@@ -33,13 +33,21 @@ Note:
 - The number of processes should be adjusted based on your system configuration
 
 
+## Tutorial — Two Typical Examples
+
+Example 1: One-shot solution of multi-orbital impurity problem in DMFT
+
+Example 2: Multi-orbital DMFT calculation on Bethe lattice
+
+
 ## License
 
 GNU AFFERO General Public License Version 3
 
 ## Documentation
 
-A tutorial is planned to be included in the `docs` folder.
+A tutorial is planned to be included in the `docs` folder. In addition, a new tutorial article will soon be available on arXiv—stay tuned! [See author publications on arXiv](https://arxiv.org/search/?query=Wang%2C+Jia-Ming&searchtype=author&abstracts=show&order=-announced_date_first&size=50)
+
 
 ## Research Publications with iNORG
 
@@ -58,20 +66,9 @@ A tutorial is planned to be included in the `docs` folder.
 -------------------------------------------------------------------------------------------
 ## Recent Updates:
 
-Version: v1.9.00.p3 @ 2024.10.29
-    realized: Fix the bug for the 2 or 3 orbital cases
+Version: v1.10.00 @ 2025.04.27
+    realized: Implemented parameter reading from the PARAMS.norg file, with the option to choose between a single NORG iteration or standard Bethe lattice multi-orbital DMFT calculation.
 
-Version: v1.9.11.p3 @ 2024.11.12
-    realized: The position that needs to be fitted is controlled by passing parameters through eDMFT.
-
-Version: v1.9.13.p3 @ 2024.11.28
-    realized: Different impurity orbitals can now use different numbers of bath sites during NORG process.
-
-Version: v1.9.14.p3 @ 2024.12.16
-    realized: Implemented orthogonalization of all orbitals during Green's function calculation.
-
-Version: v1.9.15.p3 @ 2025.03.26
-    realized: Improved Lanczos stability and added the functionality to specify the number of degeneracies.
-
-Version: v1.9.16 @ 2025.04.20
-    realized: Beging begin the example code for the CPC paper.
+Version: v1.10.01 @ 2025.04.30
+    realized: Successfully tested controlling the impurity solver via the PARAMS.norg file, allowing the user to choose between a single NORG iteration or a standard Bethe lattice multi-orbital DMFT calculation.
+    note: To enhance computational stability, the program implements two types of degeneracy determination: one is the actual degeneracy, and the other is a user-specified preset degeneracy. During calculations, the program always uses the larger of these two values to determine the degenerate ground state basis, but afterwards, the preset degeneracy (p.degel) is updated according to the actual degeneracy. In DMFT mode, once a degenerate ground state is detected during the iteration process, the degeneracy count can only increase and will not decrease.

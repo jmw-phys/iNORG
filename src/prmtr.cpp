@@ -50,7 +50,7 @@ void Prmtr::set_values() {
     Uprm = U - delta;
     bandw = 40.;                                        //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
     eimp = VecReal(norbs, 0.);
-    degel = 2;                                          // Degenerate energy levels
+    degel = 0;                                          // Degenerate energy levels
     bethe_t.reset(nband, 0.5);
 	// if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] = 0.5 * bethe_t[i];
 	// if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] = 0.25;
@@ -127,12 +127,12 @@ void Prmtr::after_modify_prmtr(const VecInt& nbaths) const
 {
     mu = 0.0;
     nI2B.reset(norg_sets, 0); nO2sets.reset(norg_sets, 0);
-    control_divs.reset(norg_sets + 1, ndiv, 0);
-    control_divs[0] = templet_restrain;
-    for_Int(i, 0, norg_sets) {
-        Int temp_baths_orbitals = nbaths[i];
-        control_divs[i + 1] = VecInt{1,  int(temp_baths_orbitals/2),  0,  0,  1,  0,  0,  int((temp_baths_orbitals-1)/2)};
-    }
+    // control_divs.reset(norg_sets + 1, ndiv, 0);
+    // control_divs[0] = templet_restrain;
+    // for_Int(i, 0, norg_sets) {
+    //     Int temp_baths_orbitals = nbaths[i];
+    //     control_divs[i + 1] = VecInt{1,  int(temp_baths_orbitals/2),  0,  0,  1,  0,  0,  int((temp_baths_orbitals-1)/2)};
+    // }
 
 
     MatInt sit_mat(control_divs.truncate_row(1,norg_sets + 1));

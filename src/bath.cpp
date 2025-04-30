@@ -28,15 +28,25 @@ Bath::Bath(const MyMpi& mm_i, const Prmtr& prmtr_i) :mm(mm_i), p(prmtr_i), uur(m
 
 void Bath::number_bath_fit(const ImGreen& hb_i, const VecInt or_deg)
 {
-	VEC<ImGreen> v_hb = generate_hb(hb_i, or_deg);      // vec of hyb function
-	Vec<MatReal> v_bs = generate_bs(); 					// bath sum rule //! Here set for empty
-	Vec<VecReal> v_a(npart), v_a_temp(MAX(or_deg));
-	for_Int(i, 0, MAX(or_deg)) {
-		// if (mm) WRN("HERE is fine ")
-		v_a_temp[i].reset(number_bath_fit_part(v_hb[i], v_bs[i], i));
+	VEC<ImGreen> v_hb; 
+	Vec<MatReal> v_bs = generate_bs();
+	if(or_deg.size() > 0) {
+		v_hb = generate_hb(hb_i, or_deg);      // vec of hyb function
+		Vec<VecReal> v_a(npart), v_a_temp(MAX(or_deg));
+		for_Int(i, 0, MAX(or_deg)) {
+			// if (mm) WRN("HERE is fine ")
+			v_a_temp[i].reset(number_bath_fit_part(v_hb[i], v_bs[i], i));
+		}
+		for_Int(i, 0, npart) v_a[i] = v_a_temp[or_deg[i * 2] - 1];
+		fvb = arr2fvb(v_a);
+	} else {
+		v_hb = generate_hb(hb_i);
+		Vec<VecReal> v_a(npart);
+		for_Int(i, 0, npart) {
+			v_a[i].reset(number_bath_fit_part(v_hb[i], v_bs[i], i));
+		}
+		fvb = arr2fvb(v_a);
 	}
-	for_Int(i, 0, npart) v_a[i] = v_a_temp[or_deg[i * 2] - 1];
-	fvb = arr2fvb(v_a);
 	//fix_fvb_symmetry();
 	// if (mm) bth_write_fvb(iter);
 }

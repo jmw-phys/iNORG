@@ -548,3 +548,9 @@ Version: v1.9.14.p3 @ 2024.12.16
 
 Version: v1.9.15.p3 @ 2025.03.26
     realized: Improved Lanczos stability and added the functionality to specify the number of degeneracies.
+
+Version: v1.9.16 @ 2025.04.20
+    realized: Beging begin the example code for the CPC paper.
+
+Version: v1.10.00 @ 2025.04.27
+    realized: Implemented parameter reading from the PARAMS.norg file, with the option to choose between a single NORG iteration or standard Bethe lattice multi-orbital DMFT calculation.
