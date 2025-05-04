@@ -47,6 +47,7 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	// oneedm.write_the_multiTab("0.25-");
 	if(mm) std::cout << std::endl;						// blank line
 	impH = impH_i;
+	uormat = uormat_initialize();
 	// //! testing-20240503 begin
 	// scsp.div = std::vector<MatInt>();
 	scsp.divs_to_idx = std::map<std::string, Idx>();

@@ -4,7 +4,7 @@ Now this package is currently under heavy development.
 
 ## Version
 
-v1.9.16
+v1.10.01
 
 ## Installation
 
