@@ -46,7 +46,7 @@ GNU AFFERO General Public License Version 3
 
 ## Documentation
 
-A tutorial is planned to be included in the `docs` folder. In addition, a new tutorial article will soon be available on arXiv—stay tuned! [See author publications on arXiv](https://arxiv.org/search/?query=Wang%2C+Jia-Ming&searchtype=author&abstracts=show&order=-announced_date_first&size=50)
+A tutorial will be provided in the `docs` folder. Additionally, a new tutorial article detailing the specific implementation algorithms and user manual for iNORG will soon be available on arXiv—stay tuned! [See author publications on arXiv](https://arxiv.org/search/?query=Wang%2C+Jia-Ming&searchtype=author&abstracts=show&order=-announced_date_first&size=50)
 
 
 ## Research Publications with iNORG
@@ -57,7 +57,7 @@ A tutorial is planned to be included in the `docs` folder. In addition, a new tu
 
 3. Zhenfeng Ouyang, *et al*., *DFT+DMFT study of correlated electronic structure in the monolayer-trilayer phase of La₃Ni₂O₇*, [Phys. Rev. B, **111**(12), 125111 (2025)](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.111.125111).
 
-4. Yin Chen, *et al*., *Non-fermi liquid and antiferromagnetic correlations with hole doping in the bilayer two-orbital hubbard model of La₃Ni₂O₇ at zero temperature*, [Phys. Rev. B, **110**(23), 235119 (2024)](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.109.165154).
+4. Yin Chen, *et al*., *Non-fermi liquid and antiferromagnetic correlations with hole doping in the bilayer two-orbital hubbard model of La₃Ni₂O₇ at zero temperature*, [Phys. Rev. B, **110**(23), 235119 (2024)](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.110.235119).
 
 5. Yi-Heng Tian, *et al*., *Correlation effects and concomitant two-orbital s±-wave superconductivity in La₃Ni₂O₇ under high pressure*, [Phys. Rev. B, **109**(16), 165154 (2024)](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.109.165154).
 
