@@ -1,4 +1,4 @@
-# iNORG -- iNORG: An open source quantum impurity solver based on the natural orbitals renormalization group
+# iNORG: An open source quantum impurity solver based on the natural orbitals renormalization group
 
 Now this package is currently under heavy development. 
 
