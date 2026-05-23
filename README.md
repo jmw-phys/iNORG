@@ -2,7 +2,7 @@
 
 Now this package is currently under heavy development. 
 
-If you have any questions about iNORG, please feel free to contact me by email: jmw@ruc.edu.cn
+If you have any questions about iNORG, please feel free to contact me at: jmw.phys@gmail.com
 
 ## Version
 
