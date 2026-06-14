@@ -5,7 +5,7 @@ code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
 #include "bath.h"
 
 Bath::Bath(const MyMpi& mm_i, const Prmtr& prmtr_i) :mm(mm_i), p(prmtr_i), uur(mm.id()),
-	npart(p.nband), nb(npart), ni(npart), info(p.nband, 6, 0.)
+	npart(p.magnetic ? p.norbs : p.nband), nb(npart), ni(npart), info(npart, 6, 0.)
 {
 	{ SLEEP(1); mm.barrier(); }		// make random seed output together
 
@@ -15,8 +15,15 @@ Bath::Bath(const MyMpi& mm_i, const Prmtr& prmtr_i) :mm(mm_i), p(prmtr_i), uur(m
 	}
 
 	//set the number of bath sites in per independent parts
-	for_Int(i, 0, npart) {
-		nb[i] = p.nI2B[i * 2];
+	if (p.magnetic) {
+		// 5up+5dn: same bath count for up/dn of same band
+		for_Int(i, 0, npart) {
+			nb[i] = p.nI2B[(i % p.nband) * 2];
+		}
+	} else {
+		for_Int(i, 0, npart) {
+			nb[i] = p.nI2B[i * 2];
+		}
 	}
 
 	//initialize the fitting parameter for each independent parts
@@ -28,27 +35,28 @@ Bath::Bath(const MyMpi& mm_i, const Prmtr& prmtr_i) :mm(mm_i), p(prmtr_i), uur(m
 
 void Bath::number_bath_fit(const ImGreen& hb_i, const VecInt or_deg)
 {
-	VEC<ImGreen> v_hb; 
-	Vec<MatReal> v_bs = generate_bs();
-	if(or_deg.size() > 0) {
-		v_hb = generate_hb(hb_i, or_deg);      // vec of hyb function
-		Vec<VecReal> v_a(npart), v_a_temp(MAX(or_deg));
-		for_Int(i, 0, MAX(or_deg)) {
-			// if (mm) WRN("HERE is fine ")
-			v_a_temp[i].reset(number_bath_fit_part(v_hb[i], v_bs[i], i));
-		}
-		for_Int(i, 0, npart) v_a[i] = v_a_temp[or_deg[i * 2] - 1];
-		fvb = arr2fvb(v_a);
-	} else {
-		v_hb = generate_hb(hb_i);
-		Vec<VecReal> v_a(npart);
-		for_Int(i, 0, npart) {
-			v_a[i].reset(number_bath_fit_part(v_hb[i], v_bs[i], i));
-		}
-		fvb = arr2fvb(v_a);
+	VEC<ImGreen> v_hb = generate_hb(hb_i, or_deg);      // vec of hyb function
+	Vec<MatReal> v_bs = generate_bs(); 					// bath sum rule //! Here set for empty
+	Vec<VecReal> v_a(npart), v_a_temp(MAX(or_deg));
+	for_Int(i, 0, MAX(or_deg)) {
+		// if (mm) WRN("HERE is fine ")
+		v_a_temp[i].reset(number_bath_fit_part(v_hb[i], v_bs[i], i));
 	}
+	for_Int(i, 0, npart) v_a[i] = v_a_temp[or_deg[i * 2] - 1];
+	fvb = arr2fvb(v_a);
 	//fix_fvb_symmetry();
 	// if (mm) bth_write_fvb(iter);
+}
+
+void Bath::number_bath_fit_all(const ImGreen& hb_i)
+{
+	VEC<ImGreen> v_hb = generate_hb(hb_i);      // extract all npart diagonal Green functions
+	Vec<MatReal> v_bs = generate_bs();
+	Vec<VecReal> v_a(npart);
+	for_Int(i, 0, npart) {
+		v_a[i].reset(number_bath_fit_part(v_hb[i], v_bs[i], i));
+	}
+	fvb = arr2fvb(v_a);
 }
 
 VecReal Bath::number_bath_fit_part(const ImGreen& vhb_i, const MatReal& vbs_i, Int idx)
@@ -398,18 +406,45 @@ Vec<Vec<MatReal>> Bath::arr2fvb(const Vec<VecReal>& arr)
 MatReal Bath::find_hop() const
 {
     MatReal h0(0, 0, 0.);
-    for_Int(i, 0, p.nband) {
-        const Int nb_i = p.nI2B[i * 2];
-        MatReal h0_i(1 + nb_i, 1 + nb_i, 0.);
-		VecReal hop(fvb[i][0][0]), ose(fvb[i][1][0]);
-		slctsort(ose, hop);
-        for_Int(j, 0, nb_i) {
-            h0_i[0][j + 1] 		= hop[j];
-            h0_i[j + 1][0] 		= hop[j];
-            h0_i[j + 1][j + 1] 	= ose[j];
+    if (p.magnetic) {
+        for_Int(i, 0, p.nband) {
+            const Int nb_i = p.nI2B[i * 2];
+            // Spin-up block from fvb[i]
+            MatReal h0_up(1 + nb_i, 1 + nb_i, 0.);
+            VecReal hop_up(fvb[i][0][0]), ose_up(fvb[i][1][0]);
+            slctsort(ose_up, hop_up);
+            for_Int(j, 0, nb_i) {
+                h0_up[0][j + 1]     = hop_up[j];
+                h0_up[j + 1][0]     = hop_up[j];
+                h0_up[j + 1][j + 1] = ose_up[j];
+            }
+            // Spin-dn block from fvb[i + nband]
+            MatReal h0_dn(1 + nb_i, 1 + nb_i, 0.);
+            VecReal hop_dn(fvb[i + p.nband][0][0]), ose_dn(fvb[i + p.nband][1][0]);
+            slctsort(ose_dn, hop_dn);
+            for_Int(j, 0, nb_i) {
+                h0_dn[0][j + 1]     = hop_dn[j];
+                h0_dn[j + 1][0]     = hop_dn[j];
+                h0_dn[j + 1][j + 1] = ose_dn[j];
+            }
+            // combine: [up, dn] for this band -> interleaved in h0
+            MatReal h0_i = direct_sum(h0_up, h0_dn);
+            h0.reset(direct_sum(h0, h0_i));
         }
-        h0_i.reset(direct_sum(h0_i, h0_i));
-        h0.reset(direct_sum(h0, h0_i));
+    } else {
+        for_Int(i, 0, p.nband) {
+            const Int nb_i = p.nI2B[i * 2];
+            MatReal h0_i(1 + nb_i, 1 + nb_i, 0.);
+            VecReal hop(fvb[i][0][0]), ose(fvb[i][1][0]);
+            slctsort(ose, hop);
+            for_Int(j, 0, nb_i) {
+                h0_i[0][j + 1]      = hop[j];
+                h0_i[j + 1][0]      = hop[j];
+                h0_i[j + 1][j + 1]  = ose[j];
+            }
+            h0_i.reset(direct_sum(h0_i, h0_i));
+            h0.reset(direct_sum(h0, h0_i));
+        }
     }
     return h0;
 }

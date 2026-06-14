@@ -6,21 +6,21 @@ code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
 using namespace std;
 
 
-Crrvec::Crrvec(const NocSpace& old_nosp_i, const Operator& main_opr, const VecReal& vgs_i, const Real& gs, const Int right_set_i, const Real omeg, const Real eta_i)
-    :mm(main_opr.mm),p(main_opr.p), sep_h(main_opr.find_hmlt(main_opr.table)),
-    ground_state(vgs_i), right_set(right_set_i), right_pos_in_div(0), opr(main_opr),
-    old_nosp(old_nosp_i), new_nosp(main_opr.scsp), crtorann(main_opr.scsp.nspa - old_nosp_i.nspa), omega(omeg), eta(eta_i), correct_green(1,cmplx(0.)),
-    ex_state(project_uplwer_parical_space(vgs_i, crtorann, right_set_i)), ground_state_energy(gs), correct_vector(ex_state.size(), 0.)
-{
-    correct_vector = find_correct_vec();
-    // Cmplx test = DOT(cmplx(ex_state), correct_vector);
-    Cmplx a = (correct_vector * (cmplx(omeg, eta) - cmplx(gs)) + cmplx(sep_h * real(correct_vector), sep_h * imag(correct_vector)) - cmplx(ex_state)).norm();
-    if(mm) WRN(NAV2(DOT(cmplx(ex_state), correct_vector), a));
-    // if(mm) WRN(NAV3(correct_vector, ex_state, a));
-    correct_vecs.reset(1,correct_vector.size());
-    correct_vecs[0] = std::move(correct_vector);
-    correct_green[0] = DOT(cmplx(ex_state), correct_vector);
-}
+// Crrvec::Crrvec(const NocSpace& old_nosp_i, const Operator& main_opr, const VecReal& vgs_i, const Real& gs, const Int right_set_i, const Real omeg, const Real eta_i)
+//     :mm(main_opr.mm),p(main_opr.p), sep_h(main_opr.find_hmlt(main_opr.table)),
+//     ground_state(vgs_i), right_set(right_set_i), right_pos_in_div(0), opr(main_opr),
+//     old_nosp(old_nosp_i), new_nosp(main_opr.scsp), crtorann(main_opr.scsp.nspa - old_nosp_i.nspa), omega(omeg), eta(eta_i), correct_green(1,cmplx(0.)),
+//     ex_state(project_uplwer_parical_space(vgs_i, crtorann, right_set_i)), ground_state_energy(gs), correct_vector(ex_state.size(), 0.)
+// {
+//     correct_vector = find_correct_vec();
+//     // Cmplx test = DOT(cmplx(ex_state), correct_vector);
+//     Cmplx a = (correct_vector * (cmplx(omeg, eta) - cmplx(gs)) + cmplx(sep_h * real(correct_vector), sep_h * imag(correct_vector)) - cmplx(ex_state)).norm();
+//     if(mm) WRN(NAV2(DOT(cmplx(ex_state), correct_vector), a));
+//     // if(mm) WRN(NAV3(correct_vector, ex_state, a));
+//     correct_vecs.reset(1,correct_vector.size());
+//     correct_vecs[0] = std::move(correct_vector);
+//     correct_green[0] = DOT(cmplx(ex_state), correct_vector);
+// }
 
 Crrvec::Crrvec(const NocSpace &old_nosp_i, const Operator& main_opr, const VecReal &vgs_i, const Real &gs, const Int right_set_i, const VecReal &omega_point)
     :mm(main_opr.mm),p(main_opr.p), sep_h(main_opr.find_hmlt(main_opr.table)),
@@ -71,18 +71,18 @@ Crrvec::Crrvec(const NocSpace &old_nosp_i, Operator& main_opr, const VecReal &vg
     }
 }
 
-ImGreen Crrvec::find_gf() {
-
-    ImGreen green(1, p);
-    for_Int(w, 0, green.nomgs) {
-        omega   = real(green.z(w));
-        eta     = imag(green.z(w));
-        VecCmplx exstate(cmplx(ex_state));
-        Cmplx z = DOT(exstate, find_correct_vec());
-        green[w][0][0] = z;
-    }
-    return green;
-}
+// ImGreen Crrvec::find_gf() {
+// 
+//     ImGreen green(1, p);
+//     for_Int(w, 0, green.nomgs) {
+//         omega   = real(green.z(w));
+//         eta     = imag(green.z(w));
+//         VecCmplx exstate(cmplx(ex_state));
+//         Cmplx z = DOT(exstate, find_correct_vec());
+//         green[w][0][0] = z;
+//     }
+//     return green;
+// }
 
 ImGreen Crrvec::find_gf_from_krylov_space() {
     VEC<Real> ltd;	        // diagonal elements 
@@ -407,15 +407,15 @@ VecReal Crrvec::imag_to_real(const VecReal& v_imag)
     return x;
 }
 
-VecCmplx Crrvec::find_correct_vec()
-{
-    VecReal b(ex_state.size(),0.);
-    b = -eta * ex_state;
-    VecReal imag_v(ex_state.size(), 0.);
-    conjugate_gradient_simple((*this), imag_v, b);
-    VecReal real_v (imag_to_real(imag_v));
-    return (cmplx(real_v, imag_v));
-}
+// VecCmplx Crrvec::find_correct_vec()
+// {
+//     VecReal b(ex_state.size(),0.);
+//     b = -eta * ex_state;
+//     VecReal imag_v(ex_state.size(), 0.);
+//     conjugate_gradient_simple((*this), imag_v, b);
+//     VecReal real_v (imag_to_real(imag_v));
+//     return (cmplx(real_v, imag_v));
+// }
 
 void Crrvec::find_trdgnl_one_step(const VecReal& initial_vector, VecReal& v0, VecReal& v1, Real& a, Real& b, const SparseMatReal& sep_h) {
     v1 -= a * v0;

@@ -35,6 +35,8 @@ public:
 	void write(const Str& green_name, const Str& rowname, Int iter_cnt=999) const;
 	void read_edmft(const Str& file, const VecInt& or_deg);
 	void write_edmft(const Str& green_name, const VecInt& or_deg) const;
+	void read_edmft_magnetic(const Str& file, Int nband);
+	void write_edmft_magnetic(const Str& green_name, Int nband) const;
 	void write_zen(const Str& green_name, Int nspin=2, Int iter_cnt=999) const;
 	void write_zen(const Str& green_name, const Str& rowname, Int nspin=2, Int iter_cnt=999) const;
 	inline void reset(Idx n);

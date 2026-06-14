@@ -15,10 +15,10 @@ Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i)
 	// if (mm) WRN(NAV2(table[2].size(), oper_value.size()));
 }
 
-Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i,const Tab &tab, const VecReal& coefficient_i):
-	mm(mm_i), p(prmtr_i), scsp(NocSpace(mm_i, prmtr_i)), table(tab), dim(tab[0].size()), oper_value(pow(p.norbit, 4) + pow(p.norbit, 2) + 1)
-{
-}
+// Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i,const Tab &tab, const VecReal& coefficient_i):
+// 	mm(mm_i), p(prmtr_i), scsp(NocSpace(mm_i, prmtr_i)), table(tab), dim(tab[0].size()), oper_value(pow(p.norbit, 4) + pow(p.norbit, 2) + 1)
+// {
+// }
 
 Operator::Operator(const MyMpi& mm_i, const Prmtr& prmtr_i, const NocSpace& s_i,const Tab &per_table):
 	mm(mm_i), p(prmtr_i), scsp(s_i), table(per_table), dim(s_i.dim), oper_value(pow(p.norbit, 4) + pow(p.norbit, 2) + 1)
@@ -328,7 +328,7 @@ MatReal Operator::lowest_eigpairs(const Idx n, bool if_need_fast, Int wish_nev)
 	if(mm) {cout <<"PIO: krylov_space_size = ";cout <<iofmt("sci"); for_Int(i, 0, krylov_space_size.size()) cout << eval[i] << ","<< krylov_space_size[i] << "; "; cout << std::endl;}
 	// if(mm) std::cout << "The eigenvalue" << iofmt("sci") << eval << std::endl;
 	groundstate_energy = eval[0];
-	if(p.degel != gs_dgcy) {p.degel = gs_dgcy; if(mm) WRN(NAV(p.degel))}
+	if(p.degel < gs_dgcy) {p.degel = gs_dgcy; if(mm) WRN(NAV(p.degel))}
 	// MatReal eigenvec(eigenvec_i.size(),n);
 	// for_Int(i, 0, eigenvec_i.size()) eigenvec[i] = eigenvec_i[i];
 	// ground_state = eigenvec_i[0];

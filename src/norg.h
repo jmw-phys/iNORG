@@ -163,6 +163,8 @@ public:
 
 	void get_gimp_eigpairs(Green& imp_i, VecInt or_deg);
 
+	void get_gimp_eigpairs_magnetic(Green& imp_i);
+
 	void get_gimp_all(Green& imp_i);
 
 	void find_g0(Green& imp_i);

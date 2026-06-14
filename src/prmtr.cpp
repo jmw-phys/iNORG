@@ -18,6 +18,7 @@ void Prmtr::set_inert_values()
 {
     nband = 3;
     norbs = nband * 2;
+    magnetic = 0;
     project = STR(nband)+"band_KH";
     
 	gauss_n_max = 512;		        // default value: 2048
@@ -50,7 +51,7 @@ void Prmtr::set_values() {
     Uprm = U - delta;
     bandw = 40.;                                        //SQRT(SQR(bethe_u) + SQR(bethe_u12) + SUM(t * t))
     eimp = VecReal(norbs, 0.);
-    degel = 0;                                          // Degenerate energy levels
+    degel = 2;                                          // Degenerate energy levels
     bethe_t.reset(nband, 0.5);
 	// if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] = 0.5 * bethe_t[i];
 	// if (nband > 1) for_Int(i, 0, nband - 1) bethe_t[i + 1] = 0.25;
@@ -127,12 +128,12 @@ void Prmtr::after_modify_prmtr(const VecInt& nbaths) const
 {
     mu = 0.0;
     nI2B.reset(norg_sets, 0); nO2sets.reset(norg_sets, 0);
-    // control_divs.reset(norg_sets + 1, ndiv, 0);
-    // control_divs[0] = templet_restrain;
-    // for_Int(i, 0, norg_sets) {
-    //     Int temp_baths_orbitals = nbaths[i];
-    //     control_divs[i + 1] = VecInt{1,  int(temp_baths_orbitals/2),  0,  0,  1,  0,  0,  int((temp_baths_orbitals-1)/2)};
-    // }
+    control_divs.reset(norg_sets + 1, ndiv, 0);
+    control_divs[0] = templet_restrain;
+    for_Int(i, 0, norg_sets) {
+        Int temp_baths_orbitals = nbaths[i];
+        control_divs[i + 1] = VecInt{1,  int(temp_baths_orbitals/2),  0,  0,  1,  0,  0,  int((temp_baths_orbitals-1)/2)};
+    }
 
 
     MatInt sit_mat(control_divs.truncate_row(1,norg_sets + 1));
@@ -229,9 +230,9 @@ void Prmtr::derive() {
     Re_z.reset(nfreq);
     for_Int(n, 0, nfreq) Re_z[n] = Cmplx(freq_low + n * dlt_freq, eta_freq);
 
-    // max_omg = 4 * SQRT(SQR(U) + DOT(t, t));    
+    // max_omg = 4 * SQRT(SQR(U) + DOT(t, t));
     // max_omg = 2 * (ABS(U) + 8 * SQRT(DOT(t, t) - t[0] * t[0]));
-    max_omg = unit_omg * 8193 * 2;
+    max_omg = unit_omg * nmesh * 2;
 
     num_omg = Int_ROUND(max_omg / unit_omg / 2);
     Im_z.reset(num_omg);
@@ -246,7 +247,7 @@ void Prmtr::derive() {
 
 void Prmtr::derive_ImGreen() const {
     unit_omg = pi_Real/beta;
-    max_omg = unit_omg * 8193 * 2;
+    max_omg = unit_omg * nmesh * 2;
 
     num_omg = Int_ROUND(max_omg / unit_omg / 2);
     Im_z.reset(num_omg);

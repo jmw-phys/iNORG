@@ -35,7 +35,7 @@ date 2013 - 2017
 #include "ompidx.h"
 #include "stat.h"
 #include "sparsemat.h"
-#include "msolver.h"
+// #include "msolver.h"
 
 
 // Pauli arrays to define Pauli matrices

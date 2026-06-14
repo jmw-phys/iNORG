@@ -27,8 +27,9 @@ class APIedmft{
 	VecReal solver_eimp_data;			// Impurity energy level for orbitals, correspondingly mean Impurity energy.
 	// ctqmcdata solver_ctqmc_data;
 	Real Uc, Jz, mu;
-	Int nband;							
+	Int nband;
 	Int norbs;
+	Int magnetic;
 	Int ful_pcl_sch;
 	Int iter_count;
 	// VecInt artificial_symm;
@@ -71,7 +72,7 @@ private:
 void read_norg_setting(
 	const std::string& filename,
 	std::vector<double>& Ed,
-	std::vector<int>& deg_idx,
+	std::vector<int>& Deg,
 	double& J,
 	std::string& CoulombF,
 	double& beta,

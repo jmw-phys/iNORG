@@ -257,6 +257,66 @@ void Green::read_edmft(const Str& file, const VecInt& or_deg) {
     ifs.close();
 }
 
+void Green::read_edmft_magnetic(const Str& file, Int nband) {
+    IFS ifs(file);
+    if (!ifs) {
+        WRN(STR("file opening failed with ") + NAV(file));
+    } else {
+        Str line;
+        // skip the "#" line
+        while (std::getline(ifs, line)) {
+            if (line.empty() || line[0] != '#') {
+                std::istringstream iss(line);
+                Real omg;
+                Int n = 0;
+                MatReal re(norbs, norbs, 0.);
+                MatReal im(norbs, norbs, 0.);
+                iss >> omg;
+                // Format: omega re_1up im_1up ... re_5up im_5up re_1dn im_1dn ... re_5dn im_5dn
+                // norbs = 2*nband, columns map directly to g[n][m][m]
+                for_Int(m, 0, norbs) {
+                    iss >> re[m][m];
+                    iss >> im[m][m];
+                }
+                g[n] = cmplx(re, im);
+                break;
+            }
+        }
+
+        for_Int(n, 1, nomgs) {
+            Real omg;
+            MatReal re(norbs, norbs, 0.);
+            MatReal im(norbs, norbs, 0.);
+            ifs >> omg;
+            for_Int(m, 0, norbs) {
+                ifs >> re[m][m];
+                ifs >> im[m][m];
+            }
+            g[n] = cmplx(re, im);
+        }
+
+        if (!ifs) {
+            ERR(STR("read-in error with ") + NAV(file));
+        }
+    }
+    ifs.close();
+}
+
+void Green::write_edmft_magnetic(const Str& green_name, Int nband) const {
+    OFS ofs;
+    ofs.open(green_name);
+    ofs << iofmt("sci");
+    for_Int(i, 0, nomgs) {
+        ofs << setw(w_Real) << omg(i);
+        // Write all norbs (= 2*nband) diagonal elements: 5up then 5dn
+        for_Int(m, 0, norbs) {
+            ofs << "  " << setw(w_Real) << real(g[i][m][m]);
+            ofs << "  " << setw(w_Real) << imag(g[i][m][m]);
+        }
+        ofs << endl;
+    }
+}
+
 void Green::write_zen(const Str& green_name, Int nspin, Int iter_cnt) const {
 	OFS ofs;
 	// if (iter_cnt == 999) { ofs.open(iox + green_name + ".txt"); }

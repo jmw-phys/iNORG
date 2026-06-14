@@ -59,7 +59,7 @@ private:
 
 public:
 	//Crrvec(const MyMpi &mm_i, const Prmtr &prmtr_i, const NocSpace &old_nosp, const NocSpace &main_nosp, const VecReal &vgs_i, const Real &gs, const Int right_set, const Real omeg = 0., const Real eta_i = 0.01);
-	Crrvec(const NocSpace &old_nosp, const Operator& main_opr, const VecReal &vgs_i, const Real &gs, const Int right_set_i, const Real omeg = 0., const Real eta_i = 0.01);
+	// Crrvec(const NocSpace &old_nosp, const Operator& main_opr, const VecReal &vgs_i, const Real &gs, const Int right_set_i, const Real omeg = 0., const Real eta_i = 0.01);
 
 	Crrvec(const NocSpace &old_nosp_i, const Operator& main_opr, const VecReal &vgs_i, const Real &gs, const Int right_set_i, const VecReal &omega_point);
 	Crrvec(const NocSpace &old_nosp_i, const Operator& main_opr, const VecReal &vgs_i, const Real &gs, const Int right_set_i, const VecCmplx &omega_point);
@@ -71,9 +71,9 @@ public:
 
 	VecReal imag_to_real(const VecReal& KetVec);
 
-	VecCmplx find_correct_vec();
+	// VecCmplx find_correct_vec();
 
-	ImGreen find_gf();
+	// ImGreen find_gf();
 
 	ImGreen find_gf_from_krylov_space();
 

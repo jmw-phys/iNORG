@@ -75,6 +75,7 @@ public:
 	mutable VEC<MatReal> rotationU;	// save the rotation matrix for convience.
 
 	
+	mutable Int magnetic;			// 0: non-magnetic (default), 1: spin-resolved magnetic calculation
 	mutable Str nooc_mode;
 
 	//--------------------------------------------------------special for the hhd function(arXiv:2209.14178v1)-----------------------------------------------------------------

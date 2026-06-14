@@ -47,12 +47,10 @@ void NORG::up_date_h0_to_solve(const Impdata& impH_i, const Int mode) {
 	// oneedm.write_the_multiTab("0.25-");
 	if(mm) std::cout << std::endl;						// blank line
 	impH = impH_i;
-	uormat = uormat_initialize();
 	// //! testing-20240503 begin
 	// scsp.div = std::vector<MatInt>();
 	scsp.divs_to_idx = std::map<std::string, Idx>();
 	// scsp.idx_div = std::vector<Int>();
-	// if(p.if_norg_degenerate > 0) p.degel = p.if_norg_degenerate;
 	// //! testing-20240503 end
 	if (mm) WRN(NAV2(impH.first,scsp.dim));
 	set_row_primeter_byimpH(uormat, impH_i, oneedm.oper_value);
@@ -395,6 +393,48 @@ void NORG::get_gimp_eigpairs(Green& imp_i, VecInt or_deg)
 		if (mm) PIO("finished the " + STR(i) + " find_g_norg   " + present());
 	}
 	for_Int(i, 0, p.nband) for_Int(n, 0, imp_i.nomgs) imp_i[n][i][i] = imp_i[n][idx[or_deg[2 * i] - 1]][idx[or_deg[2 * i] - 1]];
+}
+
+void NORG::get_gimp_eigpairs_magnetic(Green& imp_i)
+{
+	for_Int(i, 0, p.nband)
+	{
+		// === Spin-up (same mechanism as get_gimp_eigpairs) ===
+		StdVecInt diff_up = {(i+1), -(i+1)};
+		for (const auto ii : diff_up) {
+			NocSpace scsp_sub(mm, p, nppso(p.npartical, ii));
+			Operator opr_sub(mm, p, scsp_sub);
+			set_row_primeter_byimpH(uormat, impH, opr_sub.oper_value);
+			for_Int(egs_idx, 0, p.degel) {
+				CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, final_ground_state[egs_idx], i * 2);
+				ImGreen gf(1, p);
+				if (ii > 0) temp_green.find_gf_greater(groune_lst, gf);
+				if (ii < 0) temp_green.find_gf_lesser(groune_lst, gf);
+				for_Int(n, 0, gf.nomgs)
+					imp_i[n][i][i] += gf[n][0][0] / p.degel;
+			}
+		}
+
+		// === Spin-down: directly modify npartical[2*i+1] instead of using nppso() ===
+		StdVecInt signs_dn = {+1, -1};
+		for (const auto sgn : signs_dn) {
+			VecInt npart_dn = p.npartical;
+			npart_dn[2*i+1] += sgn;
+			NocSpace scsp_sub(mm, p, npart_dn);
+			Operator opr_sub(mm, p, scsp_sub);
+			set_row_primeter_byimpH(uormat, impH, opr_sub.oper_value);
+			for_Int(egs_idx, 0, p.degel) {
+				CrrltFun temp_green(mm, p, scsp, scsp_sub, opr_sub, final_ground_state[egs_idx], i * 2 + 1);
+				ImGreen gf(1, p);
+				if (sgn > 0) temp_green.find_gf_greater(groune_lst, gf);
+				if (sgn < 0) temp_green.find_gf_lesser(groune_lst, gf);
+				for_Int(n, 0, gf.nomgs)
+					imp_i[n][i + p.nband][i + p.nband] += gf[n][0][0] / p.degel;
+			}
+		}
+
+		if (mm) PIO("finished band " + STR(i) + " (up+dn)   " + present());
+	}
 }
 
 // special modify for the HHD case.(arXiv:2209.14178v1)

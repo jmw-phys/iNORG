@@ -47,7 +47,9 @@ private:
 public:
 	Bath(const MyMpi& mm_i, const Prmtr& prmtr_i);
 
-	void number_bath_fit(const ImGreen& hb_i, const VecInt or_deg = VecInt());
+	void number_bath_fit(const ImGreen& hb_i, const VecInt or_deg);
+
+	void number_bath_fit_all(const ImGreen& hb_i);
 
 	void fvb_init();
 

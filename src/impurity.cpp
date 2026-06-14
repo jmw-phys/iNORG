@@ -45,6 +45,20 @@ void Impurity::find_g0(Green &g0) const {
     }
 }
 
+// rely on imp model's frame, extract both spin channels for magnetic calculation
+void Impurity::find_g0_magnetic(Green &g0) const {
+
+    MatCmplx Z(ns, ns);
+    for_Int(n, 0, g0.nomgs) {
+        Z = g0.z(n);
+        MatCmplx g0_z = matinvlu(Z - cmplx(h0));
+        for_Int(i, 0, p.nband) {
+            g0[n][i][i]                     = g0_z[pos_imp[2 * i]][pos_imp[2 * i]];            // spin-up
+            g0[n][i + p.nband][i + p.nband] = g0_z[pos_imp[2 * i + 1]][pos_imp[2 * i + 1]];  // spin-dn
+        }
+    }
+}
+
 // rely on imp model's frame
 void Impurity::find_all_g0(Green &g0) const {
 
@@ -72,6 +86,26 @@ void Impurity::find_hb(Green &hb) const {
             VecCmplx S = INV(Z - cmplx(vec_ose[i]));
             VecCmplx V = cmplx(vec_hop[i]);
             hb[n][i][i] = SUM(V * S * V.co());
+        }
+    }
+}
+
+//rely on imp model's frame, rebuild hybridization for all 10 spin-orbitals
+void Impurity::find_hb_magnetic(Green &hb) const {
+    for_Int(i, 0, p.nband) {
+        VecReal hop_up(bth.fvb[i][0][0]),             ose_up(bth.fvb[i][1][0]);               // spin-up
+        VecReal hop_dn(bth.fvb[i + p.nband][0][0]),   ose_dn(bth.fvb[i + p.nband][1][0]);     // spin-dn
+        const Int nb_i = p.nI2B[2*i];
+        for_Int(n, 0, hb.nomgs) {
+            const VecCmplx Z(nb_i, hb.z(n));
+            // spin-up
+            VecCmplx S_up = INV(Z - cmplx(ose_up));
+            VecCmplx V_up = cmplx(hop_up);
+            hb[n][i][i] = SUM(V_up * S_up * V_up.co());
+            // spin-dn
+            VecCmplx S_dn = INV(Z - cmplx(ose_dn));
+            VecCmplx V_dn = cmplx(hop_dn);
+            hb[n][i + p.nband][i + p.nband] = SUM(V_dn * S_dn * V_dn.co());
         }
     }
 }

@@ -49,9 +49,11 @@ public:
 	Impurity(const MyMpi& mm_i, const Prmtr& prmtr_i, const Bath& bth_i, const Str& file = empty_str);
 	Impurity(const MyMpi& mm_i, const Prmtr& prmtr_i, const Bath& bth_i, const VecInt or_deg);
 	void find_g0(Green& g0) const;
+	void find_g0_magnetic(Green& g0) const;
 	void find_all_g0(Green& g0) const;
-	
+
 	void find_hb(Green& hb) const;
+	void find_hb_magnetic(Green& hb) const;
 	
 	MatReal find_hop_for_test() const;
 

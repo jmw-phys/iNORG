@@ -14,20 +14,37 @@ code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022 - 2024
 
 APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i), p(prmtr_i), num_omg(prmtr_i.num_omg), 
 	ful_pcl_sch(1), iter_count(0), sig_err(0.), n_eles(p.norbs, 0.), fit_err(p.nband, 0.), fit_range (5.0),
-	num_nondegenerate(-1), weight_nooc(5, 1E-4), weight_freze(5, 1E-13), fit_nbaths(p.norg_sets, 0)
+	num_nondegenerate(-1), weight_nooc(5, 1E-4), weight_freze(5, 1E-13), fit_nbaths(p.norg_sets, 0), magnetic(0)
 {
 	update(file);
+	Int n_green_orbs = magnetic ? norbs : nband;
 	Bath bth(mm, p);
 	Impurity imp(mm, p, bth, or_deg_idx);
-	ImGreen hb(p.nband, p);	hb.read_edmft("Delta.inp", or_deg_idx);									if (mm) hb.write_edmft("hb_read.txt", or_deg_idx);
+
+	// Hybridization reading and bath fitting
+	ImGreen hb(n_green_orbs, p);
+	if (magnetic) {
+		hb.read_edmft_magnetic("Delta.inp", nband);													if (mm) hb.write_edmft_magnetic("hb_read.txt", nband);
+	} else {
+		hb.read_edmft("Delta.inp", or_deg_idx);													if (mm) hb.write_edmft("hb_read.txt", or_deg_idx);
+	}
 	if(mm) WRN(NAV(or_deg_idx))
-	bth.bth_read_fvb("ose_hop");	bth.number_bath_fit(hb, or_deg_idx);							if (mm) bth.bth_write_fvb();
+	bth.bth_read_fvb("ose_hop");
+	if (magnetic) bth.number_bath_fit_all(hb);
+	else          bth.number_bath_fit(hb, or_deg_idx);
+	if (mm) bth.bth_write_fvb();
 	{ mm.barrier(); SLEEP(1); }
 
-	imp.update("eDMFT");																			if (mm) imp.write_H0info(bth, MAX(or_deg_idx));
-	ImGreen hb_imp(p.nband, p);		imp.find_hb(hb_imp); 											if (mm) hb_imp.write_edmft("hb_fit.txt", or_deg_idx);
+	// Impurity model construction (interface unchanged for magnetic)
+	imp.update("eDMFT");																			if (mm) imp.write_H0info(bth, magnetic ? norbs : MAX(or_deg_idx));
+	ImGreen hb_imp(n_green_orbs, p);
+	if (magnetic) imp.find_hb_magnetic(hb_imp);
+	else          imp.find_hb(hb_imp);
+	if (magnetic) { if (mm) hb_imp.write_edmft_magnetic("hb_fit.txt", nband); }
+	else          { if (mm) hb_imp.write_edmft("hb_fit.txt", or_deg_idx); }
+
 	edmft_back_up("read");
-	auto_nooc("ful_pcl_sch", imp);	
+	auto_nooc("ful_pcl_sch", imp);
 	if(mm) WRN(NAV(p.control_divs));
 	NORG norg(mm, p);
 	if (!norg.check_NTR()) norg.uormat = p.rotationU;
@@ -36,14 +53,32 @@ APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i
 	// MatReal tmp_e = norg.save_NTR();
 	// MatReal local_multiplets_state = norg.oneedm.local_multiplets_state(norg.oneedm.ground_state);	if (mm)WRN(NAV(local_multiplets_state));
 	edmft_back_up("save");
-	ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);													if (mm)	g0imp.write_edmft("g0imp.txt", or_deg_idx);
-	ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp, or_deg_idx);							if (mm) gfimp.write_edmft("Gf.out", or_deg_idx);
-	ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();
+
+	// Green's function and self-energy
+	ImGreen g0imp(n_green_orbs, p);
+	if (magnetic) imp.find_g0_magnetic(g0imp);
+	else          imp.find_g0(g0imp);
+	if (magnetic) { if (mm)	g0imp.write_edmft_magnetic("g0imp.txt", nband); }
+	else          { if (mm)	g0imp.write_edmft("g0imp.txt", or_deg_idx); }
+
+	ImGreen gfimp(n_green_orbs, p);
+	if (magnetic) norg.get_gimp_eigpairs_magnetic(gfimp);
+	else          norg.get_gimp_eigpairs(gfimp, or_deg_idx);
+	if (magnetic) { if (mm) gfimp.write_edmft_magnetic("Gf.out", nband); }
+	else          { if (mm) gfimp.write_edmft("Gf.out", or_deg_idx); }
+
+	ImGreen seimp(n_green_orbs, p);	seimp = g0imp.inverse() - gfimp.inverse();
 	fit_err = bth.info.tr()[1];
 	{ mm.barrier(); SLEEP(1); }
 	if (mm) {
-		ImGreen last_sig(p.nband, p); 		last_sig.read_edmft("Sig.out", or_deg_idx);				sig_err = seimp.error(last_sig);
-		log("sigerr_update");																		seimp.write_edmft("Sig.out", or_deg_idx);
+		ImGreen last_sig(n_green_orbs, p);
+		if (magnetic) {
+			last_sig.read_edmft_magnetic("Sig.out", nband);											sig_err = seimp.error(last_sig);
+			log("sigerr_update");																	seimp.write_edmft_magnetic("Sig.out", nband);
+		} else {
+			last_sig.read_edmft("Sig.out", or_deg_idx);											sig_err = seimp.error(last_sig);
+			log("sigerr_update");																	seimp.write_edmft("Sig.out", or_deg_idx);
+		}
 	}
 	//hold for checking-----------------------------------------------------------------------------------------------------------------------------------
 	/* 
@@ -86,7 +121,7 @@ APIedmft::APIedmft(const MyMpi& mm_i, Prmtr& prmtr_i, const Str& file) : mm(mm_i
 void APIedmft::read_eDMFT(const Str& file) {
 	{
 		std::vector<double> Ed;
-		std::vector<int> deg_idx;
+		std::vector<int> Deg;
 		double J;
 		std::string CoulombF;
 		double beta;
@@ -96,7 +131,7 @@ void APIedmft::read_eDMFT(const Str& file) {
 		std::vector<int> restrain_t;
 		std::vector<int> fit_nbaths_t;
 		// std::vector<int> distribute_t; //! delete in v1.9.13.p3@2024.11.28
-		read_norg_setting("PARAMS.norg", Ed, deg_idx, J, CoulombF, beta, U, weight_noc1, weight_noc2, restrain_t, fit_nbaths_t);
+		read_norg_setting("PARAMS.norg", Ed, Deg, J, CoulombF, beta, U, weight_noc1, weight_noc2, restrain_t, fit_nbaths_t);
 		//--------------------------------------------------
 		// ! Here only suit for the t2g orbital.
 		// nband = 3;	norbs = 6;	mu = 0;	
@@ -113,16 +148,25 @@ void APIedmft::read_eDMFT(const Str& file) {
 		// }
 		p.beta = beta;
 		p.eimp.reset(norbs, 0.);
-		// p.eimp =  concat(VecReal(Ed), VecReal(Ed)).mat(2, Ed.size()).tr().vec();
-		or_deg_idx.reset(concat(VecInt(deg_idx), VecInt(deg_idx)).mat(2, deg_idx.size()).tr().vec());
-		for_Int(i, 0, p.eimp.size()) p.eimp[i] =  Ed[or_deg_idx[i] - 1];
+		if (magnetic) {
+			// magnetic: all 10 spin-orbitals are non-degenerate
+			// Deg_dn = Deg + nband, so concat → [1,2,3,4,5, 6,7,8,9,10]
+			VecInt Deg_up(Deg), Deg_dn(Deg);
+			for_Int(i, 0, nband) Deg_dn[i] += nband;
+			or_deg_idx.reset(concat(Deg_up, Deg_dn).mat(2, nband).tr().vec());
+			// Ed has nband values; up/dn of same band share crystal field energy
+			for_Int(i, 0, p.eimp.size()) p.eimp[i] = Ed[i / 2];
+		} else {
+			or_deg_idx.reset(concat(VecInt(Deg), VecInt(Deg)).mat(2, Deg.size()).tr().vec());
+			for_Int(i, 0, p.eimp.size()) p.eimp[i] = Ed[or_deg_idx[i] - 1];
+		}
 		num_nondegenerate = MAX(or_deg_idx);
 		weight_nooc.reset(Vec(weight_noc1));
 		weight_freze.reset(Vec(weight_noc2));
 		restrain = VecInt(restrain_t);
 		fit_nbaths.reset(fit_nbaths_t);
 		// distribute = VecInt(distribute_t); //! delete in v1.9.13.p3@2024.11.28
-		// if (mm) WRN(NAV2(VecReal(Ed), VecInt(deg_idx)));
+		// if (mm) WRN(NAV2(VecReal(Ed), VecInt(Deg)));
 		//--------------------------------------------------
 
 	}
@@ -234,6 +278,7 @@ void APIedmft::update(const Str& file) {
 	{// modify the parameters from edmft.in
 		read_eDMFT(file);
 		p.U = Uc; p.mu = mu; p.jz = Jz; p.nband = nband; p.norg_sets = p.norbs = norbs;
+		p.magnetic = magnetic;
 		p.templet_restrain = restrain;
 		p.project = NAV(nband) + "band";
 		// if(p.if_norg_degenerate == 1) p.bandw = 4 * Uc;
@@ -244,7 +289,7 @@ void APIedmft::update(const Str& file) {
 		if(mm) WRN(NAV(p.control_divs));
 		p.Uprm = p.U - 2 * p.jz;
 		p.degel = 0;
-		n_eles.reset(norbs, 0); fit_err.reset(nband, 0);
+		n_eles.reset(norbs, 0); fit_err.reset(magnetic ? norbs : nband, 0);
 		// if (mm) p.print();
 	}
 
@@ -268,10 +313,22 @@ bool APIedmft::if_lock(const Str file) const {
 
 void APIedmft::print_log(const Str& lbl, std::ostream& os) const {
     using namespace std;
-    Str temp; 
-    for_Int(i, 0, p.nband) { 
-        if (i == 0) temp += STR(p.npartical[i * 2]); 
-        else temp += "-" + STR(p.npartical[i * 2]); 
+    Str temp;
+    if (p.magnetic) {
+        for_Int(i, 0, p.nband) {
+            if (i == 0) temp += STR(p.npartical[i * 2]);
+            else temp += "-" + STR(p.npartical[i * 2]);
+        }
+        temp += "|";
+        for_Int(i, 0, p.nband) {
+            if (i == 0) temp += STR(p.npartical[i * 2 + 1]);
+            else temp += "-" + STR(p.npartical[i * 2 + 1]);
+        }
+    } else {
+        for_Int(i, 0, p.nband) {
+            if (i == 0) temp += STR(p.npartical[i * 2]);
+            else temp += "-" + STR(p.npartical[i * 2]);
+        }
     }
 
     os << iofmt();
@@ -282,8 +339,17 @@ void APIedmft::print_log(const Str& lbl, std::ostream& os) const {
     os << setw(3 + 2 * p.nband) << temp;
     
     os << iofmt() << fixed << setprecision(8);
-    for_Int(i, 0, p.nband) {
-        os << "  " << setw(15) << fit_err[or_deg_idx[i * 2] - 1] << "~" << setw(10) << n_eles[i * 2];
+    if (p.magnetic) {
+        for_Int(i, 0, p.nband) {
+            os << "  " << setw(15) << fit_err[i] << "~" << setw(10) << n_eles[i * 2];
+        }
+        for_Int(i, 0, p.nband) {
+            os << "  " << setw(15) << fit_err[i + p.nband] << "~" << setw(10) << n_eles[i * 2 + 1];
+        }
+    } else {
+        for_Int(i, 0, p.nband) {
+            os << "  " << setw(15) << fit_err[or_deg_idx[i * 2] - 1] << "~" << setw(10) << n_eles[i * 2];
+        }
     }
     
     os << "  " << present();
@@ -371,7 +437,7 @@ void APIedmft::auto_nooc(Str mode, const Impurity& imp) {
 void APIedmft::read_norg_setting(
 	const std::string& filename,
 	std::vector<double>& Ed,
-	std::vector<int>& deg_idx,
+	std::vector<int>& Deg,
 	double& J,
 	std::string& CoulombF,
 	double& beta,
@@ -398,17 +464,17 @@ void APIedmft::read_norg_setting(
 				}
 			}
 		}
-		else if (key == "deg_idx") {
+		else if (key == "Deg") {
 			char ch;
 			while (iss >> ch && ch != ']') {
 				if (ch != ',' && ch != '[') {
 					int value;
 					iss.unget();
 					iss >> value;
-					deg_idx.push_back(value);
+					Deg.push_back(value);
 				}
 			}
-			nband = deg_idx.size();
+			nband = Deg.size();
 			norbs = 2 * nband;
 		}
 		else if (key == "J") {
@@ -429,8 +495,14 @@ void APIedmft::read_norg_setting(
 		else if (key == "U") {
 			iss >> U;
 		}
-		else if (key == "pred_gs_deg") {
+		else if (key == "Minsulator") {
 			iss >> p.if_norg_degenerate;
+		}
+		else if (key == "magnetic") {
+			iss >> magnetic;
+		}
+		else if (key == "nmesh") {
+			iss >> p.nmesh;
 		}
 		else if (key == "ful_pcl_sch") {
 			iss >> ful_pcl_sch;
@@ -514,6 +586,36 @@ void APIedmft::read_norg_setting(
 // Input parameter validation check
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/*
+int main() {
+	std::vector<double> Ed;
+	std::vector<int> Deg;
+	double J;
+	std::string CoulombF;
+	double beta;
+	double U;
+	std::vector<int> restrain;
+	std::vector<int> distribute;
+
+	read_data("data.txt", Ed, Deg, J, CoulombF, beta, U, restrain, distribute);
+
+
+	// Print the values
+	std::cout << "Ed: ";
+	for (double e : Ed) std::cout << e << " ";
+	std::cout << "\nDeg: ";
+	for (int d : Deg) std::cout << d << " ";
+	std::cout << "\nJ: " << J << "\nCoulombF: " << CoulombF << "\nbeta: " << beta << "\nU: " << U << std::endl;
+	std::cout << "restrain: ";
+	for (int r : restrain) std::cout << r << " ";
+	std::cout << "\ndistribute: ";
+	for (int d : distribute) std::cout << d << " ";
+	std::cout << std::endl;
+
+	return 0;
+}
+*/
 
 void APIedmft::edmft_back_up(const Str& status) {
 	using namespace std;
