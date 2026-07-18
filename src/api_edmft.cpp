@@ -464,7 +464,7 @@ void APIedmft::read_norg_setting(
 				}
 			}
 		}
-		else if (key == "Deg") {
+		else if (key == "Deg" || key == "deg_idx") {
 			char ch;
 			while (iss >> ch && ch != ']') {
 				if (ch != ',' && ch != '[') {
@@ -495,7 +495,7 @@ void APIedmft::read_norg_setting(
 		else if (key == "U") {
 			iss >> U;
 		}
-		else if (key == "Minsulator") {
+		else if (key == "Minsulator" || key == "pred_gs_deg") {
 			iss >> p.if_norg_degenerate;
 		}
 		else if (key == "magnetic") {
