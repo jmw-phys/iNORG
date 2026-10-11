@@ -1,0 +1,29 @@
+// prmtr print bgn  2026-10-11 16:26:34
+              np = 36                          # number of mpi processes
+           nbath = 20                          # number of bath orbital
+           norbs = 4                           # number of spin-orbitals
+           cnooc = phss_v2                     # Correlation nature orbital occupation constraint.
+    rotation_imp = NO                          # if rotation impurity orbital is used. 
+    control_divs = 
+row[0] =  0 -2 -3 -4  0  4  3  2
+row[1] =  1  0  0  2  1  2  0  0
+row[2] =  1  0  0  2  1  2  0  0
+row[3] =  1  0  0  2  1  2  0  0
+row[4] =  1  0  0  2  1  2  0  0
+    # to set the number of division and the shortcut restratin.
+               U = 3                           # The hubbard U interaction strength
+            Uprm = 2.7                         # The U^' term
+              jz = 0                           # The hund coupling
+              mu = 0                           # The chemical potential
+      bethe_t[i] = 0.5                         # quarter bandwidth(0 to t.size())
+      bethe_t[i] = 0.25                        # quarter bandwidth(0 to t.size())
+         max_omg = 327.72                      # max_omg of imgreen
+        eta_freq = 0.02                        # eta of omega + i * eta
+        dlt_freq = 0.005                       # The real x-axis unit for retarded green function
+     fit_max_omg = 4.888                       # The fitting max omg
+VecInt(fit_points) = 
+                           # to set the fix fitting points.
+     fit_num_omg = 122                         # The max number of fitting points.
+      unit_omg*2 = 0.04                        # The image x-axis unit for Matsubara Green's function
+// prmtr print end  2026-10-11 16:26:34
+
