@@ -24,15 +24,16 @@ $ make clean
 $ make
 ```
 
-3. Run the program:
+3. Run the program from a directory that contains `PARAMS.norg`, for example a tutorial directory:
 ```bash
-$ mpirun -n [number_of_processes] ./testing/inorg
+$ cd tutor/1_Single-impurity_Anderson_model_with_multiple_orbitals
+$ mpiexec -n <N> ../../inorg > run.log 2>&1
 ```
 
 Note: 
 - The code requires MPI and MKL libraries
 - Make sure you have the necessary compilers and libraries installed
-- The number of processes should be adjusted based on your system configuration
+- Replace `<N>` with the number of physical cores on your machine (at least 2)
 
 
 ## Tutorial — Two Typical Examples
@@ -48,7 +49,10 @@ GNU AFFERO General Public License Version 3
 
 ## Documentation
 
-A tutorial will be provided in the `docs` folder. Additionally, a new tutorial article detailing the specific implementation algorithms and user manual for iNORG will soon be available on arXiv—stay tuned! [See author publications on arXiv](https://arxiv.org/search/?query=Wang%2C+Jia-Ming&searchtype=author&abstracts=show&order=-announced_date_first&size=50)
+The user manual is online at https://jmw-phys.github.io/iNORG/. Its sources are in the `docs/` folder.
+
+The implementation algorithms and the user manual of iNORG are described in:
+Jia-Ming Wang, Yi-Heng Tian, Yin Chen, Ru Zheng, Rong-Qiang He, Zhong-Yi Lu, *iNORG: An open-source quantum impurity solver package based on the natural orbitals renormalization group*, [arXiv:2607.13993 (2026)](https://arxiv.org/abs/2607.13993).
 
 
 ## Research Publications with iNORG

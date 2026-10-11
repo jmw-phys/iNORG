@@ -1,0 +1,70 @@
+site_name: iNORG
+site_description: User manual for the natural orbitals renormalization group impurity solver
+site_url: https://jmw-phys.github.io/iNORG/
+repo_url: https://github.com/jmw-phys/iNORG
+repo_name: jmw-phys/iNORG
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.arithmatex:
+      generic: true
+  - tables
+  - toc:
+      permalink: true
+  - attr_list
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - Installation: installation.md
+      - Quick start: quickstart.md
+  - Tutorials:
+      - "Example 1: One-shot impurity solution": tutorials/siam-oneshot.md
+      - "Example 2: Bethe lattice DMFT": tutorials/bethe-dmft.md
+  - Common framework:
+      - Anderson impurity model: theory/impurity-model.md
+      - Many-body wave functions: theory/wavefunctions.md
+      - Lanczos algorithm: theory/lanczos.md
+      - Solver workflow: implementation/workflow.md
+      - Hybridization fitting: implementation/hybridization-fitting.md
+      - Wave-function encoding: implementation/encoding.md
+      - Many-body operators: implementation/operators.md
+      - Ground-state solution: implementation/ground-state.md
+      - Green's functions: implementation/greens-functions.md
+  - Solver methods:
+      - NORG:
+          - Natural orbitals renormalization group: theory/norg.md
+          - Occupancy constraints: implementation/nooc.md
+  - Reference:
+      - Parameters: parameters.md
+      - Output files: output-files.md
+      - Known limitations: known-limitations.md
+  - Citing: citing.md
+  - Publications: paper-list.md
