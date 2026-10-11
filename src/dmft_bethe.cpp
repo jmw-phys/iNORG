@@ -7,6 +7,12 @@ code developed and maintained by (jmw@ruc.edu.cn, RUC, China) date 2022
 #include "dmft_bethe.h"
 
 
+static void project_ph_se(ImGreen& se) {
+	for_Int(n, 0, se.nomgs) for_Int(i, 0, se.norbs)
+		se[n][i][i] = Cmplx(0., imag(se[n][i][i]));
+}
+
+
 void DMFT::set_parameter() {
 	bethe_mu = p.mu;
 	bethe_t = p.bethe_t;
@@ -44,6 +50,7 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 	else {g_loc = g0_loc();																	if (mm) g_loc.write("g0loc", iter_cnt);}
 
     VEC<MatReal> norg_tempU;
+	if (p.bath_ph_symm) project_ph_se(se);
 	se_input.push_back(se);
 	Int Flag_semix(0);
 	// while (iter_cnt < p.iter_max) 
@@ -63,7 +70,8 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 		norg.up_date_h0_to_solve(imp.impH, 1);												n_eles = norg.write_impurtiy_occupation(iter_cnt);
 		ImGreen g0imp(p.nband, p);	imp.find_g0(g0imp);										if (mm)	g0imp.write("g0imp", iter_cnt);
 		ImGreen gfimp(p.nband, p);	norg.get_gimp_eigpairs(gfimp);							if (mm) gfimp.write("gfimp", iter_cnt);
-		ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();				if (mm) seimp.write("seimp", iter_cnt);
+		ImGreen seimp(p.nband, p);	seimp = g0imp.inverse() - gfimp.inverse();
+		if (p.bath_ph_symm) project_ph_se(seimp);									if (mm) seimp.write("seimp", iter_cnt);
 
 		if (mode == 0) {
 			append_gloc_err(gfimp.error(g_loc));											log("gerr_update");
@@ -77,7 +85,7 @@ DMFT::DMFT(const MyMpi& mm_i, Prmtr& prmtr_i, const Int mode) :
 			append_gloc_err(err_temp);														log("sigerr_update");
 			// se = (iter_cnt == 1) ? seimp : 0.5 * se + 0.5 * seimp;	
 			// se = seimp;
-			if (iter_cnt > 1 && err_temp < 8E-3) Flag_semix = 1;
+			if (p.pulay_mixing && iter_cnt > 1 && err_temp < 8E-3) Flag_semix = 1;
 			pulay_mixing(seimp);
 			if (!Flag_semix) {
 				se = seimp;

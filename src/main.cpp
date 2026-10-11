@@ -151,6 +151,8 @@ void read_params_norg(const MyMpi& mm, Prmtr& p, const Str& filename) {
     double mu = 0.0;
     int band = 0;
     int pred_gs_deg = 0;
+	Int bath_ph_symm = 1;
+	Int pulay_mixing = 0;
     std::vector<double> t_values;
     double u = 0.0;
     double uprim = 0.0;
@@ -171,6 +173,20 @@ void read_params_norg(const MyMpi& mm, Prmtr& p, const Str& filename) {
             iss >> band;
         } else if (key == "pred_gs_deg") {
             iss >> pred_gs_deg;
+		} else if (key == "bath_ph_symm") {
+			std::string value, rest;
+			std::getline(iss, rest, '#');
+			std::istringstream value_stream(rest);
+			if (!(value_stream >> value) || (value != "0" && value != "1") || !(value_stream >> std::ws).eof())
+				ERR("bath_ph_symm must be 0 or 1 in " + filename);
+			bath_ph_symm = (value == "1");
+		} else if (key == "pulay_mixing") {
+			std::string value, rest;
+			std::getline(iss, rest, '#');
+			std::istringstream value_stream(rest);
+			if (!(value_stream >> value) || (value != "0" && value != "1") || !(value_stream >> std::ws).eof())
+				ERR("pulay_mixing must be 0 or 1 in " + filename);
+			pulay_mixing = (value == "1");
         } else if (key == "bethe_t") {
             char ch;
             while (iss >> ch && ch != ']') {
@@ -260,6 +276,15 @@ void read_params_norg(const MyMpi& mm, Prmtr& p, const Str& filename) {
     if (t_values.size() != static_cast<std::size_t>(band)) ERR("bethe_t must contain exactly bethe_band values in " + filename);
     if (fit_nbaths_values.size() != static_cast<std::size_t>(2 * band)) ERR("fit_nbaths must contain exactly 2 * bethe_band values in " + filename);
     if (restrain_values.size() != distribute_values.size()) ERR("restrain and distribute must have equal lengths in " + filename);
+
+	p.bath_ph_symm = bath_ph_symm;
+	p.pulay_mixing = pulay_mixing;
+	if (p.bath_ph_symm && mu != 0.0)
+		ERR("bath_ph_symm = 1 requires bethe_mu = 0 in " + filename + "; set bath_ph_symm 0 for a nonzero bethe_mu");
+	if (p.bath_ph_symm) for_Int(i, 0, fit_nbaths_vals.size()) {
+		if (fit_nbaths_vals[i] % 2 == 0)
+			ERR("bath_ph_symm requires odd fit_nbaths entries in " + filename);
+	}
 
     p.after_modify_prmtr(fit_nbaths_vals);
     // after_modify_prmtr() now rebuilds control_divs from fit_nbaths, so install the

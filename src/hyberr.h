@@ -119,6 +119,50 @@ public:
 
 };
 
+// One impurity and an odd bath: mirrored hopping and paired energies.
+inline VecReal ph_expand(const VecReal& r, Int nb) {
+	Int h = nb / 2;
+	VecReal a(2 * nb, 0.);
+	for_Int(j, 0, h) {
+		a[j] = a[nb - 1 - j] = r[j];
+		a[nb + j] = -r[h + 1 + j];
+		a[2 * nb - 1 - j] = r[h + 1 + j];
+	}
+	a[h] = r[h];
+	a[nb + h] = 0.;
+	return a;
+}
+
+inline VecReal ph_reduce(const VecReal& a, Int nb) {
+	Int h = nb / 2;
+	VecReal V(a.truncate(0, nb)), E(a.truncate(nb, 2 * nb));
+	slctsort(E, V);
+	VecReal r(nb);
+	for_Int(j, 0, h) {
+		r[j] = SQRT(0.5 * (SQR(V[j]) + SQR(V[nb - 1 - j])));
+		r[h + 1 + j] = 0.5 * (E[nb - 1 - j] - E[j]);
+	}
+	r[h] = V[h];
+	return r;
+}
+
+struct HybErrPH {
+	HybErr& h;
+	Int nb;
+	HybErrPH(HybErr& h_i, Int nb_i) : h(h_i), nb(nb_i) {}
+
+	void operator()(const Int x, const VecReal& r, Real& y, VecReal& dydr) {
+		Int hh = nb / 2;
+		VecReal dyda(2 * nb);
+		h(x, ph_expand(r, nb), y, dyda);
+		for_Int(j, 0, hh) {
+			dydr[j] = dyda[j] + dyda[nb - 1 - j];
+			dydr[hh + 1 + j] = -dyda[nb + j] + dyda[2 * nb - 1 - j];
+		}
+		dydr[hh] = dyda[hh];
+	}
+};
+
 // ------------------------------------------------------------------🪦 code grave 🪦------------------------------------------------------------------
 /*
 

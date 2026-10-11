@@ -42,6 +42,8 @@ public:
 	mutable VecCmplx Im_z;
 
 	//fitting related		
+	mutable Int bath_ph_symm = 0;			// PH bath fit, enabled by the mode-0 reader
+	mutable Int pulay_mixing = 1;			// Pulay mixing of the self-energy; the mode-0 reader sets 0 by default
 	mutable VEC<Int> fit_points;				// number of positive imaginary frequencies used for bath fitting
 	mutable Real fit_max_omg;				// imaginary frequency upper bound used for bath fitting
 	mutable Int fit_num_omg;				// number of positive imaginary frequencies used for bath fitting

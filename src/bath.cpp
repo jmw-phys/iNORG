@@ -88,7 +88,9 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_number_contest(const VecReal& a0, 
 	HybErr hyberr(p, vhb_i, vbs_i, nb[idx]);
 
 	// if (mm) WRN("HERE is fine ")
-	const Int np = a0.size();
+	const Int ph = p.bath_ph_symm;
+	const VecReal a0r = ph ? ph_reduce(a0, nb[idx]) : a0;
+	const Int np = a0r.size();
 	// const Int ntry_fine = ntry / 4;
 	// Int ntry = 1 * (mm.np() - 1);
 	Int ntry_fine = MAX(16, mm.np() - 1);
@@ -105,8 +107,8 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_number_contest(const VecReal& a0, 
 	Int nmin = 0;		// number of fittings reaching the minimum
 	MPI_Status status;
 	VecReal a(np);
-	VecReal a_optm = a0;
-	Real err_optm = hyberr(a_optm);
+	VecReal a_optm = a0r;
+	Real err_optm = hyberr(ph ? ph_expand(a_optm, nb[idx]) : a_optm);
 	MatReal ma(ntry, np, 0.);
 	VecReal ma_err(ntry);
 	// if (mm) WRN("HERE is fine "+NAV(err_optm))
@@ -144,7 +146,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_number_contest(const VecReal& a0, 
 				if (nfst < mm.np()) {		// send the first ntot-1 sets of parameters
 					if (nsnd < ntot) {
 						if (ntime == 0) {
-							a = next_initial_fitting_parameters(a0, ntry_fine, itry);
+							a = next_initial_fitting_parameters(a0r, ntry_fine, itry);
 						}
 						else if (ntime == 1) {
 							a = ma[itry];
@@ -163,19 +165,20 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_number_contest(const VecReal& a0, 
 
 					//				WRN(NAV(nrcv));
 					Int sndr = status.MPI_SOURCE;
-					Real err = hyberr(a);
+					const VecReal a_full = ph ? ph_expand(a, nb[idx]) : a;
+					Real err = hyberr(a_full);
 					if (ntime == 0) {
 						ma[nrcv] = a;
 						ma_err[nrcv] = err;
 					}
 					++nrcv;
 					if (true) {
-						Real err_crv = hyberr.err_curve(a);
+						Real err_crv = hyberr.err_curve(a_full);
 						//Real err_crv = 1.;
-						Real err_bsr = hyberr.err_bsr(a);
-						Real err_reg = hyberr.err_reg(a);
+						Real err_bsr = hyberr.err_bsr(a_full);
+						Real err_reg = hyberr.err_reg(a_full);
 						//Real err_bsr = 1.;
-						Real a_norm = a.norm();
+						Real a_norm = a_full.norm();
 						// WRN(NAV5(sndr, ntot, nsnd, nrcv, itry) + ", " + NAV6(err_optm, err, err_crv, err_reg,err_bsr, a_norm));
 					}
 					if (err_optm - sqrt(tol) > err) { nmin = 0; }
@@ -184,7 +187,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_number_contest(const VecReal& a0, 
 
 					if (nsnd < ntot) {
 						if (ntime == 0) {
-							a = next_initial_fitting_parameters(a0, ntry_fine, itry);
+							a = next_initial_fitting_parameters(a0r, ntry_fine, itry);
 						}
 						else if (ntime == 1) {
 							a = ma[itry];
@@ -209,10 +212,17 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_number_contest(const VecReal& a0, 
 			while (true) {
 				mm.Recv(a, status, mm.ms());
 				if (status.MPI_TAG == 0) break;
-				FitMrq<HybErr> mrq(hyberr.x, hyberr.y, hyberr.sig, a, hyberr, tol, itmax, ndone);
-				Int mrq_fit_info = mrq.fit();
-				// WRN(NAV2(itmax,ndone));
-				mm.Send(mrq.a, mm.ms(), 1);
+				if (ph) {
+					HybErrPH hph(hyberr, nb[idx]);
+					FitMrq<HybErrPH> mrq(hyberr.x, hyberr.y, hyberr.sig, a, hph, tol, itmax, ndone);
+					Int mrq_fit_info = mrq.fit();
+					mm.Send(mrq.a, mm.ms(), 1);
+				} else {
+					FitMrq<HybErr> mrq(hyberr.x, hyberr.y, hyberr.sig, a, hyberr, tol, itmax, ndone);
+					Int mrq_fit_info = mrq.fit();
+					// WRN(NAV2(itmax,ndone));
+					mm.Send(mrq.a, mm.ms(), 1);
+				}
 			}
 			++ntime;
 		}
@@ -223,7 +233,7 @@ std::tuple<Real, VecReal, Int> Bath::bath_fit_number_contest(const VecReal& a0, 
 	mm.Bcast(a_optm);
 	mm.Bcast(nmin);
 
-	return std::make_tuple(err_optm, a_optm, nmin);
+	return std::make_tuple(err_optm, ph ? ph_expand(a_optm, nb[idx]) : a_optm, nmin);
 }
 
 
