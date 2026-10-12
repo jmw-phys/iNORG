@@ -7,7 +7,6 @@ repo_name: jmw-phys/iNORG
 theme:
   name: material
   features:
-    - navigation.sections
     - content.code.copy
   palette:
     - scheme: default
