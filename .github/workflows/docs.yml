@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   build:
+    if: ${{ github.repository == 'jmw-phys/iNORG' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,6 +35,7 @@ jobs:
           path: site
 
   deploy:
+    if: ${{ github.repository == 'jmw-phys/iNORG' }}
     needs: build
     runs-on: ubuntu-latest
     environment:
