@@ -121,7 +121,11 @@ The one-shot example's sparse row selection is motivated by the discrete Lehmann
 
 Compare target and fitted hybridizations over the full mesh, especially the low-energy region relevant to your calculation. Also inspect the separate objective contributions in `h0.txt` or its iteration-prefixed equivalent. A small combined objective depends on the selected rows and weights; it is not an independent bound on the final self-energy error.
 
-The paper's fitting-performance example compares wide and narrow bands with $U=3$, $\Delta=0.3$, and $t_2=0.5t_1$. Here $\Delta$ is the model parameter in the figure caption, not this page's hybridization symbol. As reported in the paper, the fit errors decrease exponentially with bath count in that example and fall below $10^{-4}$ for $n_b\geq7$. This describes that fit comparison, not a bath-size guarantee for arbitrary input.
+The figure below shows the paper's fitting-performance example for the wide and narrow bands. Here $\Delta$ is the model parameter in the figure caption, not this page's hybridization symbol. As reported in the paper, the fit errors decrease exponentially with bath count in that example and fall below $10^{-4}$ for $n_b\geq7$. This describes that fit comparison, not a bath-size guarantee for arbitrary input.
+
+![Wide-band hybridization fits and inset comparing wide-band and narrow-band errors as bath size increases](img/bathfit.svg){ style="background-color: white;" }
+
+*Figure: Imaginary part of the wide-band hybridization $\Gamma_{\rm imp}(i\omega)$ for $U=3$, $\Delta=0.3$, and $t_2=0.5t_1$. The inset compares wide-band (WB) and narrow-band (NB) fit errors as the number of bath sites per impurity orbital, $n_b$, increases.*
 
 <!-- iNORG paper: Fitting performance, inorg.tex:393, label fig:bathfit. No numerical results have been generated for this manual. -->
 

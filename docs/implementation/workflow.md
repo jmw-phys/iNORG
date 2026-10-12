@@ -4,7 +4,11 @@ An iNORG calculation combines bath discretization, selection of a many-body spac
 
 ## From hybridization to observables
 
-The following table describes the steps labeled A–J in the iNORG paper's workflow.
+The flowchart below shows how bath fitting leads to observables; the table explains its labels A–J.
+
+![NORG workflow from bath fitting through orbital optimization to physical observables](img/flowchart.svg){ style="background-color: white;" }
+
+*Figure: Bath fitting defines the impurity model (A), and repeated solves in a selected space optimize the natural orbitals (B–I). After convergence, the solver evaluates physical quantities (J).*
 
 | Step | Operation | Result |
 | --- | --- | --- |
@@ -14,8 +18,8 @@ The following table describes the steps labeled A–J in the iNORG paper's workf
 | D | Solve the projected Hamiltonian with Lanczos. | Ground-state energy and amplitudes. |
 | E | Calculate $D_{\alpha\beta}=\langle\psi|c_\alpha^\dagger c_\beta|\psi\rangle$. | Single-particle density matrix. |
 | F | Diagonalize the density matrix blocks. | New bath orbitals and natural occupations. |
-| G | Check the change in ground-state energy. | Continue orbital optimization or proceed. |
-| H | Retain the occupations and orbital transformation. | The optimized orbital representation. |
+| G | Rotate the bath orbitals and rebuild the Hamiltonian. | Repeat the inner orbital optimization loop. |
+| H | Check the change in ground-state energy. | Once converged, retain occupations and the orbital transformation. |
 | I | Check occupation stability and reconsider the selected space when needed. | A space appropriate to the optimized orbitals. |
 | J | Calculate Green's functions and other observables. | Impurity output for analysis or another DMFT iteration. |
 
@@ -29,6 +33,8 @@ $$
 This summarizes the method. In the current standalone code, the inner NORG loop updates orbitals within its constructed space. Mode 1 first runs a preliminary solve, uses its occupation weights to assign division sizes, and then constructs the final NORG problem. The actual inner occupation diagnostic is a root-mean-square change normalized by the total orbital count, and the stopping function also uses energy and iteration history. There is no standalone input keyword for the schematic tolerance $\Delta_d$.
 
 <!-- iNORG paper: Overall workflow of iNORG, inorg.tex:304. Paper wording: separate energy and L1-occupation convergence loops. Code: src/api_edmft.cpp:47; src/api_edmft.cpp:49; src/api_edmft.cpp:374; src/api_edmft.cpp:423; src/norg.cpp:68; src/norg.cpp:92; src/norg.cpp:529. -->
+
+<!-- iNORG paper: flowchart figure and caption, inorg.tex:310–327. The table follows the diagram's labels G (orbital rotation) and H (energy convergence), which differ from the enumerated steps in the paper text. -->
 
 ## How the run modes use this workflow
 
@@ -54,6 +60,14 @@ The driver sets $\operatorname{Re}\Sigma_{aa}(i\omega_n)=0$ for the initial self
 
 ## Module map
 
+The diagram below groups the modules by their role; the table maps these roles to source files and manual pages. The `api_.*` label is retained as shown in the paper; the current interface files are `api_edmft.cpp` and `api_edmft.h`, and `comdivs.*` is under `src/gen/`.
+
+![iNORG modules grouped into preprocessing, space selection, operators, wave functions, and postprocessing](img/structure.svg){ style="background-color: white;" }
+
+*Figure: Module names appear above their roles in preprocessing, space selection, operators, wave functions, and postprocessing.*
+
+<!-- iNORG paper: Organizational structure, inorg.tex:338–352. Module names checked against src/ and src/gen/; api_.* is the paper's interface label. -->
+
 | Responsibility | Main source files | Manual page |
 | --- | --- | --- |
 | Inputs and outer calculation | `main.cpp`, `api_edmft.cpp`, `dmft_bethe.cpp` | [Quick start](../quickstart.md) |
@@ -71,7 +85,7 @@ All file names in this table are relative to `src/`. C++17 supplies the implemen
 
 Inspect the bath fit, the inner eigenproblem, the orbital optimization, and, for mode 0, the outer self-consistency separately. Increasing a bath size can change both fit accuracy and the selected many-body space. Increasing a Lanczos dimension does not relax NOOC constraints.
 
-The message `THE NORG CONVERGED` is also printed when the inner loop reaches its iteration limit. Inspect the preceding energy and occupation history. The [known limitations](../known-limitations.md) describe this behavior, the Bethe convergence caveat, and the unreliable double-occupancy output.
+The message `THE NORG CONVERGED` is also printed when the inner loop reaches its iteration limit. Inspect the preceding energy and occupation history.
 
 <!-- src/norg.cpp:68; src/norg.cpp:103; src/dmft_bethe.cpp:394. -->
 

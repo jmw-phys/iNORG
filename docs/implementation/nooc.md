@@ -27,6 +27,12 @@ $$
 
 The groups contain nearly full, moderately full, active, moderately empty, and nearly empty orbitals. Each group has its own constraint. Their direct product, together with the active impurity space, gives the retained space before imposing the fixed particle counts. The split into five bath groups is an example, not a requirement of the direct-product rule.
 
+The diagram below shows these independent bath groups.
+
+![Direct-product NOOC groups with separate hole and electron limits around an active group](img/nooc-1.svg){ style="background-color: white;" }
+
+*Figure: Direct-product constraints limit holes and electrons separately in each bath group, while the active group remains unrestricted.*
+
 The corresponding algorithm name in the input is `nooc`. It performs the individual division checks without adding a joint excitation limit.
 
 <!-- iNORG paper: Direct product constraint rule, inorg.tex:423. src/nocspace.cpp:296; src/nocspace.cpp:297. -->
@@ -47,6 +53,12 @@ $$
 
 The inner constrained group contains six preset full and six preset empty orbitals. It allows at most two changes in total. The outer group contains eight of each and allows at most one change. A hole and an electron each consume one unit of this budget; a particle-hole pair consumes two.
 
+The diagram below shows how the paired groups share each excitation limit.
+
+![Joint NOOC groups pairing preset full and empty orbitals under shared excitation limits](img/nooc-2.svg){ style="background-color: white;" }
+
+*Figure: Joint constraints count holes and electrons together within each paired group, while the active group remains unrestricted.*
+
 The input name is `cnooc`. The code first checks each division separately, then checks the combined holes and electrons in each mirrored pair of bath divisions.
 
 <!-- iNORG paper: Joint constraint rule, inorg.tex:444. src/nocspace.cpp:79; src/nocspace.cpp:299. -->
@@ -58,6 +70,12 @@ The particle-hole excitation state (PHES) rule also limits the cumulative excita
 $$
 2^*\left(12+16^{1\pm}\right)^{2\pm}.
 $$
+
+The diagram below shows how the PHES limits are nested across the bath groups.
+
+![PHES constraints nesting an outer-group excitation limit within a cumulative bath excitation limit](img/nooc-3.svg){ style="background-color: white;" }
+
+*Figure: PHES constraints combine a limit on the outer group with a limit on all constrained bath orbitals together. The active group remains unrestricted.*
 
 This rejects the last configuration in the following table, even though it passes the joint rule.
 
