@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 		if (mm) cerr << "Error: inorg requires at least 2 MPI processes (mpirun -n 2 or more)." << endl;
 		MPI_Abort(MPI_COMM_WORLD, 1);
 	}
-	if (mm) cout << "\n\nVersion: v1.10.01@2025.04.30\
+	if (mm) cout << "\n\nVersion: v1.10.02@2026.10.11\
 (running "<< present() <<")\n\n" << endl;
 	if (mm) cout << NAV(pwd()) << endl; 
 	use_mkl(mm);

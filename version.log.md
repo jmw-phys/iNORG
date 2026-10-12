@@ -554,3 +554,8 @@ Version: v1.9.16 @ 2025.04.20
 
 Version: v1.10.00 @ 2025.04.27
     realized: Implemented parameter reading from the PARAMS.norg file, with the option to choose between a single NORG iteration or standard Bethe lattice multi-orbital DMFT calculation.
+
+Version: v1.10.02 @ 2026.10.11
+    realized: Mode 0 (Bethe lattice DMFT) fits a particle-hole symmetric bath by default (new key bath_ph_symm; needs bethe_mu = 0 and odd fit_nbaths). The diagonal Re Sigma is set to zero before the self-energy is stored, compared or mixed.
+    realized: New mode-0 key pulay_mixing (default 0): plain substitution in every iteration; set 1 for Pulay mixing of the self-energy.
+    note: The tutorial directories were renamed to match the examples of the iNORG paper; an online user manual is available at https://jmw-phys.github.io/iNORG/.

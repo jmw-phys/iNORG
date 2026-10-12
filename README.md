@@ -1,12 +1,15 @@
-# iNORG: An open source quantum impurity solver based on the natural orbitals renormalization group
+# iNORG: An open-source quantum impurity solver based on the natural orbitals renormalization group
 
-Now this package is currently under heavy development. 
+iNORG is an open-source solver for multi-orbital quantum impurity problems, based on the natural orbitals renormalization group (NORG). It can be used as the impurity solver in dynamical mean-field theory (DMFT) and in DFT+DMFT calculations. iNORG is written in C++ with MPI and Intel MKL, and it is actively maintained.
+
+- User manual: https://jmw-phys.github.io/iNORG/
+- Code paper: [arXiv:2607.13993](https://arxiv.org/abs/2607.13993)
 
 If you have any questions about iNORG, please feel free to contact me at: jmw.phys@gmail.com or jiaming.w@rutgers.edu
 
 ## Version
 
-v1.10.01
+v1.10.02
 
 ## Installation
 
@@ -78,3 +81,8 @@ Version: v1.10.00 @ 2025.04.27
 Version: v1.10.01 @ 2025.04.30
     realized: Successfully tested controlling the impurity solver via the PARAMS.norg file, allowing the user to choose between a single NORG iteration or a standard Bethe lattice multi-orbital DMFT calculation.
     note: To enhance computational stability, the program implements two types of degeneracy determination: one is the actual degeneracy, and the other is a user-specified preset degeneracy. During calculations, the program always uses the larger of these two values to determine the degenerate ground state basis, but afterwards, the preset degeneracy (p.degel) is updated according to the actual degeneracy. In DMFT mode, once a degenerate ground state is detected during the iteration process, the degeneracy count can only increase and will not decrease.
+
+Version: v1.10.02 @ 2026.10.11
+    realized: Mode 0 (Bethe lattice DMFT) fits a particle-hole symmetric bath by default (new key bath_ph_symm; needs bethe_mu = 0 and odd fit_nbaths). The diagonal Re Sigma is set to zero before the self-energy is stored, compared or mixed.
+    realized: New mode-0 key pulay_mixing (default 0): plain substitution in every iteration; set 1 for Pulay mixing of the self-energy.
+    note: The tutorial directories were renamed to match the examples of the iNORG paper; an online user manual is available at https://jmw-phys.github.io/iNORG/.
