@@ -1,6 +1,6 @@
 # Multi-orbital Bethe lattice DMFT
 
-This example is in `tutor/0_Multi-orbital_model_on_Bethe_lattice_with_DMFT`. It solves a two-orbital lattice model through a local impurity problem with a discrete bath. Each band has a semicircular noninteracting density of states with half-bandwidth $2|t_a|$. The density-density interactions are an intra-orbital $U$ and an inter-orbital $U'$, with zero Hund coupling in this mode.
+This example is in `tutor/2_Multi-orbital_model_on_Bethe_lattice_with_DMFT`. It solves a two-orbital lattice model through a local impurity problem with a discrete bath. Each band has a semicircular noninteracting density of states with half-bandwidth $2|t_a|$. The density-density interactions are an intra-orbital $U$ and an inter-orbital $U'$, with zero Hund coupling in this mode.
 
 The solver uses a half-filling shift in the impurity Hamiltonian. For two bands with zero Hund coupling, this shift is $U/2+U'$. Equivalently, the local interaction can be written, up to a constant, using $(n_{a\uparrow}-1/2)(n_{a\downarrow}-1/2)$ and $(n_1-1)(n_2-1)$. The default PH-symmetric fit requires a zero chemical-potential offset.
 
@@ -12,7 +12,7 @@ The Bethe self-consistency relation is $\Delta_a(z)=t_a^2G_{\mathrm{loc},a}(z)$.
 
 !!! warning "Convergence needs inspection"
 
-    With `bath_ph_symm 0`, an unconstrained fit can break particle-hole symmetry and the DMFT loop may not converge. The supplied input uses the default `bath_ph_symm 1`. Inspect the full iteration history before using the results. See [known limitations](../known-limitations.md#bethe-dmft-convergence).
+    With `bath_ph_symm 0`, an unconstrained fit can break particle-hole symmetry and the DMFT loop may not converge. The supplied input uses the default `bath_ph_symm 1`. Inspect the full iteration history before using the results.
 
 ## Physics and relation to Example 2
 
@@ -32,7 +32,7 @@ The paper and the checked-in example both use $U=3$ and $U'=2.7$, so $U-U'=0.3$.
 
 The walkthrough uses the checked-in values. A change to the bath count must be accompanied by a consistent division template and any seed bath. The [NOOC page](../implementation/nooc.md) explains these counts. The compiled mode-0 constraint is already `phss_v2`; the parser does not read the `NOOC` line listed in the paper. Likewise, the current chemical-potential reset and `pred_gs_deg` branch behavior take precedence over the paper's parameter descriptions.
 
-<!-- iNORG paper: Examples / Example 2, inorg.tex:986. Actual example: tutor/0_Multi-orbital_model_on_Bethe_lattice_with_DMFT/PARAMS.norg:4; tutor/0_Multi-orbital_model_on_Bethe_lattice_with_DMFT/PARAMS.norg:5; tutor/0_Multi-orbital_model_on_Bethe_lattice_with_DMFT/PARAMS.norg:6; tutor/0_Multi-orbital_model_on_Bethe_lattice_with_DMFT/PARAMS.norg:8; tutor/0_Multi-orbital_model_on_Bethe_lattice_with_DMFT/PARAMS.norg:11. Parser/default differences: src/main.cpp:168; src/prmtr.cpp:82; src/prmtr.cpp:129; src/densitymatrix.cpp:102. -->
+<!-- iNORG paper: Examples / Example 2, inorg.tex:986. Actual example: tutor/2_Multi-orbital_model_on_Bethe_lattice_with_DMFT/PARAMS.norg:4; tutor/2_Multi-orbital_model_on_Bethe_lattice_with_DMFT/PARAMS.norg:5; tutor/2_Multi-orbital_model_on_Bethe_lattice_with_DMFT/PARAMS.norg:6; tutor/2_Multi-orbital_model_on_Bethe_lattice_with_DMFT/PARAMS.norg:8; tutor/2_Multi-orbital_model_on_Bethe_lattice_with_DMFT/PARAMS.norg:11. Parser/default differences: src/main.cpp:168; src/prmtr.cpp:82; src/prmtr.cpp:129; src/densitymatrix.cpp:102. -->
 
 ## Input parameters, line by line
 
@@ -52,7 +52,7 @@ restrain     [0, -2, -3, -4, 0, 4, 3, 2] # Details of NOOC
 distribute   [1,  0,  0,  2, 1, 2, 0, 0] # Template for the positions of specific orbitals in NOOC
 ```
 
-<!-- tutor/0_Multi-orbital_model_on_Bethe_lattice_with_DMFT/PARAMS.norg:1 -->
+<!-- tutor/2_Multi-orbital_model_on_Bethe_lattice_with_DMFT/PARAMS.norg:1 -->
 
 | Line | Setting | Effect |
 | --- | --- | --- |
@@ -116,7 +116,7 @@ Optional `mb.gfloc` and `mb.seimp` supply a local Green's function and self-ener
 From the repository root, after [installation](../installation.md):
 
 ```bash
-cd tutor/0_Multi-orbital_model_on_Bethe_lattice_with_DMFT
+cd tutor/2_Multi-orbital_model_on_Bethe_lattice_with_DMFT
 mpiexec -n <N> ../../inorg > run.log 2>&1
 ```
 
@@ -147,11 +147,11 @@ The initial lattice file is `zic000.mb.g0loc.txt` for a fresh run. Frequency tab
 
 ## Reference output
 
-The supplied reference output in `tutor/0_Multi-orbital_model_on_Bethe_lattice_with_DMFT/important_output/` shows the state after iteration 30 for illustration. It contains nine `zic030.*` files, `log.parameters.txt`, and `log.txt` and `run.log` cut after iteration 30. The last recorded error is about $1.8\times10^{-3}$. The run used the unchanged tutorial input ($U=3$, $U'=2.7$), the defaults `bath_ph_symm 1` and `pulay_mixing 0`, and 36 MPI ranks. The figures below were generated from these iteration-30 reference files.
+The supplied reference output in `tutor/2_Multi-orbital_model_on_Bethe_lattice_with_DMFT/important_output/` shows the state after iteration 30 for illustration. It contains nine `zic030.*` files, `log.parameters.txt`, and `log.txt` and `run.log` cut after iteration 30. The last recorded error is about $1.8\times10^{-3}$. The run used the unchanged tutorial input ($U=3$, $U'=2.7$), the defaults `bath_ph_symm 1` and `pulay_mixing 0`, and 36 MPI ranks. The figures below were generated from these iteration-30 reference files.
 
 A full run continues until the code's stopping rule is met, subject to the iteration limit. In the reference run, the error first fell below $10^{-4}$ at iteration 61 ($8.57\times10^{-5}$), and the code stopped after iteration 62.
 
-<!-- tutor/0_Multi-orbital_model_on_Bethe_lattice_with_DMFT/important_output/log.txt:31; tutor/0_Multi-orbital_model_on_Bethe_lattice_with_DMFT/important_output/run.log:3443; tutor/0_Multi-orbital_model_on_Bethe_lattice_with_DMFT/important_output/log.parameters.txt:2; tutor/0_Multi-orbital_model_on_Bethe_lattice_with_DMFT/PARAMS.norg:6; tutor/0_Multi-orbital_model_on_Bethe_lattice_with_DMFT/PARAMS.norg:7; src/main.cpp:154; src/main.cpp:155; src/dmft_bethe.cpp:57; src/dmft_bethe.cpp:394; src/dmft_bethe.cpp:396 -->
+<!-- tutor/2_Multi-orbital_model_on_Bethe_lattice_with_DMFT/important_output/log.txt:31; tutor/2_Multi-orbital_model_on_Bethe_lattice_with_DMFT/important_output/run.log:3443; tutor/2_Multi-orbital_model_on_Bethe_lattice_with_DMFT/important_output/log.parameters.txt:2; tutor/2_Multi-orbital_model_on_Bethe_lattice_with_DMFT/PARAMS.norg:6; tutor/2_Multi-orbital_model_on_Bethe_lattice_with_DMFT/PARAMS.norg:7; src/main.cpp:154; src/main.cpp:155; src/dmft_bethe.cpp:57; src/dmft_bethe.cpp:394; src/dmft_bethe.cpp:396 -->
 
 ### Convergence
 
@@ -163,7 +163,7 @@ The figure shows the error column of the supplied `log.txt` through iteration 30
 
 The figure shows $-\mathrm{Im}\,\Sigma(i\omega_n)$ of the two orbitals from `zic030.mb.seimp.txt` (columns 5 and 6). Compared with iteration 61 of the reference run, the iteration-30 self-energy differs by at most about 1% for the wide band and 0.4% for the narrow band over $\omega_n\leq2$. The physical picture is the same orbital-selective Mott phase. For the narrow band ($t = 0.25$), $-\mathrm{Im}\,\Sigma$ grows without bound as $\omega_n \to 0$: this orbital is a Mott insulator. For the wide band ($t = 0.5$), $-\mathrm{Im}\,\Sigma$ goes back toward zero at low frequency: this orbital stays metallic.
 
-<!-- tutor/0_Multi-orbital_model_on_Bethe_lattice_with_DMFT/important_output/zic030.mb.seimp.txt:1 -->
+<!-- tutor/2_Multi-orbital_model_on_Bethe_lattice_with_DMFT/important_output/zic030.mb.seimp.txt:1 -->
 
 ![Iteration-30 imaginary part of the impurity self-energy for the wide and narrow bands](img/bethe-self-energy.png)
 
