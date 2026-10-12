@@ -137,7 +137,7 @@ First compare `hb_read.txt` with `hb_fit.txt`, particularly at the low frequenci
 
 <!-- src/api_edmft.cpp:29; src/api_edmft.cpp:39; src/api_edmft.cpp:44; src/api_edmft.cpp:62; src/api_edmft.cpp:68; src/api_edmft.cpp:70; src/api_edmft.cpp:79; src/green.cpp:188 -->
 
-`nmat.txt` begins with spin-orbital occupations and their totals. Its double-occupancy and derived correlation blocks are [not reliable](../known-limitations.md#double-occupancy-output). `log.norg` appends a summary with the self-energy change, particle-number sectors, bath-fit errors, and occupations. That self-energy change compares two invocations; it is not an internal DMFT convergence test.
+`nmat.txt` begins with spin-orbital occupations and their totals. Its double-occupancy and derived correlation blocks are not reliable. `log.norg` appends a summary with the self-energy change, particle-number sectors, bath-fit errors, and occupations. That self-energy change compares two invocations; it is not an internal DMFT convergence test.
 
 `edmft_back_up` stores an iteration counter and particle numbers for subsequent invocations, even in this standalone mode. For an independent calculation, start from a clean run directory containing only the chosen inputs. See the [output reference](../output-files.md) for all layouts and overwrite behavior.
 

@@ -28,8 +28,6 @@ The external eDMFT workflow is in [`api/eDMFT`](https://github.com/jmw-phys/iNOR
 2. Follow the [quick start](quickstart.md). The one-shot example has no `ose_hop`; the solver warns and fits from its generated initial bath.
 3. Use the [parameter reference](parameters.md) and [output-file reference](output-files.md) to inspect your run.
 
-Read the [known limitations](known-limitations.md) before interpreting results. In particular, the supplied Bethe example is not a guaranteed converged calculation, and the printed double-occupancy data are not reliable in the current implementation.
-
 Source code and issue tracking are on [GitHub](https://github.com/jmw-phys/iNORG). See [Citing iNORG](citing.md) for the method paper and the [paper list](paper-list.md) for applications.
 
 ## Future developments

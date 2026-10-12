@@ -114,7 +114,7 @@ The subsequent labeled blocks are matrices for $\langle s_{z,a}s_{z,b}\rangle$, 
 
 !!! warning "Double-occupancy output"
 
-    The current operator-table path leaves the printed $\langle n_i n_j\rangle$ matrix zero. It is not a physical result. Do not use this block or the spin/charge correlation quantities derived from it. The one-particle occupation block is computed separately. See [known limitations](known-limitations.md#double-occupancy-output).
+    The current operator-table path leaves the printed $\langle n_i n_j\rangle$ matrix zero. It is not a physical result. Do not use this block or the spin/charge correlation quantities derived from it. The one-particle occupation block is computed separately.
 
 <!-- src/norg.cpp:752; src/norg.cpp:799; src/norg.cpp:827; src/prmtr.cpp:69; src/operator.cpp:11; src/operator.cpp:199; src/operator.cpp:203; src/operator.cpp:215; src/densitymatrix.cpp:204; src/densitymatrix.cpp:213 -->
 

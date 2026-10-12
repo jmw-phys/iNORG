@@ -69,7 +69,7 @@ During an orbital-optimization sweep, transformed coefficients are inserted into
 
 Leaving the impurity basis fixed keeps density-density interactions diagonal in the occupation basis. The default table therefore records off-diagonal hopping connections. `find_hmlt_V2` calculates the diagonal energies and combines them with those connections to construct the Hamiltonian.
 
-This specialization matters when reusing a table for another observable. The one-particle density matrix is calculated with a separate diagonal contribution. The current double-occupancy routine instead expects four-fermion table entries that are absent in this path, producing an unreliable zero block. See [the documented output limitation](../known-limitations.md#double-occupancy-output) before interpreting correlations.
+This specialization matters when reusing a table for another observable. The one-particle density matrix is calculated with a separate diagonal contribution. The current double-occupancy routine instead expects four-fermion table entries that are absent in this path, producing an unreliable zero block. Do not use it to interpret correlations.
 
 <!-- src/prmtr.cpp:69; src/operator.cpp:11; src/operator.cpp:203; src/operator.cpp:215; src/operator.cpp:253; src/operator.cpp:261; src/densitymatrix.cpp:138; src/densitymatrix.cpp:204; src/densitymatrix.cpp:213. -->
 
